@@ -56,6 +56,22 @@ export const MEDIDAS = {
     nombre: 'Largo de manga', min: 8, max: 75,
     como: 'Desde la punta del hombro hasta donde quieres que llegue la manga (corta: unos 20 cm).',
   },
+  'pecho': {
+    nombre: 'Contorno de pecho', min: 60, max: 160,
+    como: 'Rodea la parte más ancha del pecho, por debajo de los brazos, sin apretar.',
+  },
+  'largo-camisa': {
+    nombre: 'Largo de camisa', min: 45, max: 100,
+    como: 'Por la espalda, desde la base del cuello hasta donde quieres que llegue la camisa.',
+  },
+  'largo-manga-larga': {
+    nombre: 'Largo de manga', min: 35, max: 85,
+    como: 'Con el brazo un poco doblado, desde la punta del hombro hasta el hueso de la muñeca.',
+  },
+  'muneca': {
+    nombre: 'Contorno de muñeca', min: 10, max: 30,
+    como: 'Rodea la muñeca, justo encima del hueso.',
+  },
 };
 
 // ---- Dibujo: figura del cuerpo + marca de dónde medir ----
@@ -87,6 +103,10 @@ const MARCAS = {
   'largo-blusa': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 112 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 112, 65, 85)}`,
   'contorno-brazo': '<ellipse cx="85" cy="58" rx="5" ry="2"/>',
   'largo-manga': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M80 40 L90 44 L93 64 L83 66 L79 50 Z"/><path d="M82 40 L88 66 M80 41 L84 39 M86 66 L90 66"/>`,
+  'pecho': '<ellipse cx="60" cy="58" rx="21" ry="4"/>',
+  'largo-camisa': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 116 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 116, 65, 85)}`,
+  'largo-manga-larga': '<path d="M83 40 L91 70 L90 97"/><circle cx="83" cy="40" r="1.5" fill="#9E2F45"/><circle cx="90" cy="97" r="1.5" fill="#9E2F45"/>',
+  'muneca': '<ellipse cx="90" cy="95" rx="3.5" ry="1.5"/>',
 };
 
 export const figuraMedida = (id) => `

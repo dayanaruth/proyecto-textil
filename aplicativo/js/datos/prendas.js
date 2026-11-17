@@ -19,6 +19,14 @@ const INSUMOS_BLUSA = [
 ];
 // Vestido: como la blusa, pero en vez del largo de blusa pide el largo de la falda
 const VESTIDO = BLUSA.map((id) => (id === 'largo-blusa' ? 'largo-falda' : id));
+// Camisas: dama parte de la blusa; varón tiene cuerpo recto
+const CAMISA_DAMA = [...BLUSA.filter((id) => !['largo-blusa', 'largo-manga'].includes(id)), 'largo-camisa', 'largo-manga-larga', 'muneca'];
+const CAMISA_VARON = ['pecho', 'cadera', 'cuello', 'ancho-espalda', 'largo-camisa', 'contorno-brazo', 'largo-manga-larga', 'muneca'];
+const INSUMOS_CAMISA = (botones) => [
+  { nombre: 'Botones', cantidad: String(botones), unidad: 'unid.' },
+  { nombre: 'Entretela (cuello y puños)', cantidad: '0,3', unidad: 'm' },
+  { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
+];
 const INSUMOS_VESTIDO = [
   { nombre: 'Cierre invisible (50 cm)', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
@@ -31,8 +39,8 @@ export const PRENDAS = [
   {
     id: 'camisa', nombre: 'Camisa básica', detalle: 'Dama o varón', img: img('camisa-varon'),
     variantes: [
-      { id: 'camisa-dama', nombre: 'Dama', titulo: 'Camisa de dama', img: img('camisa-dama') },
-      { id: 'camisa-varon', nombre: 'Varón', titulo: 'Camisa de varón', img: img('camisa-varon') },
+      { id: 'camisa-dama', nombre: 'Dama', titulo: 'Camisa de dama', img: img('camisa-dama'), medidas: CAMISA_DAMA, insumos: INSUMOS_CAMISA(8) },
+      { id: 'camisa-varon', nombre: 'Varón', titulo: 'Camisa de varón', img: img('camisa-varon'), medidas: CAMISA_VARON, insumos: INSUMOS_CAMISA(10) },
     ],
   },
   {

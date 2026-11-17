@@ -18,8 +18,8 @@ export const FORMULAS = {
   facilidadManga: 1.5,    // la copa mide un poco más que la sisa (se embebe)
   margen: { escote: 1, hombro: 1.5, sisa: 1, costado: 1.5, ruedo: 2, centroEspalda: 2, manga: 2.5 },
 };
-const F = FORMULAS;
-const mg = F.margen;
+// F son las fórmulas en uso; cuerpo() puede cambiarlas por un momento (ej. la camisa usa más holgura)
+let F = FORMULAS;
 
 // Punto del costado a cierta altura (entre dos puntos)
 const entre = (a, b, y) => P(a.x + (b.x - a.x) * ((y - a.y) / (b.y - a.y)), y);
@@ -81,12 +81,12 @@ function espalda(m, b) {
         pinza.length
           ? `Pinza de cintura: a ${n(xp)} cm del centro, ${n(F.pinzaCintura)} cm de ancho en la cintura. Sube hasta ${n(ys + 3)} cm${rombo ? ' y baja hasta la cadera (forma de rombo)' : ''}.`
           : 'Tu blusa es corta: no lleva pinza de cintura.',
-        `Agrega el margen: ${n(mg.escote)} cm en el escote, ${n(mg.hombro)} en el hombro, ${n(mg.sisa)} en la sisa, ${n(mg.costado)} en el costado, ${n(mg.ruedo)} en el ruedo y ${n(mg.centroEspalda)} en el centro (cierre).`,
+        `Agrega el margen: ${n(F.margen.escote)} cm en el escote, ${n(F.margen.hombro)} en el hombro, ${n(F.margen.sisa)} en la sisa, ${n(F.margen.costado)} en el costado, ${n(F.margen.ruedo)} en el ruedo y ${n(F.margen.centroEspalda)} en el centro (cierre).`,
       ],
       contorno: [
-        { ...escote, margen: mg.escote }, { a: B, b: C, margen: mg.hombro }, { ...sisa, margen: mg.sisa },
-        ...lado.slice(1).map((q, i) => ({ a: lado[i], b: q, margen: mg.costado })),
-        { a: R, b: R0, margen: mg.ruedo }, { a: R0, b: A, margen: mg.centroEspalda },
+        { ...escote, margen: F.margen.escote }, { a: B, b: C, margen: F.margen.hombro }, { ...sisa, margen: F.margen.sisa },
+        ...lado.slice(1).map((q, i) => ({ a: lado[i], b: q, margen: F.margen.costado })),
+        { a: R, b: R0, margen: F.margen.ruedo }, { a: R0, b: A, margen: F.margen.centroEspalda },
       ],
       rotulo: P(ancho / 2, ys + (yR - ys) * 0.55),
       hilo: [P(ancho * 0.7, ys + 4), P(ancho * 0.7, Math.max(ys + 10, yR - 5))],
@@ -147,12 +147,12 @@ function delantero(m, b) {
         [hayCostado ? `Pinza de costado: ${n(exceso)} cm de ancho, 4 cm debajo de la sisa, apuntando al busto (termina 3 cm antes de P).` : '',
           pinzaCintura.length ? `Pinza de cintura: debajo de P, ${n(F.pinzaCintura)} cm de ancho en la cintura, desde 2 cm bajo P hasta la ${rombo ? 'cadera' : 'cintura'}.` : '',
         ].join(' ').trim() || 'Con estas medidas no hacen falta pinzas.',
-        `Agrega el margen: ${n(mg.escote)} cm en el escote, ${n(mg.hombro)} en el hombro, ${n(mg.sisa)} en la sisa, ${n(mg.costado)} en el costado y ${n(mg.ruedo)} en el ruedo. El doblez no lleva margen.`,
+        `Agrega el margen: ${n(F.margen.escote)} cm en el escote, ${n(F.margen.hombro)} en el hombro, ${n(F.margen.sisa)} en la sisa, ${n(F.margen.costado)} en el costado y ${n(F.margen.ruedo)} en el ruedo. El doblez no lleva margen.`,
       ],
       contorno: [
-        { ...escote, margen: mg.escote }, { a: A, b: R0, margen: 0 }, { a: R0, b: R, margen: mg.ruedo },
-        ...lado.slice(1).map((q, i) => ({ a: lado[lado.length - 1 - i], b: lado[lado.length - 2 - i], margen: mg.costado })),
-        { a: D, c: sisa.c2, c2: sisa.c, b: C, margen: mg.sisa }, { a: C, b: B, margen: mg.hombro },
+        { ...escote, margen: F.margen.escote }, { a: A, b: R0, margen: 0 }, { a: R0, b: R, margen: F.margen.ruedo },
+        ...lado.slice(1).map((q, i) => ({ a: lado[lado.length - 1 - i], b: lado[lado.length - 2 - i], margen: F.margen.costado })),
+        { a: D, c: sisa.c2, c2: sisa.c, b: C, margen: F.margen.sisa }, { a: C, b: B, margen: F.margen.hombro },
       ],
       rotulo: P(ancho / 2 + 2, ys + (yR - ys) * 0.6),
       hilo: [P(ancho * 0.8, ys + 4), P(ancho * 0.8, Math.max(ys + 10, yR - 5))],
@@ -162,10 +162,13 @@ function delantero(m, b) {
 }
 
 // Manga corta: la altura de la copa se busca para que la copa mida lo mismo que la sisa (+ facilidad)
-export function manga(m, sisaTotal) {
-  const A = m['contorno-brazo'] + F.holguraBrazo;
-  const L = m['largo-manga'];
-  const objetivo = (sisaTotal + F.facilidadManga) / 2;
+export function manga(m, sisaTotal, opciones = {}) {
+  const o = { holgura: F.holguraBrazo, facilidad: F.facilidadManga, largo: m['largo-manga'], anchoAbajo: null,
+    abertura: false, margenRuedo: F.margen.manga, ...opciones };
+  const A = m['contorno-brazo'] + o.holgura;
+  const L = o.largo;
+  const entra = o.anchoAbajo ? (A - o.anchoAbajo) / 2 : 1;
+  const objetivo = (sisaTotal + o.facilidad) / 2;
   const media = (h) => ({ a: P(0, h), c: P(A * 0.2, h), c2: P(A * 0.3, 0), b: P(A / 2, 0) });
   let bajo = 2, alto = Math.max(3, L - 2);
   for (let i = 0; i < 30; i++) {
@@ -175,7 +178,13 @@ export function manga(m, sisaTotal) {
   const h = (bajo + alto) / 2;
   const izq = media(h);
   const der = { a: P(A / 2, 0), c: P(A * 0.7, 0), c2: P(A * 0.8, h), b: P(A, h) };
-  const U1 = P(0, h), U2 = P(A, h), B1 = P(1, L), B2 = P(A - 1, L), T = P(A / 2, 0);
+  const U1 = P(0, h), U2 = P(A, h), B1 = P(entra, L), B2 = P(A - entra, L), T = P(A / 2, 0);
+  const xa = B1.x + (B2.x - B1.x) * 0.25; // abertura del puño, del lado de atrás
+  const abertura = o.abertura ? [
+    { paso: 4, tipo: 'linea', p: [P(xa, L), P(xa, L - 12)] },
+    { paso: 4, tipo: 'linea', p: [P(xa + 3, L), P(xa + 3, L - 4)], puntos: true },
+    { paso: 4, tipo: 'linea', p: [P(xa + 6, L), P(xa + 6, L - 4)], puntos: true },
+  ] : [];
 
   return {
     nombre: 'Manga', cortar: 'Cortar 2', alDoblez: false,
@@ -184,17 +193,19 @@ export function manga(m, sisaTotal) {
       { paso: 1, tipo: 'linea', p: [P(A / 2, h), T], puntos: true }, { paso: 1, tipo: 'punto', p: [T], nombre: 'C', der: true },
       { paso: 2, tipo: 'curva', p: [izq.a, izq.c, izq.c2, izq.b] }, { paso: 2, tipo: 'curva', p: [der.a, der.c, der.c2, der.b] },
       { paso: 3, tipo: 'linea', p: [U1, B1] }, { paso: 3, tipo: 'linea', p: [U2, B2] }, { paso: 3, tipo: 'linea', p: [B1, B2] },
+      ...abertura,
     ],
     pasos: [
-      `Traza una línea A–B del ancho de la manga: contorno de brazo + ${n(F.holguraBrazo)} = ${n(A)} cm.`,
+      `Traza una línea A–B del ancho de la manga: contorno de brazo + ${n(o.holgura)} = ${n(A)} cm.`,
       `Desde el centro de A–B sube ${n(h)} cm (altura de copa) y marca C. La app la calculó para que la manga calce en tu sisa de ${n(sisaTotal)} cm.`,
       'Une A con C y C con B con curvas suaves: hacia adentro cerca de A y B, y redondeada arriba (la copa).',
-      `Desde A y B baja hasta el largo de manga (${n(L)} cm), entrando 1 cm a cada lado. Une abajo.`,
-      `Agrega el margen: ${n(mg.sisa)} cm en la copa, ${n(mg.costado)} en los costados y ${n(mg.manga)} en el ruedo.`,
+      `Desde A y B baja ${n(L)} cm${o.abertura ? ' (largo de manga menos el puño)' : ' (largo de manga)'}, entrando ${n(entra)} cm a cada lado. Une abajo.`,
+      ...(o.abertura ? ['Abertura: a un cuarto del ancho de abajo (lado de atrás) sube 12 cm. Al lado marca 2 pliegues de 2 cm: así la manga mide lo mismo que el puño.'] : []),
+      `Agrega el margen: ${n(F.margen.sisa)} cm en la copa, ${n(F.margen.costado)} en los costados y ${n(o.margenRuedo)} en el ruedo.`,
     ],
     contorno: [
-      { ...izq, margen: mg.sisa }, { ...der, margen: mg.sisa },
-      { a: U2, b: B2, margen: mg.costado }, { a: B2, b: B1, margen: mg.manga }, { a: B1, b: U1, margen: mg.costado },
+      { ...izq, margen: F.margen.sisa }, { ...der, margen: F.margen.sisa },
+      { a: U2, b: B2, margen: F.margen.costado }, { a: B2, b: B1, margen: o.margenRuedo }, { a: B1, b: U1, margen: F.margen.costado },
     ],
     rotulo: P(A / 2, h + (L - h) * 0.45 + 1),
     hilo: [P(A / 2, h + 1), P(A / 2, Math.max(h + 3, L - 2))],
@@ -203,10 +214,16 @@ export function manga(m, sisaTotal) {
 }
 
 // Cuerpo (delantero + espalda) y sisa, para reutilizar en el vestido
-export function cuerpo(m) {
-  const b = base(m);
-  const del = delantero(m, b), esp = espalda(m, b);
-  return { b, delantero: del.pieza, espalda: esp.pieza, sisa: del.sisa + esp.sisa };
+export function cuerpo(m, cambios = {}) {
+  const antes = F;
+  F = { ...FORMULAS, ...cambios };
+  try {
+    const b = base(m);
+    const del = delantero(m, b), esp = espalda(m, b);
+    return { b, delantero: del.pieza, espalda: esp.pieza, sisa: del.sisa + esp.sisa, formulas: F };
+  } finally {
+    F = antes;
+  }
 }
 
 export function construir(m) {

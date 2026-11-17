@@ -14,6 +14,21 @@ function enCurva({ a, c, c2, b }, t) {
   return punto(u * u * a.x + 2 * u * t * c.x + t * t * b.x, u * u * a.y + 2 * u * t * c.y + t * t * b.y);
 }
 
+// Corta una curva suave (4 puntos) a cierta altura y: devuelve [parte de arriba, parte de abajo]
+export function partirCurvaEnY(t, y) {
+  let bajo = 0, alto = 1;
+  const sube = enCurva(t, 1).y > enCurva(t, 0).y;
+  for (let i = 0; i < 40; i++) {
+    const m = (bajo + alto) / 2;
+    if ((enCurva(t, m).y < y) === sube) bajo = m; else alto = m;
+  }
+  const k = (bajo + alto) / 2;
+  const mezcla = (p, q) => punto(p.x + (q.x - p.x) * k, p.y + (q.y - p.y) * k);
+  const p01 = mezcla(t.a, t.c), p12 = mezcla(t.c, t.c2), p23 = mezcla(t.c2, t.b);
+  const p012 = mezcla(p01, p12), p123 = mezcla(p12, p23), medio = mezcla(p012, p123);
+  return [{ a: t.a, c: p01, c2: p012, b: medio }, { a: medio, c: p123, c2: p23, b: t.b }];
+}
+
 // Largo de un tramo recto o curvo (en cm)
 export function largoTramo(t, divisiones = 40) {
   if (!t.c) return Math.hypot(t.b.x - t.a.x, t.b.y - t.a.y);

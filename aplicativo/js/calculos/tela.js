@@ -26,7 +26,8 @@ export function piezasDeMolde(molde) {
       ? [{ ancho: x.alto / 2, alto: x.largo }, { ancho: x.largo / 2, alto: x.alto, atravesada: true }]
       : [{ ancho: x.alto, alto: x.largo }, { ancho: x.largo, alto: x.alto, atravesada: true }],
   }));
-  return [...piezas, ...rectangulos];
+  const repetir = (lista, fuente) => lista.flatMap((p, i) => Array.from({ length: fuente[i].alDoblez ? fuente[i].cantidad ?? 1 : 1 }, () => p));
+  return [...repetir(piezas, molde.piezas), ...repetir(rectangulos, molde.rectangulos)];
 }
 
 // Una pieza muy ancha (falda de tablones) se corta en paneles que se unen con costura.

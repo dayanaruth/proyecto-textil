@@ -15,7 +15,7 @@ export function mostrar(main, [id]) {
     return;
   }
   const esta = location.hash;
-  main.innerHTML = `${barraPasos(2)}<p class="ayuda">Preparando el molde…</p>`;
+  main.innerHTML = `${barraPasos(2, id)}<p class="ayuda">Preparando el molde…</p>`;
   construirMolde(id, medidas).then((molde) => {
     if (location.hash === esta) pintar(main, prenda, molde);
   });
@@ -27,7 +27,7 @@ function pintar(main, prenda, molde) {
   let pieza = 0, paso = 0;
 
   main.innerHTML = `
-    ${barraPasos(2)}
+    ${barraPasos(2, prenda.id)}
     <h1>Tu molde: ${titulo}</h1>
     <p class="ayuda">${molde.piezas.some((p) => p.imprimir !== false)
       ? 'Sigue los pasos para trazarlo en papel, o imprímelo en tamaño real.'

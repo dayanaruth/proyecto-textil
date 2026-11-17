@@ -42,7 +42,7 @@ function unaMedida(main, prenda, base, i, cambiando) {
   const ultima = i === lista.length - 1;
 
   main.innerHTML = `
-    ${barraPasos(1)}
+    ${barraPasos(1, prenda.id)}
     <p class="contador">${prenda.titulo ?? prenda.nombre} · Medida ${i + 1} de ${lista.length}</p>
     <div class="figura">${figuraMedida(id)}</div>
     <form class="form-medida" novalidate>
@@ -77,7 +77,7 @@ function unaMedida(main, prenda, base, i, cambiando) {
 
 function todas(main, prenda, base) {
   main.innerHTML = `
-    ${barraPasos(1)}
+    ${barraPasos(1, prenda.id)}
     <h1>Todas las medidas</h1>
     <p class="ayuda">${prenda.titulo ?? prenda.nombre}. Escribe cada medida en centímetros.</p>
     <form novalidate>
@@ -130,7 +130,7 @@ function revisar(main, prenda, base) {
     return;
   }
   main.innerHTML = `
-    ${barraPasos(1)}
+    ${barraPasos(1, prenda.id)}
     <h1>Revisa las medidas</h1>
     <p class="ayuda">Si alguna está mal, toca «Cambiar».</p>
     <ul class="resumen">

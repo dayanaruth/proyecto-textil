@@ -11,6 +11,7 @@ import { buscarPrenda, prendaMadre } from './datos/prendas.js';
 
 const main = document.getElementById('app');
 const atras = document.getElementById('atras');
+const irInicio = document.getElementById('ir-inicio');
 
 // Cada pantalla puede devolver a dónde lleva "Atrás"
 const RUTAS = {
@@ -52,6 +53,7 @@ function navegar() {
   const nombre = ruta || 'inicio';
   const destino = (RUTAS[nombre] ?? pronto)(main, datos);
   atras.hidden = nombre === 'inicio';
+  irInicio.hidden = nombre === 'inicio';
   atras.href = destino ?? destinoAtras(nombre, datos);
   window.scrollTo(0, 0);
   main.focus({ preventScroll: true });

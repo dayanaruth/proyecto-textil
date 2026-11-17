@@ -24,7 +24,7 @@ export function mostrar(main, [id]) {
   const titulo = prenda ? `: ${prenda.titulo ?? prenda.nombre}` : '';
 
   main.innerHTML = `
-    ${prenda ? barraPasos(4) : ''}
+    ${prenda ? barraPasos(4, prenda.id) : ''}
     <h1>Costo y precio${titulo}</h1>
     <p class="ayuda">Escribe los precios en bolivianos. Los totales se calculan solos.</p>
     <form class="costos" novalidate>

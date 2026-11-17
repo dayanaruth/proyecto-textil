@@ -15,7 +15,7 @@ export function mostrar(main, [id]) {
   if (prenda.medidas.some((k) => trabajo.medidas[k] == null)) return location.replace(`#/medidas/${id}/revisar`);
 
   const esta = location.hash;
-  main.innerHTML = `${barraPasos(3)}<p class="ayuda">Calculando…</p>`;
+  main.innerHTML = `${barraPasos(3, id)}<p class="ayuda">Calculando…</p>`;
   construirMolde(id, trabajo.medidas).then((molde) => {
     if (location.hash === esta) pintar(main, prenda, piezasDeMolde(molde), trabajo.tela?.ancho ?? 150);
   });
@@ -25,7 +25,7 @@ export function mostrar(main, [id]) {
 function pintar(main, prenda, piezas, anchoInicial) {
   const otroInicial = ANCHOS_COMUNES.includes(anchoInicial) ? '' : numero(anchoInicial / 100);
   main.innerHTML = `
-    ${barraPasos(3)}
+    ${barraPasos(3, prenda.id)}
     <h1>¿Cuánta tela comprar?</h1>
     <p class="ayuda">Elige el ancho de la tela. Si no sabes, pregunta en la tienda.</p>
     <div class="selector selector-ancho" role="group" aria-label="Ancho de la tela">

@@ -27,6 +27,13 @@ const INSUMOS_CAMISA = (botones) => [
   { nombre: 'Entretela (cuello y puños)', cantidad: '0,3', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
+const PANTALON = ['cintura', 'cadera', 'altura-cadera', 'tiro', 'altura-rodilla', 'largo-pantalon', 'bota'];
+const INSUMOS_PANTALON = [
+  { nombre: 'Cierre (18 cm)', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Botón o gancho', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Entretela (pretina)', cantidad: '0,15', unidad: 'm' },
+  { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
+];
 const INSUMOS_VESTIDO = [
   { nombre: 'Cierre invisible (50 cm)', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
@@ -46,8 +53,8 @@ export const PRENDAS = [
   {
     id: 'pantalon', nombre: 'Pantalón recto', detalle: 'Dama o varón', img: img('pantalon-dama'),
     variantes: [
-      { id: 'pantalon-dama', nombre: 'Dama', titulo: 'Pantalón de dama', img: img('pantalon-dama') },
-      { id: 'pantalon-varon', nombre: 'Varón', titulo: 'Pantalón de varón', img: img('pantalon-varon') },
+      { id: 'pantalon-dama', nombre: 'Dama', titulo: 'Pantalón de dama', img: img('pantalon-dama'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
+      { id: 'pantalon-varon', nombre: 'Varón', titulo: 'Pantalón de varón', img: img('pantalon-varon'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
     ],
   },
   { id: 'falda-uniforme', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA },

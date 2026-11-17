@@ -72,6 +72,22 @@ export const MEDIDAS = {
     nombre: 'Contorno de muñeca', min: 10, max: 30,
     como: 'Rodea la muñeca, justo encima del hueso.',
   },
+  'tiro': {
+    nombre: 'Altura de tiro', min: 18, max: 40,
+    como: 'Sentada en una silla dura: de costado, desde la cintura hasta el asiento.',
+  },
+  'altura-rodilla': {
+    nombre: 'Altura de rodilla', min: 40, max: 75,
+    como: 'De costado, desde la cintura hasta la mitad de la rodilla.',
+  },
+  'largo-pantalon': {
+    nombre: 'Largo de pantalón', min: 60, max: 125,
+    como: 'De costado, desde la cintura hasta donde quieres que llegue el pantalón (con zapatos).',
+  },
+  'bota': {
+    nombre: 'Ancho de bota', min: 26, max: 70,
+    como: 'Contorno que quieres en el ruedo del pantalón. Recto: unos 40 a 46 cm.',
+  },
 };
 
 // ---- Dibujo: figura del cuerpo + marca de dónde medir ----
@@ -107,6 +123,10 @@ const MARCAS = {
   'largo-camisa': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 116 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 116, 65, 85)}`,
   'largo-manga-larga': '<path d="M83 40 L91 70 L90 97"/><circle cx="83" cy="40" r="1.5" fill="#9E2F45"/><circle cx="90" cy="97" r="1.5" fill="#9E2F45"/>',
   'muneca': '<ellipse cx="90" cy="95" rx="3.5" ry="1.5"/>',
+  'tiro': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 Q86 92 84 104 L82 114 H38 L36 104 Q34 92 48 80 Z"/>${flecha(104, 80, 114, 72, 61)}`,
+  'altura-rodilla': `${flecha(104, 80, 150, 72, 76)}<path d="M62 150 H76" stroke-width="2"/>`,
+  'largo-pantalon': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 Q86 92 84 104 L76 150 L71 190 H62 L60 114 L58 190 H49 L44 150 L36 104 Q34 92 48 80 Z"/>${flecha(104, 80, 190, 72, 71)}`,
+  'bota': '<ellipse cx="66.5" cy="186" rx="6.5" ry="1.8"/><ellipse cx="53.5" cy="186" rx="6.5" ry="1.8"/>',
 };
 
 export const figuraMedida = (id) => `

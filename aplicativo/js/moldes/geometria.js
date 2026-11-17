@@ -70,9 +70,18 @@ export function agregarMargen({ puntos, margenes }) {
     const d = punto(q.x - p.x, q.y - p.y);
     const l = Math.hypot(d.x, d.y) || 1;
     const m = margenes[i];
-    return { o: punto(p.x + (signo * d.y / l) * m, p.y + (-signo * d.x / l) * m), d };
+    return { o: punto(p.x + (signo * d.y / l) * m, p.y + (-signo * d.x / l) * m), d, m };
   });
-  return lados.map((lado, i) => cruce(lados[(i - 1 + n) % n], lado));
+  // En ángulos muy agudos (ej. el tiro del pantalón) el cruce se escapa en punta:
+  // si se aleja mucho de la esquina, se corta la punta (esquina "biselada")
+  return lados.map((lado, i) => {
+    const antes = lados[(i - 1 + n) % n];
+    const q = cruce(antes, lado);
+    const limite = 2.5 * Math.max(antes.m, lado.m, 0.5);
+    if (Math.hypot(q.x - puntos[i].x, q.y - puntos[i].y) <= limite) return q;
+    const finAntes = punto(antes.o.x + antes.d.x, antes.o.y + antes.d.y);
+    return punto((finAntes.x + lado.o.x) / 2, (finAntes.y + lado.o.y) / 2);
+  });
 }
 
 // Punto donde se cruzan dos líneas (si son paralelas, el inicio de la segunda)

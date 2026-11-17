@@ -25,6 +25,12 @@ const REGLAS = [
     texto: 'El alto de busto debe ser menor que el talle delantero. Revisa las dos medidas.' },
   { usa: ['busto', 'ancho-espalda'], falla: (m) => m['ancho-espalda'] > m.busto / 2,
     texto: 'El ancho de espalda parece muy grande comparado con el busto. Revisa si está bien.' },
+  { usa: ['altura-cadera', 'tiro'], falla: (m) => m['altura-cadera'] >= m.tiro,
+    texto: 'La altura de cadera debe ser menor que el tiro. Revisa las dos medidas.' },
+  { usa: ['tiro', 'altura-rodilla'], falla: (m) => m.tiro >= m['altura-rodilla'],
+    texto: 'El tiro debe ser menor que la altura de rodilla. Revisa las dos medidas.' },
+  { usa: ['altura-rodilla', 'largo-pantalon'], falla: (m) => m['altura-rodilla'] >= m['largo-pantalon'],
+    texto: 'La rodilla debe estar más arriba que el largo del pantalón. Revisa las dos medidas.' },
 ];
 
 export const avisos = (medidas, ids) =>

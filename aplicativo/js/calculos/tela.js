@@ -64,8 +64,12 @@ export function planoDeCorte(todas, anchoTela) {
     const lugar = filas.flatMap((fila) => caben.map((forma) => ({ fila, forma })))
       .find(({ fila, forma }) => !(pieza.doblez && fila.doblez) && forma.alto <= fila.alto && fila.usado + forma.ancho <= util);
 
+    const encaje = lugar || pieza.doblez || !pieza.formas[0].puntos ? null : buscarEncaje(filas, pieza.formas[0], util);
     if (lugar) {
       poner(lugar.fila, pieza, lugar.forma);
+    } else if (encaje) {
+      poner(encaje.fila, pieza, encaje.forma, encaje.x);
+      if (encaje.forma.girada && !notas.includes(AVISO_GIRO)) notas.push(AVISO_GIRO);
     } else {
       const forma = caben.reduce((a, b) => (b.alto < a.alto ? b : a));
       const y = filas.reduce((s, f) => s + f.alto, 0);
@@ -84,15 +88,59 @@ export function planoDeCorte(todas, anchoTela) {
 }
 
 // Las piezas al doblez van al inicio de la fila (x = 0 es el doblez)
-function poner(fila, pieza, forma) {
+function poner(fila, pieza, forma, xEncaje) {
   const colocada = { nombre: pieza.nombre, doblez: pieza.doblez, ...forma, x: 0, y: fila.y };
   if (pieza.doblez) {
     fila.piezas.forEach((p) => { p.x += forma.ancho; });
     fila.piezas.unshift(colocada);
     fila.doblez = true;
+    fila.usado += forma.ancho;
   } else {
-    colocada.x = fila.usado;
+    colocada.x = xEncaje ?? fila.usado;
     fila.piezas.push(colocada);
+    fila.usado = colocada.x + forma.ancho;
   }
-  fila.usado += forma.ancho;
+}
+
+// ---- Encaje: dos piezas se acercan según su forma real (no su rectángulo) ----
+const AVISO_GIRO = 'Algunas piezas van al revés para aprovechar la tela. Si tu tela tiene pelo o un dibujo con dirección, ponlas todas en el mismo sentido (necesitarás un poco más).';
+const SEPARACION = 0.3; // cm entre piezas
+
+// Dónde empieza y termina la pieza a cierta altura y
+function anchoEn(puntos, y) {
+  let min = Infinity, max = -Infinity;
+  puntos.forEach((p, i) => {
+    const q = puntos[(i + 1) % puntos.length];
+    if ((p.y <= y && q.y >= y) || (q.y <= y && p.y >= y)) {
+      const x = p.y === q.y ? Math.min(p.x, q.x) : p.x + ((y - p.y) / (q.y - p.y)) * (q.x - p.x);
+      const x2 = p.y === q.y ? Math.max(p.x, q.x) : x;
+      min = Math.min(min, x); max = Math.max(max, x2);
+    }
+  });
+  return min <= max ? { min, max } : null;
+}
+
+const girar = (f) => ({ ...f, girada: true, puntos: f.puntos.map((p) => ({ x: f.ancho - p.x, y: f.alto - p.y })) });
+
+// Lo más a la izquierda que puede ir "forma" a la derecha de la pieza "previa" sin pisarla
+function xJunto(previa, forma) {
+  let x = previa.x;
+  for (let y = 0; y <= Math.min(previa.alto, forma.alto); y += 0.5) {
+    const a = anchoEn(previa.puntos, y), b = anchoEn(forma.puntos, y);
+    if (a && b) x = Math.max(x, previa.x + a.max - b.min + SEPARACION);
+  }
+  return x;
+}
+
+function buscarEncaje(filas, forma, util) {
+  for (const fila of filas) {
+    const previa = fila.piezas.at(-1);
+    if (!previa?.puntos || forma.alto > fila.alto) continue;
+    const opciones = [forma, girar(forma)]
+      .map((f) => ({ fila, forma: f, x: xJunto(previa, f) }))
+      .filter((o) => o.x + o.forma.ancho <= util)
+      .sort((a, b) => a.x - b.x);
+    if (opciones.length) return opciones[0];
+  }
+  return null;
 }

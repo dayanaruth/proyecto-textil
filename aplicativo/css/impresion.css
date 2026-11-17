@@ -1,20 +1,41 @@
-/* Impresión del molde a escala real */
-#impresion { display: none; }
+/* Impresión del molde a escala real + vista previa en pantalla */
+#impresion { display: none; color: #000; font-size: 11pt; }
+#impresion .hoja-titulo { margin: 0 0 .2cm; font-size: 9pt; }
+#impresion h1 { font-size: 18pt; margin-bottom: .4cm; }
+#impresion ol, #impresion ul { margin: 0 0 .5cm; padding-left: .6cm; }
+#impresion svg { display: block; }
+.cuadro-control {
+  display: grid; place-items: center; width: 10cm; height: 10cm; margin: .5cm 0;
+  border: 1px solid #000; font-size: 14pt;
+}
+
+/* Vista previa: las hojas se ven como papel, achicadas para la pantalla */
+@media screen {
+  #impresion.vista-previa {
+    display: block; position: fixed; inset: 4.25rem 0 0; z-index: 40; overflow: auto;
+    padding: 1rem; background: #6B6460;
+  }
+  .vista-previa .hoja {
+    zoom: var(--zoom, 1);
+    box-sizing: border-box; width: 21.6cm; min-height: 27.9cm; margin: 0 auto 1rem; padding: 1cm;
+    background: #fff; box-shadow: 0 4px 16px rgb(0 0 0 / .35);
+  }
+  .barra-impresion {
+    position: fixed; inset: 0 0 auto; z-index: 41; height: 4.25rem;
+    display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem;
+    background: var(--superficie); border-bottom: 1px solid var(--borde);
+  }
+  .barra-impresion p { flex: 1; font-size: .95rem; line-height: 1.25; }
+  .barra-impresion small { display: block; color: var(--texto-suave); font-size: .8rem; }
+  .barra-impresion .btn { min-height: 3rem; padding: .5rem 1rem; }
+}
 
 @page { margin: 1cm; }
 
 @media print {
   body { background: #fff; color: #000; }
   body > :not(#impresion) { display: none !important; }
-  #impresion { display: block; font-size: 11pt; }
+  #impresion { display: block; }
   .hoja { break-after: page; }
   .hoja:last-child { break-after: auto; }
-  .hoja svg { display: block; }
-  .hoja-titulo { margin: 0 0 .2cm; font-size: 9pt; }
-  .hoja h1 { font-size: 18pt; margin-bottom: .4cm; }
-  .hoja ol, .hoja ul { margin: 0 0 .5cm; padding-left: .6cm; }
-  .cuadro-control {
-    display: grid; place-items: center; width: 10cm; height: 10cm; margin: .5cm 0;
-    border: 1px solid #000; font-size: 14pt;
-  }
 }

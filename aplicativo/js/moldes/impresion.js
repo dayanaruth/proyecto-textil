@@ -50,10 +50,40 @@ export function imprimir(titulo, molde) {
       </ul>
     </section>`;
 
+  // Vista previa propia: se ven las hojas antes de gastar papel (funciona en cualquier navegador)
+  document.querySelector('#impresion')?.remove();
+  document.querySelector('.barra-impresion')?.remove();
   const zona = document.createElement('div');
   zona.id = 'impresion';
+  zona.className = 'vista-previa';
   zona.innerHTML = portada + paginas.join('');
-  document.body.append(zona);
-  window.addEventListener('afterprint', () => zona.remove(), { once: true });
-  window.print();
+  const barra = document.createElement('div');
+  barra.className = 'barra-impresion';
+  barra.innerHTML = `
+    <p><b>Vista previa</b><small>${total} hojas · Carta o A4</small></p>
+    <button type="button" class="btn btn-secundario" data-accion="cerrar">Cerrar</button>
+    <button type="button" class="btn btn-principal" data-accion="imprimir">🖨️ Imprimir</button>`;
+
+  // Las hojas miden 21,6 cm de ancho: se achican para que entren en la pantalla
+  const ajustar = () => {
+    const anchoHoja = (21.6 / 2.54) * 96;
+    zona.style.setProperty('--zoom', Math.min(1, (window.innerWidth - 32) / anchoHoja).toFixed(3));
+  };
+  const cerrar = () => {
+    zona.remove();
+    barra.remove();
+    window.removeEventListener('resize', ajustar);
+    document.removeEventListener('keydown', teclas);
+  };
+  const teclas = (e) => { if (e.key === 'Escape') cerrar(); };
+  barra.addEventListener('click', (e) => {
+    const accion = e.target.closest('[data-accion]')?.dataset.accion;
+    if (accion === 'cerrar') cerrar();
+    if (accion === 'imprimir') window.print();
+  });
+  window.addEventListener('resize', ajustar);
+  document.addEventListener('keydown', teclas);
+  ajustar();
+  document.body.append(barra, zona);
+  barra.querySelector('[data-accion="imprimir"]').focus();
 }

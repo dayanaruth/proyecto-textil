@@ -6,6 +6,8 @@ const MOLDES = {
   'vestido': () => import('./prendas/vestido.js'),
   'camisa-dama': () => import('./prendas/camisa-dama.js'),
   'camisa-varon': () => import('./prendas/camisa-varon.js'),
+  'pantalon-dama': () => import('./prendas/pantalon-dama.js'),
+  'pantalon-varon': () => import('./prendas/pantalon-varon.js'),
 };
 
 export const tieneMolde = (id) => id in MOLDES;

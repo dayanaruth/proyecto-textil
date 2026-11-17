@@ -1,0 +1,11 @@
+# El informe no se publica (contiene datos personales)
+*.docx
+*.doc
+*.pdf
+~$*
+
+# Archivos del sistema
+Thumbs.db
+desktop.ini
+.DS_Store
+node_modules/

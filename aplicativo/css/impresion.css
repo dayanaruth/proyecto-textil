@@ -1,0 +1,20 @@
+/* Impresión del molde a escala real */
+#impresion { display: none; }
+
+@page { margin: 1cm; }
+
+@media print {
+  body { background: #fff; color: #000; }
+  body > :not(#impresion) { display: none !important; }
+  #impresion { display: block; font-size: 11pt; }
+  .hoja { break-after: page; }
+  .hoja:last-child { break-after: auto; }
+  .hoja svg { display: block; }
+  .hoja-titulo { margin: 0 0 .2cm; font-size: 9pt; }
+  .hoja h1 { font-size: 18pt; margin-bottom: .4cm; }
+  .hoja ol, .hoja ul { margin: 0 0 .5cm; padding-left: .6cm; }
+  .cuadro-control {
+    display: grid; place-items: center; width: 10cm; height: 10cm; margin: .5cm 0;
+    border: 1px solid #000; font-size: 14pt;
+  }
+}

@@ -29,11 +29,14 @@ function pintar(main, prenda, molde) {
   main.innerHTML = `
     ${barraPasos(2)}
     <h1>Tu molde: ${titulo}</h1>
-    <p class="ayuda">Sigue los pasos para trazarlo en papel, o imprímelo en tamaño real.</p>
-    <div class="selector" role="group" aria-label="Pieza del molde">
+    <p class="ayuda">${molde.piezas.some((p) => p.imprimir !== false)
+      ? 'Sigue los pasos para trazarlo en papel, o imprímelo en tamaño real.'
+      : 'Sigue los pasos para marcarlo directamente sobre la tela.'}</p>
+    <div class="selector" role="group" aria-label="Pieza del molde"${molde.piezas.length < 2 ? ' hidden' : ''}>
       ${molde.piezas.map((p, i) => `<button type="button" data-pieza="${i}">${p.nombre}</button>`).join('')}
     </div>
     <div class="lienzo-molde" id="dibujo"></div>
+    <p class="deslizar" id="deslizar" hidden>↔ Desliza el dibujo con el dedo para verlo entero</p>
     <div class="paso-caja" aria-live="polite">
       <p class="paso-num" id="paso-num"></p>
       <p class="como"><span id="paso-texto"></span>
@@ -50,7 +53,9 @@ function pintar(main, prenda, molde) {
         <tr><td>${c.nombre}<small>${c.formula}</small></td><td>${numero(c.valor)} cm</td></tr>`).join('')}
       </table>
     </details>
-    <button type="button" class="btn btn-secundario btn-ancho" id="imprimir">🖨️ Imprimir en tamaño real</button>
+    ${molde.piezas.some((p) => p.imprimir !== false)
+      ? '<button type="button" class="btn btn-secundario btn-ancho" id="imprimir">🖨️ Imprimir en tamaño real</button>'
+      : '<p class="nota nota-info">✏️ Esta prenda se marca directamente sobre la tela con tiza y regla: no hace falta imprimir.</p>'}
     <a class="btn btn-principal btn-ancho" href="#/tela/${prenda.id}">Siguiente: calcular tela ▶</a>
     <p class="provisional">Fórmulas provisionales, pendientes de revisión con el docente del taller.</p>`;
 
@@ -59,6 +64,8 @@ function pintar(main, prenda, molde) {
     const p = molde.piezas[pieza];
     const ultimo = p.pasos.length - 1;
     $('#dibujo').innerHTML = svgPieza(p, paso);
+    $('#dibujo').classList.toggle('ancho', Boolean(p.verAncho));
+    $('#deslizar').hidden = !p.verAncho;
     $('#paso-num').textContent = `${p.nombre} · Paso ${paso + 1} de ${p.pasos.length}${paso === ultimo ? ' · ¡Terminado!' : ''}`;
     $('#paso-texto').textContent = p.pasos[paso];
     $('#anterior').disabled = paso === 0;
@@ -77,7 +84,7 @@ function pintar(main, prenda, molde) {
     actualizar();
   }));
   $('.btn-voz')?.addEventListener('click', () => hablar($('#paso-texto').textContent));
-  $('#imprimir').addEventListener('click', async () => {
+  $('#imprimir')?.addEventListener('click', async () => {
     const { imprimir } = await import('../moldes/impresion.js');
     imprimir(titulo, molde);
   });

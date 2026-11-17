@@ -1,1 +1,231 @@
-// Molde: blusa — medidas que pide, fórmulas, pasos de trazado (puntos A, B, C...) y piezas
+// Molde: blusa básica (delantero al doblez, espalda con cierre, manga corta)
+// Método de los afiches del taller: busto ÷ 4, cintura ÷ 4 + pinza, cadera ÷ 4, cuello ÷ 6,
+// ancho de espalda ÷ 2, busto a busto ÷ 2, alto de busto, talles.
+// ⚠️ PROVISIONAL: reemplazar FORMULAS por las del docente del CEA.
+import { punto as P, largoTramo } from '../geometria.js';
+import { numero as n } from '../../utilidades/formato.js';
+
+export const FORMULAS = {
+  holguraBusto: 1,        // cm que se suman a busto ÷ 4
+  sisaExtra: 11,          // profundidad de sisa = busto ÷ 8 + sisaExtra
+  holguraCadera: 1,       // cm que se suman a cadera ÷ 4
+  pinzaCintura: 3,        // ancho de la pinza de cintura (delantero y espalda)
+  escoteEspalda: 2,       // profundidad del escote de espalda
+  escoteDelantero: 1,     // se suma a cuello ÷ 6 para la profundidad del escote delantero
+  caidaHombro: { espalda: 4, delantero: 4.5 },
+  hombroExtra: { espalda: 1.5, delantero: 1 }, // se suma a ancho de espalda ÷ 2
+  holguraBrazo: 6,        // cm que se suman al contorno de brazo
+  facilidadManga: 1.5,    // la copa mide un poco más que la sisa (se embebe)
+  margen: { escote: 1, hombro: 1.5, sisa: 1, costado: 1.5, ruedo: 2, centroEspalda: 2, manga: 2.5 },
+};
+const F = FORMULAS;
+const mg = F.margen;
+
+// Punto del costado a cierta altura (entre dos puntos)
+const entre = (a, b, y) => P(a.x + (b.x - a.x) * ((y - a.y) / (b.y - a.y)), y);
+
+// Costado: sisa → cintura → cadera → ruedo (si la blusa es corta, termina antes)
+function costado(S, cintura, cadera, yRuedo) {
+  if (yRuedo <= cintura.y) return [S, entre(S, cintura, yRuedo)];
+  if (yRuedo <= cadera.y) return [S, cintura, entre(cintura, cadera, yRuedo)];
+  return [S, cintura, cadera, P(cadera.x, yRuedo)];
+}
+
+const base = (m) => {
+  const c6 = m.cuello / 6;
+  const ancho = m.busto / 4 + F.holguraBusto;
+  const ys = m.busto / 8 + F.sisaExtra;                     // línea de busto / profundidad de sisa
+  const yCinturaEspalda = F.escoteEspalda + m['talle-espalda'];
+  const largoBajoCintura = F.escoteEspalda + m['largo-blusa'] - yCinturaEspalda;
+  return { c6, ancho, ys, yCinturaEspalda, largoBajoCintura };
+};
+
+function espalda(m, b) {
+  const { c6, ancho, ys } = b;
+  const A = P(0, F.escoteEspalda), B = P(c6, 0);
+  const C = P(m['ancho-espalda'] / 2 + F.hombroExtra.espalda, F.caidaHombro.espalda);
+  const D = P(ancho, ys);
+  const yW = b.yCinturaEspalda, yH = yW + m['altura-cadera'], yR = yW + b.largoBajoCintura;
+  const E = P(m.cintura / 4 + F.pinzaCintura, yW), Fc = P(m.cadera / 4 + F.holguraCadera, yH);
+  const lado = costado(D, E, Fc, yR);
+  const R = lado.at(-1), R0 = P(0, yR);
+  const sisa = { a: C, c: P(m['ancho-espalda'] / 2 + 0.5, ys * 0.6), c2: P(m['ancho-espalda'] / 2 + 1.5, ys), b: D };
+  const escote = { a: A, c: P(c6 * 0.8, F.escoteEspalda), b: B };
+  const xp = m['ancho-espalda'] / 4 + 1, p2 = F.pinzaCintura / 2;
+  const rombo = yR > yW + 3;
+  const pinza = yR >= yW
+    ? [{ paso: 5, tipo: 'pinza', p: [P(xp - p2, yW), P(xp, ys + 3), P(xp + p2, yW)] },
+      ...(rombo ? [{ paso: 5, tipo: 'pinza', p: [P(xp - p2, yW), P(xp, Math.min(yH - 4, yR - 3)), P(xp + p2, yW)] }] : [])]
+    : [];
+
+  return {
+    pieza: {
+      nombre: 'Espalda', cortar: 'Cortar 2', alDoblez: false, centro: 'CENTRO ESPALDA · CIERRE',
+      elementos: [
+        { paso: 0, tipo: 'linea', p: [A, R0] }, { paso: 0, tipo: 'punto', p: [A], nombre: 'A' },
+        { paso: 1, tipo: 'curva', p: [escote.a, escote.c, escote.b] }, { paso: 1, tipo: 'punto', p: [B], nombre: 'B', der: true },
+        { paso: 2, tipo: 'linea', p: [B, C] }, { paso: 2, tipo: 'punto', p: [C], nombre: 'C', der: true },
+        { paso: 3, tipo: 'linea', p: [P(0, ys), D], puntos: true },
+        { paso: 3, tipo: 'curva', p: [sisa.a, sisa.c, sisa.c2, sisa.b] }, { paso: 3, tipo: 'punto', p: [D], nombre: 'D', der: true },
+        ...lado.slice(1).map((q, i) => ({ paso: 4, tipo: 'linea', p: [lado[i], q] })),
+        { paso: 4, tipo: 'linea', p: [R, R0] },
+        ...(yR >= yW ? [{ paso: 4, tipo: 'punto', p: [E], nombre: 'E', der: true }] : []),
+        ...pinza,
+      ],
+      pasos: [
+        `Traza la línea del centro de la espalda: desde A baja ${n(yR - A.y)} cm (largo de la blusa).`,
+        `Escote: arriba, marca hacia la derecha cuello ÷ 6 = ${n(c6)} cm (punto B), ${n(F.escoteEspalda)} cm más arriba que A. Une A con B con una curva suave.`,
+        `Hombro: desde el centro mide ancho de espalda ÷ 2 + ${n(F.hombroExtra.espalda)} = ${n(C.x)} cm y baja ${n(F.caidaHombro.espalda)} cm: punto C. Une B con C.`,
+        `Línea de busto: baja busto ÷ 8 + ${n(F.sisaExtra)} = ${n(ys)} cm y mide hacia la derecha busto ÷ 4 + ${n(F.holguraBusto)} = ${n(ancho)} cm: punto D. Une C con D con la curva de la sisa.`,
+        `Costado: desde A baja el talle de espalda (${n(m['talle-espalda'])} cm) y mide cintura ÷ 4 + ${n(F.pinzaCintura)} = ${n(E.x)} cm (punto E). ${yR > yW ? `${n(m['altura-cadera'])} cm más abajo mide cadera ÷ 4 + ${n(F.holguraCadera)} = ${n(Fc.x)} cm. Une D, E y la cadera, y cierra el ruedo.` : 'Une D con E: aquí termina el cuerpo y se une a la falda.'}`,
+        pinza.length
+          ? `Pinza de cintura: a ${n(xp)} cm del centro, ${n(F.pinzaCintura)} cm de ancho en la cintura. Sube hasta ${n(ys + 3)} cm${rombo ? ' y baja hasta la cadera (forma de rombo)' : ''}.`
+          : 'Tu blusa es corta: no lleva pinza de cintura.',
+        `Agrega el margen: ${n(mg.escote)} cm en el escote, ${n(mg.hombro)} en el hombro, ${n(mg.sisa)} en la sisa, ${n(mg.costado)} en el costado, ${n(mg.ruedo)} en el ruedo y ${n(mg.centroEspalda)} en el centro (cierre).`,
+      ],
+      contorno: [
+        { ...escote, margen: mg.escote }, { a: B, b: C, margen: mg.hombro }, { ...sisa, margen: mg.sisa },
+        ...lado.slice(1).map((q, i) => ({ a: lado[i], b: q, margen: mg.costado })),
+        { a: R, b: R0, margen: mg.ruedo }, { a: R0, b: A, margen: mg.centroEspalda },
+      ],
+      rotulo: P(ancho / 2, ys + (yR - ys) * 0.55),
+      hilo: [P(ancho * 0.7, ys + 4), P(ancho * 0.7, Math.max(ys + 10, yR - 5))],
+    },
+    sisa: largoTramo(sisa),
+  };
+}
+
+function delantero(m, b) {
+  const { c6, ancho, ys } = b;
+  const prof = c6 + F.escoteDelantero;
+  const B = P(c6, 0), A = P(0, prof);
+  const C = P(m['ancho-espalda'] / 2 + F.hombroExtra.delantero, F.caidaHombro.delantero);
+  const D = P(ancho, ys);
+  const Pb = P(m['busto-a-busto'] / 2, m['alto-busto']);
+  const yW = m['talle-delantero'], yH = yW + m['altura-cadera'], yR = yW + b.largoBajoCintura;
+  const E = P(m.cintura / 4 + F.pinzaCintura, yW), Fc = P(m.cadera / 4 + F.holguraCadera, yH);
+  const lado = costado(D, E, Fc, yR);
+  const R = lado.at(-1), R0 = P(0, yR);
+  const sisa = { a: C, c: P(m['ancho-espalda'] / 2 - 0.5, ys * 0.6), c2: P(m['ancho-espalda'] / 2, ys), b: D };
+  const escote = { a: B, c: P(c6, prof), b: A };
+
+  // Pinza de costado: el delantero es más largo que la espalda por el busto
+  const exceso = (yW - ys) - (b.yCinturaEspalda - ys);
+  const hayCostado = exceso >= 0.5 && yR > ys + 6 + exceso;
+  const sobreLado = (y) => entre(D, lado[1], y);
+  const pinzaCostado = hayCostado
+    ? [{ paso: 6, tipo: 'pinza', p: [sobreLado(ys + 4), P(Pb.x + 3, Pb.y), sobreLado(ys + 4 + exceso)] }] : [];
+  const p2 = F.pinzaCintura / 2;
+  const rombo = yR > yW + 3;
+  const pinzaCintura = yR >= yW
+    ? [{ paso: 6, tipo: 'pinza', p: [P(Pb.x - p2, yW), P(Pb.x, Pb.y + 2), P(Pb.x + p2, yW)] },
+      ...(rombo ? [{ paso: 6, tipo: 'pinza', p: [P(Pb.x - p2, yW), P(Pb.x, Math.min(yH - 4, yR - 3)), P(Pb.x + p2, yW)] }] : [])]
+    : [];
+
+  return {
+    pieza: {
+      nombre: 'Delantero', cortar: 'Cortar 1 al doblez', alDoblez: true, centro: 'DOBLEZ', lineaCentro: { a: A, b: R0 },
+      elementos: [
+        { paso: 0, tipo: 'linea', p: [A, R0] }, { paso: 0, tipo: 'punto', p: [A], nombre: 'A' },
+        { paso: 1, tipo: 'curva', p: [escote.a, escote.c, escote.b] }, { paso: 1, tipo: 'punto', p: [B], nombre: 'B', der: true },
+        { paso: 2, tipo: 'linea', p: [B, C] }, { paso: 2, tipo: 'punto', p: [C], nombre: 'C', der: true },
+        { paso: 3, tipo: 'linea', p: [P(0, ys), D], puntos: true },
+        { paso: 3, tipo: 'curva', p: [sisa.a, sisa.c, sisa.c2, sisa.b] }, { paso: 3, tipo: 'punto', p: [D], nombre: 'D', der: true },
+        { paso: 4, tipo: 'punto', p: [Pb], nombre: 'P', der: true },
+        ...lado.slice(1).map((q, i) => ({ paso: 5, tipo: 'linea', p: [lado[i], q] })),
+        { paso: 5, tipo: 'linea', p: [R, R0] },
+        ...(yR >= yW ? [{ paso: 5, tipo: 'punto', p: [E], nombre: 'E', der: true }] : []),
+        ...pinzaCostado, ...pinzaCintura,
+      ],
+      pasos: [
+        `Traza la línea del centro (irá al doblez de la tela), desde A hacia abajo.`,
+        `Escote: marca hacia la derecha cuello ÷ 6 = ${n(c6)} cm (punto B) y baja por el centro cuello ÷ 6 + ${n(F.escoteDelantero)} = ${n(prof)} cm (punto A). Une A con B con una curva.`,
+        `Hombro: mide ancho de espalda ÷ 2 + ${n(F.hombroExtra.delantero)} = ${n(C.x)} cm y baja ${n(F.caidaHombro.delantero)} cm: punto C. Une B con C.`,
+        `Línea de busto: baja busto ÷ 8 + ${n(F.sisaExtra)} = ${n(ys)} cm y mide busto ÷ 4 + ${n(F.holguraBusto)} = ${n(ancho)} cm: punto D. Une C con D con la curva de la sisa (más honda que en la espalda).`,
+        `Punto de busto P: desde B baja el alto de busto (${n(m['alto-busto'])} cm) y desde el centro mide busto a busto ÷ 2 = ${n(Pb.x)} cm.`,
+        `Costado: desde B baja el talle delantero (${n(yW)} cm) y mide cintura ÷ 4 + ${n(F.pinzaCintura)} = ${n(E.x)} cm (punto E). ${yR > yW ? `${n(m['altura-cadera'])} cm más abajo, cadera ÷ 4 + ${n(F.holguraCadera)}. Une D, E y la cadera, y cierra el ruedo.` : 'Une D con E: aquí termina el cuerpo y se une a la falda.'}`,
+        [hayCostado ? `Pinza de costado: ${n(exceso)} cm de ancho, 4 cm debajo de la sisa, apuntando al busto (termina 3 cm antes de P).` : '',
+          pinzaCintura.length ? `Pinza de cintura: debajo de P, ${n(F.pinzaCintura)} cm de ancho en la cintura, desde 2 cm bajo P hasta la ${rombo ? 'cadera' : 'cintura'}.` : '',
+        ].join(' ').trim() || 'Con estas medidas no hacen falta pinzas.',
+        `Agrega el margen: ${n(mg.escote)} cm en el escote, ${n(mg.hombro)} en el hombro, ${n(mg.sisa)} en la sisa, ${n(mg.costado)} en el costado y ${n(mg.ruedo)} en el ruedo. El doblez no lleva margen.`,
+      ],
+      contorno: [
+        { ...escote, margen: mg.escote }, { a: A, b: R0, margen: 0 }, { a: R0, b: R, margen: mg.ruedo },
+        ...lado.slice(1).map((q, i) => ({ a: lado[lado.length - 1 - i], b: lado[lado.length - 2 - i], margen: mg.costado })),
+        { a: D, c: sisa.c2, c2: sisa.c, b: C, margen: mg.sisa }, { a: C, b: B, margen: mg.hombro },
+      ],
+      rotulo: P(ancho / 2 + 2, ys + (yR - ys) * 0.6),
+      hilo: [P(ancho * 0.8, ys + 4), P(ancho * 0.8, Math.max(ys + 10, yR - 5))],
+    },
+    sisa: largoTramo(sisa),
+  };
+}
+
+// Manga corta: la altura de la copa se busca para que la copa mida lo mismo que la sisa (+ facilidad)
+export function manga(m, sisaTotal) {
+  const A = m['contorno-brazo'] + F.holguraBrazo;
+  const L = m['largo-manga'];
+  const objetivo = (sisaTotal + F.facilidadManga) / 2;
+  const media = (h) => ({ a: P(0, h), c: P(A * 0.2, h), c2: P(A * 0.3, 0), b: P(A / 2, 0) });
+  let bajo = 2, alto = Math.max(3, L - 2);
+  for (let i = 0; i < 30; i++) {
+    const h = (bajo + alto) / 2;
+    if (largoTramo(media(h)) < objetivo) bajo = h; else alto = h;
+  }
+  const h = (bajo + alto) / 2;
+  const izq = media(h);
+  const der = { a: P(A / 2, 0), c: P(A * 0.7, 0), c2: P(A * 0.8, h), b: P(A, h) };
+  const U1 = P(0, h), U2 = P(A, h), B1 = P(1, L), B2 = P(A - 1, L), T = P(A / 2, 0);
+
+  return {
+    nombre: 'Manga', cortar: 'Cortar 2', alDoblez: false,
+    elementos: [
+      { paso: 0, tipo: 'linea', p: [U1, U2] }, { paso: 0, tipo: 'punto', p: [U1], nombre: 'A' }, { paso: 0, tipo: 'punto', p: [U2], nombre: 'B', der: true },
+      { paso: 1, tipo: 'linea', p: [P(A / 2, h), T], puntos: true }, { paso: 1, tipo: 'punto', p: [T], nombre: 'C', der: true },
+      { paso: 2, tipo: 'curva', p: [izq.a, izq.c, izq.c2, izq.b] }, { paso: 2, tipo: 'curva', p: [der.a, der.c, der.c2, der.b] },
+      { paso: 3, tipo: 'linea', p: [U1, B1] }, { paso: 3, tipo: 'linea', p: [U2, B2] }, { paso: 3, tipo: 'linea', p: [B1, B2] },
+    ],
+    pasos: [
+      `Traza una línea A–B del ancho de la manga: contorno de brazo + ${n(F.holguraBrazo)} = ${n(A)} cm.`,
+      `Desde el centro de A–B sube ${n(h)} cm (altura de copa) y marca C. La app la calculó para que la manga calce en tu sisa de ${n(sisaTotal)} cm.`,
+      'Une A con C y C con B con curvas suaves: hacia adentro cerca de A y B, y redondeada arriba (la copa).',
+      `Desde A y B baja hasta el largo de manga (${n(L)} cm), entrando 1 cm a cada lado. Une abajo.`,
+      `Agrega el margen: ${n(mg.sisa)} cm en la copa, ${n(mg.costado)} en los costados y ${n(mg.manga)} en el ruedo.`,
+    ],
+    contorno: [
+      { ...izq, margen: mg.sisa }, { ...der, margen: mg.sisa },
+      { a: U2, b: B2, margen: mg.costado }, { a: B2, b: B1, margen: mg.manga }, { a: B1, b: U1, margen: mg.costado },
+    ],
+    rotulo: P(A / 2, h + (L - h) * 0.45 + 1),
+    hilo: [P(A / 2, h + 1), P(A / 2, Math.max(h + 3, L - 2))],
+    alturaCopa: h, ancho: A,
+  };
+}
+
+// Cuerpo (delantero + espalda) y sisa, para reutilizar en el vestido
+export function cuerpo(m) {
+  const b = base(m);
+  const del = delantero(m, b), esp = espalda(m, b);
+  return { b, delantero: del.pieza, espalda: esp.pieza, sisa: del.sisa + esp.sisa };
+}
+
+export function construir(m) {
+  const b = base(m);
+  const del = delantero(m, b), esp = espalda(m, b);
+  const sisaTotal = del.sisa + esp.sisa;
+  const mangaCorta = manga(m, sisaTotal);
+  return {
+    calculos: [
+      { nombre: 'Ancho en el busto', formula: `busto ÷ 4 + ${n(F.holguraBusto)}`, valor: b.ancho },
+      { nombre: 'Profundidad de sisa', formula: `busto ÷ 8 + ${n(F.sisaExtra)}`, valor: b.ys },
+      { nombre: 'Ancho de cintura', formula: `cintura ÷ 4 + ${n(F.pinzaCintura)} (pinza)`, valor: m.cintura / 4 + F.pinzaCintura },
+      { nombre: 'Ancho de cadera', formula: `cadera ÷ 4 + ${n(F.holguraCadera)}`, valor: m.cadera / 4 + F.holguraCadera },
+      { nombre: 'Escote', formula: 'cuello ÷ 6', valor: b.c6 },
+      { nombre: 'Busto a busto ÷ 2', formula: 'tu medida ÷ 2', valor: m['busto-a-busto'] / 2 },
+      { nombre: 'Sisa (delantero + espalda)', formula: 'medida en el molde', valor: sisaTotal },
+      { nombre: 'Altura de copa de la manga', formula: 'calculada para calzar en la sisa', valor: mangaCorta.alturaCopa },
+    ],
+    piezas: [del.pieza, esp.pieza, mangaCorta],
+    rectangulos: [],
+  };
+}

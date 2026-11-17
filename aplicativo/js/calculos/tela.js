@@ -3,6 +3,7 @@
 // siempre queda a lo largo de la tela.
 import { lineaDeCorte } from '../moldes/dibujo-svg.js';
 import { caja } from '../moldes/geometria.js';
+import { numero } from '../utilidades/formato.js';
 
 export const ANCHOS_COMUNES = [90, 115, 150, 160]; // cm
 export const EXTRA = 10; // cm por si la tela encoge o la cortan torcida
@@ -12,6 +13,7 @@ export function piezasDeMolde(molde) {
   const piezas = molde.piezas.map((p) => {
     const puntos = lineaDeCorte(p);
     const c = caja(puntos);
+    if (p.paneles) return { nombre: p.nombre, paneles: true, ancho: c.ancho, alto: c.alto };
     return {
       nombre: p.nombre, doblez: p.alDoblez,
       formas: [{ ancho: c.ancho, alto: c.alto, puntos: puntos.map((q) => ({ x: q.x - c.x, y: q.y - c.y })) }],
@@ -27,9 +29,30 @@ export function piezasDeMolde(molde) {
   return [...piezas, ...rectangulos];
 }
 
+// Una pieza muy ancha (falda de tablones) se corta en paneles que se unen con costura.
+// En la tela doblada cada corte da 2 paneles; cada panel lleva margen de unión a los dos lados.
+const UNION = 1.5;
+function dividirEnPaneles(pieza, util) {
+  const neto = pieza.ancho - 2 * UNION;
+  const cortes = Math.ceil(neto / (2 * (util - 2 * UNION)));
+  const ancho = neto / (2 * cortes) + 2 * UNION;
+  const nota = `La ${pieza.nombre.toLowerCase()} se corta en ${2 * cortes} paneles de ${numero(Math.round(ancho * 10) / 10)} × ${numero(Math.round(pieza.alto * 10) / 10)} cm. Únelos con costuras de ${numero(UNION)} cm escondidas dentro de un tablón (en una va el cierre).`;
+  const paneles = Array.from({ length: cortes }, (_, i) => ({
+    nombre: cortes > 1 ? `Paneles ${i + 1}` : 'Paneles', doblez: false, formas: [{ ancho, alto: pieza.alto }],
+  }));
+  return { paneles, nota };
+}
+
 // Acomoda las piezas en filas sobre la tela doblada. Devuelve el largo necesario.
-export function planoDeCorte(piezas, anchoTela) {
+export function planoDeCorte(todas, anchoTela) {
   const util = anchoTela / 2;
+  const notas = [];
+  const piezas = todas.flatMap((p) => {
+    if (!p.paneles) return [p];
+    const { paneles, nota } = dividirEnPaneles(p, util);
+    notas.push(nota);
+    return paneles;
+  });
   const filas = [];
   const ordenadas = [...piezas].sort((a, b) => b.formas[0].alto - a.formas[0].alto);
 
@@ -53,7 +76,7 @@ export function planoDeCorte(piezas, anchoTela) {
 
   const largo = filas.reduce((s, f) => s + f.alto, 0);
   return {
-    anchoTela, util, largo,
+    anchoTela, util, largo, notas,
     comprar: Math.ceil((largo + EXTRA) / 10) * 10,
     colocadas: filas.flatMap((f) => f.piezas),
   };

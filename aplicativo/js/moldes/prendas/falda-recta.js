@@ -59,7 +59,7 @@ function mitad(cual, m, ancho, cintura, pinza) {
     { paso: 2, tipo: 'punto', p: [Fp], nombre: 'F', der: true },
     { paso: 3, tipo: 'linea', p: [A1, G] },
     { paso: 3, tipo: 'punto', p: [G], nombre: 'G', der: true },
-    ...(espalda ? [{ paso: 3, tipo: 'punto', p: [A1], nombre: 'A1' }] : []),
+    ...(espalda ? [{ paso: 3, tipo: 'punto', p: [A1], nombre: 'A1', der: true }] : []),
     { paso: 4, tipo: 'curva', p: [G, control, E] },
     ...(hayPinza ? [{ paso: 5, tipo: 'pinza', p: [enCintura(xp - pinza / 2), P(xp, enCintura(xp).y + largoPinza), enCintura(xp + pinza / 2)] }] : []),
   ];

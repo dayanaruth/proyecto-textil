@@ -19,6 +19,12 @@ const REGLAS = [
     texto: 'La cintura es más grande que la cadera. Revisa si está bien.' },
   { usa: ['altura-cadera', 'largo-falda'], falla: (m) => m['altura-cadera'] >= m['largo-falda'],
     texto: 'El largo de la falda es menor que la altura de cadera. Revisa si está bien.' },
+  { usa: ['talle-delantero', 'talle-espalda'], falla: (m) => m['talle-delantero'] < m['talle-espalda'],
+    texto: 'El talle delantero suele ser más largo que el de espalda (pasa por el busto). Revisa si está bien.' },
+  { usa: ['alto-busto', 'talle-delantero'], falla: (m) => m['alto-busto'] >= m['talle-delantero'],
+    texto: 'El alto de busto debe ser menor que el talle delantero. Revisa las dos medidas.' },
+  { usa: ['busto', 'ancho-espalda'], falla: (m) => m['ancho-espalda'] > m.busto / 2,
+    texto: 'El ancho de espalda parece muy grande comparado con el busto. Revisa si está bien.' },
 ];
 
 export const avisos = (medidas, ids) =>

@@ -9,9 +9,24 @@ const INSUMOS_FALDA = [
   { nombre: 'Botón o gancho', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Entretela', cantidad: '0,1', unidad: 'm' },
 ];
+// Medidas de la blusa en el orden de los afiches del taller
+const BLUSA = ['busto', 'cintura', 'cadera', 'cuello', 'talle-espalda', 'talle-delantero', 'ancho-espalda',
+  'busto-a-busto', 'alto-busto', 'altura-cadera', 'largo-blusa', 'contorno-brazo', 'largo-manga'];
+const INSUMOS_BLUSA = [
+  { nombre: 'Cierre invisible', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
+  { nombre: 'Entretela (escote)', cantidad: '0,1', unidad: 'm' },
+];
+// Vestido: como la blusa, pero en vez del largo de blusa pide el largo de la falda
+const VESTIDO = BLUSA.map((id) => (id === 'largo-blusa' ? 'largo-falda' : id));
+const INSUMOS_VESTIDO = [
+  { nombre: 'Cierre invisible (50 cm)', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
+  { nombre: 'Entretela (escote)', cantidad: '0,1', unidad: 'm' },
+];
 
 export const PRENDAS = [
-  { id: 'blusa', nombre: 'Blusa básica', img: img('blusa') },
+  { id: 'blusa', nombre: 'Blusa básica', img: img('blusa'), medidas: BLUSA, insumos: INSUMOS_BLUSA },
   { id: 'falda-recta', nombre: 'Falda recta', img: img('falda-recta'), medidas: FALDA, insumos: INSUMOS_FALDA },
   {
     id: 'camisa', nombre: 'Camisa básica', detalle: 'Dama o varón', img: img('camisa-varon'),
@@ -28,7 +43,7 @@ export const PRENDAS = [
     ],
   },
   { id: 'falda-uniforme', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA },
-  { id: 'vestido', nombre: 'Vestido básico', img: img('vestido') },
+  { id: 'vestido', nombre: 'Vestido básico', img: img('vestido'), medidas: VESTIDO, insumos: INSUMOS_VESTIDO },
 ];
 
 // Busca una prenda o una variante por su id

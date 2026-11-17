@@ -75,6 +75,7 @@ function resultado(plano, piezas) {
       <p>de tela de ${metros(plano.anchoTela)} de ancho</p>
       <p class="resultado-detalle">Las piezas ocupan ${metros(plano.largo)}. Se agregan unos ${EXTRA} cm por si la tela encoge o la cortan torcida.</p>
     </div>
+    ${plano.notas.map((t) => `<p class="nota nota-info">✂️ ${t}</p>`).join('')}
     <h2 class="subtitulo">Cómo acomodar las piezas</h2>
     <p class="ayuda">Dobla la tela a lo largo, orillo con orillo. Las piezas «al doblez» van pegadas al doblez.</p>
     <div class="lienzo-molde lienzo-tela">${dibujoPlano(plano)}</div>

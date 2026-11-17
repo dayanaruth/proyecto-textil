@@ -1,12 +1,31 @@
 // Geometría del molde (todo en cm). Un contorno es una lista de tramos:
-// { a, b, margen } recto, o { a, c, b, margen } curvo (c = punto de control).
+// { a, b, margen } recto, { a, c, b, margen } curvo, o { a, c, c2, b, margen } curva suave.
 export const punto = (x, y) => ({ x, y });
 
-// Punto de una curva suave (Bézier cuadrática) en t ∈ [0, 1]
-const enCurva = ({ a, c, b }, t) => punto(
-  (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t ** 2 * b.x,
-  (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t ** 2 * b.y,
-);
+// Punto de una curva (Bézier cuadrática o cúbica) en t ∈ [0, 1]
+function enCurva({ a, c, c2, b }, t) {
+  const u = 1 - t;
+  if (c2) {
+    return punto(
+      u ** 3 * a.x + 3 * u * u * t * c.x + 3 * u * t * t * c2.x + t ** 3 * b.x,
+      u ** 3 * a.y + 3 * u * u * t * c.y + 3 * u * t * t * c2.y + t ** 3 * b.y,
+    );
+  }
+  return punto(u * u * a.x + 2 * u * t * c.x + t * t * b.x, u * u * a.y + 2 * u * t * c.y + t * t * b.y);
+}
+
+// Largo de un tramo recto o curvo (en cm)
+export function largoTramo(t, divisiones = 40) {
+  if (!t.c) return Math.hypot(t.b.x - t.a.x, t.b.y - t.a.y);
+  let total = 0;
+  let antes = t.a;
+  for (let i = 1; i <= divisiones; i++) {
+    const p = enCurva(t, i / divisiones);
+    total += Math.hypot(p.x - antes.x, p.y - antes.y);
+    antes = p;
+  }
+  return total;
+}
 
 // Convierte el contorno en puntos (las curvas en tramos cortos), con el margen de cada tramo
 export function aPoligono(tramos, divisiones = 12) {

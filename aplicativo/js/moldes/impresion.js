@@ -17,7 +17,7 @@ function hojasDe(pieza) {
 }
 
 export function imprimir(titulo, molde) {
-  const grupos = molde.piezas.map(hojasDe);
+  const grupos = molde.piezas.filter((p) => p.imprimir !== false).map(hojasDe);
   const total = 1 + grupos.reduce((s, g) => s + g.hojas.length, 0);
   let numero = 1;
 

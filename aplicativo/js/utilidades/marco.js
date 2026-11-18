@@ -1,8 +1,5 @@
-// VISTA DE PRUEBA (#/marco): inicio con un "marco ilustrado" animado.
-// Figuras de costura en línea (contorno) con una mancha tipo acuarela, que llegan volando
-// desde los costados, se dibujan solas y quedan flotando a los lados.
-// Para quitarla: borrar este archivo, css/marco.css y la ruta "marco" en app.js.
-import * as inicio from './inicio.js';
+// Marco ilustrado animado para la bienvenida: figuras de costura en contorno con una mancha
+// tipo acuarela, que llegan volando desde los costados, se dibujan solas y quedan flotando.
 
 // Dibujos de contorno (viewBox 0 0 100 100). "t" = trazo
 // Las líneas punteadas (costuras) usan la clase "trazo-fijo": no se dibujan, aparecen al final
@@ -33,16 +30,16 @@ const FIGURAS = {
 
 // Dónde queda cada figura: lado, altura (% de la pantalla), tamaño, giro final, color de acuarela
 const PIEZAS = [
-  { f: 'tijeras', lado: 'izq', y: 17, t: 9, r: -12, color: '#E8A0B4' },
-  { f: 'carrete', lado: 'izq', y: 36, t: 7.5, r: 8, color: '#A9C6E8' },
-  { f: 'cinta', lado: 'izq', y: 55, t: 8.5, r: -6, color: '#F2D49B' },
-  { f: 'botones', lado: 'izq', y: 73, t: 7, r: 10, color: '#B9D8C2' },
-  { f: 'dedal', lado: 'izq', y: 90, t: 5.5, r: -14, color: '#CDB8E0' },
-  { f: 'maquina', lado: 'der', y: 16, t: 10, r: 6, color: '#B9D8C2' },
-  { f: 'molde', lado: 'der', y: 34, t: 8.5, r: -8, color: '#F2C6A0' },
-  { f: 'aguja', lado: 'der', y: 52, t: 7.5, r: 12, color: '#E8A0B4' },
-  { f: 'alfiletero', lado: 'der', y: 70, t: 7.5, r: -6, color: '#A9C6E8' },
-  { f: 'maniqui', lado: 'der', y: 88, t: 7, r: 4, color: '#F2D49B' },
+  { f: 'tijeras', ym: 18, lado: 'izq', y: 17, t: 9, r: -12, color: '#E8A0B4' },
+  { f: 'carrete', ym: 50, lado: 'izq', y: 36, t: 7.5, r: 8, color: '#A9C6E8' },
+  { f: 'cinta', ym: 82, lado: 'izq', y: 55, t: 8.5, r: -6, color: '#F2D49B' },
+  { f: 'botones', extra: true, lado: 'izq', y: 73, t: 7, r: 10, color: '#B9D8C2' },
+  { f: 'dedal', extra: true, lado: 'izq', y: 90, t: 5.5, r: -14, color: '#CDB8E0' },
+  { f: 'maquina', ym: 20, lado: 'der', y: 16, t: 10, r: 6, color: '#B9D8C2' },
+  { f: 'molde', ym: 52, lado: 'der', y: 34, t: 8.5, r: -8, color: '#F2C6A0' },
+  { f: 'aguja', ym: 84, lado: 'der', y: 52, t: 7.5, r: 12, color: '#E8A0B4' },
+  { f: 'alfiletero', extra: true, lado: 'der', y: 70, t: 7.5, r: -6, color: '#A9C6E8' },
+  { f: 'maniqui', extra: true, lado: 'der', y: 88, t: 7, r: 4, color: '#F2D49B' },
 ];
 
 function crearMarco() {
@@ -58,7 +55,7 @@ function crearMarco() {
       </filter>
     </svg>
     ${PIEZAS.map((p, i) => `
-      <div class="pieza pieza-${p.lado}" style="--y:${p.y}%; --t:${p.t}rem; --r:${p.r}deg; --d:${i * 0.12 + (p.lado === 'der' ? 0.06 : 0)}s">
+      <div class="pieza pieza-${p.lado}${p.extra ? ' pieza-extra' : ''}" style="--y:${p.y}%; --ym:${p.ym ?? p.y}%; --t:${p.t}rem; --r:${p.r}deg; --d:${i * 0.12 + (p.lado === 'der' ? 0.06 : 0)}s">
         <div class="pieza-dentro" style="--f:${(i % 4) * -1.3}s">
           <svg viewBox="0 0 100 100">
             <ellipse class="mancha" cx="52" cy="54" rx="40" ry="34" fill="${p.color}" filter="url(#acuarela)"/>
@@ -74,26 +71,15 @@ function ponerEstilos() {
   document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: 'css/marco.css' }));
 }
 
-export function mostrar(main) {
+// Activa el marco (solo en la bienvenida). Las figuras llegan una vez y se quitan al salir.
+export function activarMarco() {
   ponerEstilos();
-  const destino = inicio.mostrar(main);
-  document.querySelector('.marco-capa')?.remove();
+  if (!document.querySelector('.marco-capa')) document.body.prepend(crearMarco());
   document.body.classList.add('con-marco');
-  document.body.prepend(crearMarco());
-
-  // Aviso de vista de prueba con botón para repetir la animación
-  const aviso = document.createElement('p');
-  aviso.className = 'aviso-prueba';
-  aviso.innerHTML = 'Vista de prueba · <button type="button">▶ Repetir animación</button> · <a href="#/">Volver al inicio actual</a>';
-  aviso.querySelector('button').addEventListener('click', () => {
-    document.querySelector('.marco-capa')?.replaceWith(crearMarco());
-  });
-  main.prepend(aviso);
-
-  // Al salir de esta pantalla se quita el marco
-  window.addEventListener('hashchange', () => {
+  const quitar = () => {
+    if (location.hash.startsWith('#/bienvenida')) return window.addEventListener('hashchange', quitar, { once: true });
     document.querySelector('.marco-capa')?.remove();
     document.body.classList.remove('con-marco');
-  }, { once: true });
-  return destino;
+  };
+  window.addEventListener('hashchange', quitar, { once: true });
 }

@@ -1,13 +1,18 @@
-/* VISTA DE PRUEBA: marco ilustrado animado (#/marco). Se puede borrar sin afectar nada. */
-.marco-capa { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+/* Marco ilustrado animado de la bienvenida (js/utilidades/marco.js) */
+.marco-capa {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  --contenido: 34rem;                                   /* ancho del contenido de la bienvenida */
+  --hueco: calc((100vw - var(--contenido)) / 2);        /* espacio libre a cada costado */
+}
 .con-marco main { position: relative; z-index: 1; }
+.con-marco .barra { z-index: 10; }
 /* Con el marco, el fondo queda solo con las manchas de color (sin el dibujo repetido) */
 .con-marco { background-image: radial-gradient(circle at 8% 0%, var(--mancha-1), transparent 38%), radial-gradient(circle at 95% 100%, var(--mancha-2), transparent 42%); }
-.con-marco .barra { z-index: 10; }
 
-.pieza { position: absolute; top: var(--y); width: var(--t); translate: 0 -50%; }
-.pieza-izq { left: max(1rem, calc((100vw - 42rem) / 4 - var(--t) / 2)); animation: llegar-izq 1.2s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d); }
-.pieza-der { right: max(1rem, calc((100vw - 42rem) / 4 - var(--t) / 2)); animation: llegar-der 1.2s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d); }
+/* Cada figura se centra en su costado y nunca es más ancha que el espacio libre */
+.pieza { position: absolute; top: var(--y); width: min(var(--t), calc(var(--hueco) * .6)); }
+.pieza-izq { left: calc(var(--hueco) / 2); translate: -50% -50%; animation: llegar-izq 1.2s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d); }
+.pieza-der { right: calc(var(--hueco) / 2); translate: 50% -50%; animation: llegar-der 1.2s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d); }
 .pieza-dentro { animation: mecerse 6s ease-in-out infinite; animation-delay: var(--f); }
 .pieza svg { display: block; width: 100%; height: auto; overflow: visible; }
 
@@ -35,23 +40,20 @@
 
 /* La mancha de acuarela aparece al final */
 .mancha { transform-box: fill-box; transform-origin: center; opacity: 0; animation: tenir 1.4s ease forwards; animation-delay: calc(var(--d) + 1s); }
-@keyframes tenir { from { opacity: 0; transform: scale(.7); transform-origin: center; } to { opacity: .55; transform: scale(1); } }
+@keyframes tenir { from { opacity: 0; transform: scale(.7); } to { opacity: .55; transform: scale(1); } }
 
 @media (prefers-color-scheme: dark) {
   .linea { stroke: #F1DCD3; }
   @keyframes tenir { from { opacity: 0; } to { opacity: .28; } }
 }
 
-/* Celular: los costados son angostos, así que las figuras se asoman desde los bordes */
+/* Pantallas angostas (celular, tablet vertical): 3 figuras por lado, chicas, asomándose desde el borde */
 @media (max-width: 760px) {
-  .pieza { width: calc(var(--t) * .5); opacity: .32; }
-  .pieza-izq { left: calc(var(--t) * -.26); }
-  .pieza-der { right: calc(var(--t) * -.26); }
+  .pieza { top: var(--ym); width: 3.6rem; opacity: .5; }
+  .pieza-izq { left: 0; translate: -38% -50%; }
+  .pieza-der { right: 0; translate: 38% -50%; }
+  .pieza-extra { display: none; }
 }
-
-.aviso-prueba { margin-bottom: .5rem; padding: .375rem .75rem; text-align: center; font-size: .85rem; background: var(--nota-fondo); color: var(--nota-texto); border-radius: 999px; }
-.aviso-prueba button { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer; text-decoration: underline; }
-.aviso-prueba a { color: inherit; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
   .pieza, .pieza-dentro, .trazo, .mancha, .trazo-fijo { animation: none !important; stroke-dashoffset: 0; opacity: 1; }

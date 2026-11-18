@@ -2,6 +2,7 @@
 import { guardar } from '../datos/almacenamiento.js';
 import { PRENDAS } from '../datos/prendas.js';
 import { puedeInstalar, esIphone, instalar, instalada } from '../utilidades/pwa.js';
+import { activarMarco } from '../utilidades/marco.js';
 
 // Dibujo de un celular con el ícono de la app y una flecha de "instalar"
 const CELULAR = `
@@ -59,6 +60,7 @@ export function mostrar(main) {
   const zona = document.createElement('div');
   zona.className = 'bienvenida-zona';
   main.replaceChildren(zona);
+  activarMarco();
 
   const terminar = () => {
     guardar('bienvenida', true);

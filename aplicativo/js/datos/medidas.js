@@ -5,87 +5,87 @@ export const MEDIDAS = {
     como: 'Rodea con la cinta la parte más delgada de la cintura, sin apretar.',
   },
   'cadera': {
-    nombre: 'Contorno de cadera', min: 50, max: 170,
+    nombre: 'Contorno de cadera', min: 45, max: 170,
     como: 'Rodea la parte más ancha de la cadera, con los pies juntos.',
   },
   'altura-cadera': {
-    nombre: 'Altura de cadera', min: 10, max: 30,
+    nombre: 'Altura de cadera', min: 8, max: 30,
     como: 'Mide de costado, desde la cintura hasta la parte más ancha de la cadera.',
   },
   'largo-falda': {
-    nombre: 'Largo de falda', min: 30, max: 120,
+    nombre: 'Largo de falda', min: 20, max: 120,
     como: 'Mide de costado, desde la cintura hasta donde quieres que llegue la falda.',
   },
   'busto': {
-    nombre: 'Contorno de busto', min: 60, max: 160,
+    nombre: 'Contorno de busto', min: 45, max: 160,
     como: 'Rodea la parte más alta del busto, pasando por debajo de los brazos, sin apretar.',
   },
   'cuello': {
-    nombre: 'Contorno de cuello', min: 25, max: 55,
+    nombre: 'Contorno de cuello', min: 20, max: 55,
     como: 'Rodea la base del cuello, donde se apoya el cuello de una camisa.',
   },
   'talle-espalda': {
-    nombre: 'Talle de espalda', min: 30, max: 55,
+    nombre: 'Talle de espalda', min: 18, max: 55,
     como: 'Por la espalda, desde el hueso de la base del cuello hasta la cintura.',
   },
   'talle-delantero': {
-    nombre: 'Talle delantero', min: 32, max: 60,
+    nombre: 'Talle delantero', min: 18, max: 60,
     como: 'Desde el cuello, junto al hombro, pasando por el punto más alto del busto, hasta la cintura.',
   },
   'ancho-espalda': {
-    nombre: 'Ancho de espalda', min: 25, max: 55,
+    nombre: 'Ancho de espalda', min: 18, max: 55,
     como: 'Por la espalda, de un brazo al otro, a unos 10 cm debajo del cuello.',
   },
   'busto-a-busto': {
-    nombre: 'Busto a busto', min: 12, max: 28,
+    nombre: 'Busto a busto', min: 8, max: 28,
     como: 'Distancia entre las dos puntas del busto.',
   },
   'alto-busto': {
-    nombre: 'Alto de busto', min: 18, max: 38,
+    nombre: 'Alto de busto', min: 12, max: 38,
     como: 'Desde el cuello, junto al hombro, hasta la punta del busto.',
   },
   'largo-blusa': {
-    nombre: 'Largo de blusa', min: 40, max: 95,
+    nombre: 'Largo de blusa', min: 28, max: 95,
     como: 'Por la espalda, desde la base del cuello hasta donde quieres que llegue la blusa.',
   },
   'contorno-brazo': {
-    nombre: 'Contorno de brazo', min: 18, max: 55,
+    nombre: 'Contorno de brazo', min: 14, max: 55,
     como: 'Rodea la parte más ancha del brazo, debajo de la axila, sin apretar.',
   },
   'largo-manga': {
-    nombre: 'Largo de manga', min: 8, max: 75,
+    nombre: 'Largo de manga', min: 6, max: 75,
     como: 'Desde la punta del hombro hasta donde quieres que llegue la manga (corta: unos 20 cm).',
   },
   'pecho': {
-    nombre: 'Contorno de pecho', min: 60, max: 160,
+    nombre: 'Contorno de pecho', min: 45, max: 160,
     como: 'Rodea la parte más ancha del pecho, por debajo de los brazos, sin apretar.',
   },
   'largo-camisa': {
-    nombre: 'Largo de camisa', min: 45, max: 100,
+    nombre: 'Largo de camisa', min: 30, max: 100,
     como: 'Por la espalda, desde la base del cuello hasta donde quieres que llegue la camisa.',
   },
   'largo-manga-larga': {
-    nombre: 'Largo de manga', min: 35, max: 85,
+    nombre: 'Largo de manga', min: 22, max: 85,
     como: 'Con el brazo un poco doblado, desde la punta del hombro hasta el hueso de la muñeca.',
   },
   'muneca': {
-    nombre: 'Contorno de muñeca', min: 10, max: 30,
+    nombre: 'Contorno de muñeca', min: 9, max: 30,
     como: 'Rodea la muñeca, justo encima del hueso.',
   },
   'tiro': {
-    nombre: 'Altura de tiro', min: 18, max: 40,
+    nombre: 'Altura de tiro', min: 14, max: 40,
     como: 'Sentada en una silla dura: de costado, desde la cintura hasta el asiento.',
   },
   'altura-rodilla': {
-    nombre: 'Altura de rodilla', min: 40, max: 75,
+    nombre: 'Altura de rodilla', min: 22, max: 75,
     como: 'De costado, desde la cintura hasta la mitad de la rodilla.',
   },
   'largo-pantalon': {
-    nombre: 'Largo de pantalón', min: 60, max: 125,
+    nombre: 'Largo de pantalón', min: 40, max: 125,
     como: 'De costado, desde la cintura hasta donde quieres que llegue el pantalón (con zapatos).',
   },
   'bota': {
-    nombre: 'Ancho de bota', min: 26, max: 70,
+    nombre: 'Ancho de bota', min: 20, max: 70,
     como: 'Contorno que quieres en el ruedo del pantalón. Recto: unos 40 a 46 cm.',
   },
 };

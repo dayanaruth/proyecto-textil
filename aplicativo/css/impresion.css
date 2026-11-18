@@ -39,3 +39,9 @@
   .hoja { break-after: page; }
   .hoja:last-child { break-after: auto; }
 }
+
+/* Cotización impresa */
+@media print {
+  #impresion .documento-cot { border: 1px solid #999; }
+  #impresion .documento-cot header { background: #9E2F45; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

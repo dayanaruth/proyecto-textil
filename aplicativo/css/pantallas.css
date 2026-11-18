@@ -258,3 +258,67 @@
 .documento-cot .tabla-cot tfoot td:last-child { color: #9E2F45; }
 .doc-datos { margin: 0; padding-left: 1.25rem; }
 .lista-cantidades .contador-cant { margin-left: auto; }
+
+/* Herramientas: conversor */
+.resultados-conv { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: .5rem 0 1rem; }
+.resultado-conv { display: grid; justify-items: center; gap: .125rem; padding: .75rem .25rem; text-align: center; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
+.resultado-conv b { font-size: 1.35rem; line-height: 1.1; word-break: break-all; }
+.resultado-conv span { color: var(--texto-suave); font-size: .85rem; }
+.resultado-conv small { color: var(--primario); font-weight: 600; font-size: .8rem; }
+.regla svg { width: 100%; height: auto; display: block; margin-bottom: 1rem; }
+.equivalencias ul { padding-left: 1.25rem; display: grid; gap: .25rem; }
+
+/* Herramientas: guía */
+.consejos { list-style: none; padding: 0; margin: 0; display: grid; gap: .625rem; }
+.consejos li { display: flex; gap: .75rem; align-items: flex-start; }
+.consejos li span { font-size: 1.5rem; line-height: 1.2; flex: none; }
+.progreso { height: .5rem; margin-bottom: .75rem; background: var(--borde); border-radius: 999px; overflow: hidden; }
+.progreso span { display: block; height: 100%; background: var(--primario); border-radius: 999px; transition: width .2s; }
+.aviso-icono.centrada { font-size: 3rem; }
+
+/* Herramientas: diccionario */
+.selector-enlace {
+  flex: 1 1 5rem; display: grid; place-items: center; min-height: 3rem; padding: 0 .5rem;
+  border: 2px solid var(--borde); border-radius: 999px; background: var(--superficie); color: var(--texto); font-weight: 700; text-decoration: none;
+}
+.selector-enlace[aria-current="true"] { background: var(--primario); border-color: var(--primario); color: var(--primario-texto); }
+#buscar { margin-bottom: 1rem; }
+.fichas { display: grid; gap: .75rem; }
+@media (min-width: 40rem) { .fichas { grid-template-columns: 1fr 1fr; } }
+.ficha-palabra { display: flex; gap: .875rem; padding: .75rem; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
+.ficha-palabra[hidden] { display: none; }
+.ficha-dibujo { flex: none; width: 7rem; display: grid; place-items: center; background: var(--lienzo); border-radius: 10px; padding: .25rem; }
+.ficha-dibujo svg { width: 100%; height: auto; display: block; }
+.ficha-texto { flex: 1; min-width: 0; position: relative; }
+.ficha-texto h2 { font-size: 1.1rem; margin-bottom: .25rem; padding-right: 2.75rem; }
+.ficha-texto p { font-size: .95rem; color: var(--texto-suave); }
+.btn-voz-chico { position: absolute; top: -.25rem; right: 0; width: 2.5rem; height: 2.5rem; font-size: 1.05rem; }
+
+/* Herramientas: ejercicios */
+.pregunta { font-size: 1.3rem; margin-bottom: .75rem; }
+.cita { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--superficie); border-left: 4px solid var(--primario); border-radius: 8px; font-style: italic; }
+.opciones-texto { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.opciones-dibujo { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; margin-bottom: 1rem; }
+.opcion {
+  min-height: 3.5rem; padding: .625rem 1rem; cursor: pointer; text-align: left; font-weight: 600;
+  background: var(--superficie); color: var(--texto); border: 2px solid var(--borde); border-radius: var(--radio);
+}
+.opciones-dibujo .opcion { padding: .375rem; display: grid; }
+.opciones-dibujo .ficha-dibujo { width: 100%; }
+.opcion:hover:not(:disabled) { border-color: var(--primario); }
+.opcion:disabled { cursor: default; }
+.opcion-bien { border-color: #2E7D4F; background: #E3F4EA; color: #1E5A38; }
+.opcion-mal { border-color: #B3261E; background: #FBE5E3; color: #8C1D18; }
+.correccion { margin: .5rem 0 1rem; padding: .875rem 1rem; border-radius: var(--radio); }
+.correccion.bien { background: #E3F4EA; color: #1E5A38; }
+.correccion.mal { background: #FBE5E3; color: #8C1D18; }
+.correccion-titulo { font-weight: 800; margin-bottom: .25rem; }
+.resultado-ejercicio { text-align: center; padding: 1rem 0; }
+.puntaje { font-size: 4.5rem; font-weight: 800; line-height: 1; color: var(--primario); }
+.puntaje span { font-size: 1.5rem; color: var(--texto-suave); }
+.estrellas { display: inline-block; font-size: 2.25rem; letter-spacing: .1em; color: #E8A33D; margin: .25rem 0 .5rem; }
+.estrellas span { color: var(--borde); }
+.menu-item .estrellas { font-size: 1rem; margin: 0; }
+.errores { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .625rem; }
+.errores li { padding: .75rem 1rem; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
+.errores p + p { margin-top: .25rem; }

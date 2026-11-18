@@ -7,6 +7,7 @@ import * as tela from './pantallas/tela.js';
 import * as costos from './pantallas/costos.js';
 import * as guardadas from './pantallas/guardadas.js';
 import * as cotizaciones from './pantallas/cotizaciones.js';
+import * as herramientas from './pantallas/herramientas.js';
 import { tieneMolde } from './moldes/registro.js';
 import { iniciarPwa } from './utilidades/pwa.js';
 import { buscarPrenda, prendaMadre } from './datos/prendas.js';
@@ -27,6 +28,7 @@ const RUTAS = {
   guardadas: guardadas.mostrar,
   para: guardadas.para,
   cotizaciones: cotizaciones.mostrar,
+  herramientas: herramientas.mostrar,
 };
 
 // Pantalla temporal para lo que aún no está hecho

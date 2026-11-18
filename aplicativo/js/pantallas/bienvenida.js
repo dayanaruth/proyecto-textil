@@ -33,7 +33,7 @@ function pantallas() {
     {
       titulo: '¡Bienvenida a Mi Taller!',
       texto: 'Tu ayudante para coser: saca tus moldes, calcula la tela y sabe cuánto cobrar. Hecho para el taller de Corte y Confección.',
-      dibujo: `<div class="bienvenida-prendas">${PRENDAS.map((p) => `<img src="${p.img}" alt="" width="64" height="64">`).join('')}</div>`,
+      dibujo: `<div class="institucion institucion-centro"><img class="logo-cea" src="img/logo-cea.webp" alt="Logo del C.E.A. Man Césped" width="64" height="64"><div><strong>C.E.A. «Man Césped»</strong><small>Corte y Confección</small></div></div><div class="bienvenida-prendas">${PRENDAS.map((p) => `<img src="${p.img}" alt="" width="64" height="64">`).join('')}</div>`,
     },
     {
       titulo: 'Así funciona',

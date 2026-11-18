@@ -12,6 +12,7 @@ const OPCIONES = [
 
 export function mostrar(main) {
   main.innerHTML = `
+    <div class="institucion"><img class="logo-cea" src="img/logo-cea.webp" alt="Logo del C.E.A. Man Césped" width="56" height="56"><div><strong>C.E.A. «Man Césped»</strong><small>Corte y Confección · Cochabamba</small></div></div>
     <section class="bienvenida">
       <h1>¡Hola! ¿Qué vamos a hacer hoy?</h1>
       <a class="btn btn-principal btn-grande" href="#/prendas"><span aria-hidden="true">✂️</span> Hacer una prenda</a>

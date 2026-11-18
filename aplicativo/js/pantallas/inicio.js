@@ -6,7 +6,8 @@ const OPCIONES = [
   { ruta: 'tela', icono: '🧵', nombre: 'Calcular tela', desc: '¿Cuántos metros comprar?' },
   { ruta: 'costos', icono: '💰', nombre: 'Calcular precio', desc: 'Costo y precio de venta' },
   { ruta: 'cotizaciones', icono: '📄', nombre: 'Cotizaciones', desc: 'Enviar el precio a quien te encarga' },
-  { ruta: 'herramientas', icono: '📏', nombre: 'Herramientas', desc: 'Conversor y cómo tomar medidas' },
+  { ruta: 'herramientas', icono: '📏', nombre: 'Aprender y practicar', desc: 'Conversor, guía, diccionario, ejercicios…' },
+  { ruta: 'ayuda', icono: '❓', nombre: 'Ayuda', desc: 'Preguntas frecuentes e instalación' },
 ];
 
 export function mostrar(main) {

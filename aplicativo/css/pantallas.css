@@ -352,3 +352,32 @@
   flex: none; padding: .25rem .625rem; border-radius: 999px; font-weight: 700; font-size: .85rem; text-decoration: none;
   background: var(--primario-suave); color: var(--primario); font-variant-numeric: tabular-nums;
 }
+
+/* Bienvenida */
+.bienvenida-zona { position: relative; display: grid; justify-items: center; gap: .75rem; padding: 2.5rem 0 1rem; text-align: center; min-height: 70vh; align-content: center; }
+.bienvenida-zona h1 { font-size: 1.75rem; }
+.bienvenida-texto { max-width: 26rem; color: var(--texto-suave); font-size: 1.05rem; }
+.saltar { position: absolute; top: 0; right: 0; padding: .5rem .75rem; background: none; border: 0; color: var(--texto-suave); font-weight: 600; cursor: pointer; }
+.bienvenida-dibujo { width: 100%; display: grid; justify-items: center; gap: 1rem; }
+.bienvenida-prendas { display: grid; grid-template-columns: repeat(3, 5rem); gap: .625rem; }
+.bienvenida-prendas img { width: 5rem; height: 5rem; padding: .375rem; background: var(--lienzo); border-radius: 16px; }
+.bienvenida-pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(8rem, 1fr)); gap: .625rem; width: 100%; max-width: 22rem; }
+.bienvenida-pasos li { display: grid; justify-items: center; gap: .125rem; padding: .75rem .5rem; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
+.bienvenida-pasos small { color: var(--texto-suave); }
+.bienvenida-icono { display: grid; place-items: center; width: 3rem; height: 3rem; font-size: 1.6rem; background: var(--primario-suave); border-radius: 50%; }
+.bienvenida-celular svg { width: 11rem; height: auto; }
+.puntos { display: flex; gap: .5rem; margin: .25rem 0; }
+.puntos span { width: .7rem; height: .7rem; border-radius: 50%; background: var(--borde); }
+.puntos .activo { background: var(--primario); width: 1.6rem; border-radius: 999px; }
+.bienvenida-zona .acciones { width: 100%; max-width: 26rem; }
+
+/* Ayuda */
+.preguntas { padding: 0 1rem; }
+.pregunta-ayuda + .pregunta-ayuda { border-top: 1px solid var(--borde); }
+.pregunta-ayuda summary { padding: .875rem 0; font-weight: 700; cursor: pointer; list-style-position: outside; margin-left: 1rem; }
+.pregunta-ayuda[open] summary { color: var(--primario); }
+.respuesta { padding: 0 0 1rem 1rem; display: grid; gap: .5rem; }
+.respuesta ul { padding-left: 1.25rem; }
+.pasos-ayuda { padding-left: 1.5rem; display: grid; gap: .375rem; }
+.btn-chico { min-height: 2.75rem; padding: .375rem 1rem; justify-self: start; font-size: .95rem; }
+.acerca { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--borde); color: var(--texto-suave); font-size: .875rem; display: grid; gap: .375rem; text-align: center; }

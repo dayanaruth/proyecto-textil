@@ -8,6 +8,9 @@ import * as costos from './pantallas/costos.js';
 import * as guardadas from './pantallas/guardadas.js';
 import * as cotizaciones from './pantallas/cotizaciones.js';
 import * as herramientas from './pantallas/herramientas.js';
+import * as bienvenida from './pantallas/bienvenida.js';
+import * as ayuda from './pantallas/ayuda.js';
+import { leer } from './datos/almacenamiento.js';
 import { tieneMolde } from './moldes/registro.js';
 import { iniciarPwa } from './utilidades/pwa.js';
 import * as tiempos from './datos/tiempos.js';
@@ -30,6 +33,8 @@ const RUTAS = {
   para: guardadas.para,
   cotizaciones: cotizaciones.mostrar,
   herramientas: herramientas.mostrar,
+  bienvenida: bienvenida.mostrar,
+  ayuda: ayuda.mostrar,
 };
 
 // Pantalla temporal para lo que aún no está hecho
@@ -59,9 +64,12 @@ function destinoAtras(ruta, [id]) {
 function navegar() {
   const [ruta = '', ...datos] = location.hash.replace(/^#\/?/, '').split('/');
   const nombre = ruta || 'inicio';
+  // La primera vez que se abre la app, se muestra la bienvenida
+  if (nombre === 'inicio' && !leer('bienvenida', false)) return location.replace('#/bienvenida');
   const destino = (RUTAS[nombre] ?? pronto)(main, datos);
-  atras.hidden = nombre === 'inicio';
-  irInicio.hidden = nombre === 'inicio';
+  const sinBotones = nombre === 'inicio' || nombre === 'bienvenida';
+  atras.hidden = sinBotones;
+  irInicio.hidden = sinBotones;
   atras.href = destino ?? destinoAtras(nombre, datos);
   window.scrollTo(0, 0);
   main.focus({ preventScroll: true });

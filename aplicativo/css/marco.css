@@ -6,8 +6,6 @@
 }
 .con-marco main { position: relative; z-index: 1; }
 .con-marco .barra { z-index: 10; }
-/* Con el marco, el fondo queda solo con las manchas de color (sin el dibujo repetido) */
-.con-marco { background-image: radial-gradient(circle at 8% 0%, var(--mancha-1), transparent 38%), radial-gradient(circle at 95% 100%, var(--mancha-2), transparent 42%); }
 
 /* Cada figura se centra en su costado y nunca es más ancha que el espacio libre */
 .pieza { position: absolute; top: var(--y); width: min(var(--t), calc(var(--hueco) * .6)); }

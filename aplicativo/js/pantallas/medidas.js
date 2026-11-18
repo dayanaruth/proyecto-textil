@@ -4,7 +4,9 @@ import { MEDIDAS, figuraMedida } from '../datos/medidas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
 import { revisarMedida, avisos } from '../calculos/validacion.js';
 import { numero } from '../utilidades/formato.js';
-import { barraPasos } from '../utilidades/ui.js';
+import { barraPasos, esc } from '../utilidades/ui.js';
+import * as personas from '../datos/personas.js';
+import { avatar } from '../utilidades/avatares.js';
 import { hayVoz, hablar } from '../utilidades/voz.js';
 
 // El trabajo en curso se guarda para no perder lo escrito si se cierra la app
@@ -14,6 +16,13 @@ function anotar(prendaId, valores) {
   t.prenda = prendaId;
   Object.assign(t.medidas, valores);
   guardar('trabajo', t);
+  if (t.persona) personas.anotarMedidas(t.persona, valores);
+}
+
+// "Para: Mamá" arriba de las medidas, si se eligió a alguien guardado
+function paraQuien() {
+  const p = personas.buscar(trabajo().persona);
+  return p ? `<p class="para-quien"><span class="avatar">${avatar(p.avatar).svg}</span>Para: <b>${esc(p.nombre)}</b></p>` : '';
 }
 
 const valorInicial = (id) => {
@@ -31,6 +40,7 @@ export function mostrar(main, [id, paso = '0', modo]) {
   unaMedida(main, prenda, base, i, modo === 'cambiar');
   if (modo === 'cambiar') return `${base}/revisar`;
   if (i > 0) return `${base}/${i - 1}`;
+  if (personas.listar().length) return `#/para/${id}`;
   const madre = prendaMadre(id);
   return madre ? `#/prenda/${madre.id}` : '#/prendas';
 }
@@ -43,6 +53,7 @@ function unaMedida(main, prenda, base, i, cambiando) {
 
   main.innerHTML = `
     ${barraPasos(1, prenda.id)}
+    ${paraQuien()}
     <p class="contador">${prenda.titulo ?? prenda.nombre} · Medida ${i + 1} de ${lista.length}</p>
     <div class="figura">${figuraMedida(id)}</div>
     <form class="form-medida" novalidate>
@@ -79,6 +90,7 @@ function todas(main, prenda, base) {
   main.innerHTML = `
     ${barraPasos(1, prenda.id)}
     <h1>Todas las medidas</h1>
+    ${paraQuien()}
     <p class="ayuda">${prenda.titulo ?? prenda.nombre}. Escribe cada medida en centímetros.</p>
     <form novalidate>
       ${prenda.medidas.map((id) => `
@@ -132,6 +144,7 @@ function revisar(main, prenda, base) {
   main.innerHTML = `
     ${barraPasos(1, prenda.id)}
     <h1>Revisa las medidas</h1>
+    ${paraQuien()}
     <p class="ayuda">Si alguna está mal, toca «Cambiar».</p>
     <ul class="resumen">
       ${lista.map((id, i) => `
@@ -139,6 +152,9 @@ function revisar(main, prenda, base) {
         <a href="${base}/${i}/cambiar" aria-label="Cambiar ${MEDIDAS[id].nombre}">Cambiar</a></li>`).join('')}
     </ul>
     ${avisos(m, lista).map((t) => `<p class="nota">⚠️ ${t}</p>`).join('')}
+    ${trabajo().persona && personas.buscar(trabajo().persona)
+      ? '<p class="nota nota-info">✅ Estas medidas quedaron guardadas en su ficha.</p>'
+      : `<a class="btn btn-secundario btn-ancho" href="#/guardadas/nueva/desde-trabajo">💾 Guardar estas medidas para una persona</a>`}
     <a class="btn btn-principal btn-grande" href="#/molde/${prenda.id}">Ver mi molde ▶</a>`;
   return `${base}/${lista.length - 1}`;
 }

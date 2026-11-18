@@ -3,7 +3,7 @@ import { PRENDAS, buscarPrenda } from '../datos/prendas.js';
 import { barraPasos } from '../utilidades/ui.js';
 
 const tarjeta = (p) => `
-  <a class="tarjeta" href="${p.variantes ? `#/prenda/${p.id}` : `#/medidas/${p.id}`}">
+  <a class="tarjeta" href="${p.variantes ? `#/prenda/${p.id}` : `#/para/${p.id}`}">
     <img src="${p.img}" alt="" width="100" height="100">
     <span class="tarjeta-nombre">${p.nombre}</span>
     ${p.detalle ? `<span class="tarjeta-detalle">${p.detalle}</span>` : ''}

@@ -134,3 +134,30 @@ export const figuraMedida = (id) => `
     ${CUERPO}
     <g fill="none" stroke="#9E2F45" stroke-width="2.5" stroke-linecap="round">${MARCAS[id] ?? ''}</g>
   </svg>`;
+
+// ---- Zonas del cuerpo: para ordenar las medidas guardadas de cada persona ----
+// "solo": la medida se muestra solo para ese tipo de persona (dama o varón)
+export const ZONAS = [
+  { id: 'torso', nombre: 'Torso', medidas: ['busto', 'pecho', 'cuello', 'ancho-espalda', 'talle-espalda', 'talle-delantero', 'busto-a-busto', 'alto-busto'] },
+  { id: 'cintura', nombre: 'Cintura y cadera', medidas: ['cintura', 'cadera', 'altura-cadera'] },
+  { id: 'piernas', nombre: 'Piernas', medidas: ['tiro', 'altura-rodilla', 'bota'] },
+  { id: 'brazos', nombre: 'Brazos', medidas: ['contorno-brazo', 'muneca'] },
+  { id: 'largos', nombre: 'Largos de las prendas', medidas: ['largo-blusa', 'largo-camisa', 'largo-falda', 'largo-pantalon', 'largo-manga', 'largo-manga-larga'] },
+];
+const SOLO_DAMA = ['busto', 'talle-delantero', 'busto-a-busto', 'alto-busto', 'largo-blusa', 'largo-falda', 'largo-manga'];
+export const medidasDe = (zona, tipo) =>
+  zona.medidas.filter((id) => (tipo === 'varon' ? !SOLO_DAMA.includes(id) : id !== 'pecho'));
+
+const RESALTE = {
+  torso: '<path d="M38 40 L55 34 H65 L82 40 L78 52 Q80 64 72 80 H48 Q40 64 42 52 Z"/>',
+  cintura: '<path d="M48 76 H72 Q86 92 84 108 L83 113 H37 L36 108 Q34 92 48 76 Z"/>',
+  piernas: '<path d="M37 112 H83 L76 150 L71 188 L75 193 L62 193 L60 116 L58 193 L45 193 L49 188 L44 150 Z"/>',
+  brazos: '<path d="M38 40 L30 70 L28 98 L33 99 L36 72 L42 52 Z M82 40 L90 70 L92 98 L87 99 L84 72 L78 52 Z"/>',
+  largos: '<path d="M38 40 H82 L84 108 L76 150 L71 190 H49 L44 150 L36 108 Z"/>',
+};
+
+export const figuraZona = (id) => `
+  <svg viewBox="0 0 120 200" aria-hidden="true">
+    ${CUERPO}
+    <g fill="#9E2F45" fill-opacity=".45" stroke="#9E2F45" stroke-width="1.5">${RESALTE[id] ?? ''}</g>
+  </svg>`;

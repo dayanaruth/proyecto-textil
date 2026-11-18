@@ -5,6 +5,7 @@ import * as medidas from './pantallas/medidas.js';
 import * as molde from './pantallas/molde.js';
 import * as tela from './pantallas/tela.js';
 import * as costos from './pantallas/costos.js';
+import * as guardadas from './pantallas/guardadas.js';
 import { tieneMolde } from './moldes/registro.js';
 import { iniciarPwa } from './utilidades/pwa.js';
 import { buscarPrenda, prendaMadre } from './datos/prendas.js';
@@ -22,6 +23,8 @@ const RUTAS = {
   molde: (main, datos) => (tieneMolde(datos[0]) ? molde.mostrar(main, datos) : pronto(main, datos)),
   tela: tela.mostrar,
   costos: costos.mostrar,
+  guardadas: guardadas.mostrar,
+  para: guardadas.para,
 };
 
 // Pantalla temporal para lo que aún no está hecho

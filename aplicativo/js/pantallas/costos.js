@@ -1,10 +1,30 @@
-// Pantalla: costos en 3 cuadros y precio de venta sugerido
+// Pantalla: costo y precio, pensada para quien casi no usa aplicaciones.
+// Colores por parte (materiales, trabajo, ganancia), preguntas sencillas en cada campo, botones rápidos
+// de ganancia, ejemplo, voz, marcas de "listo", avisos de lo que falta y el precio siempre a la vista.
 import { buscarPrenda } from '../datos/prendas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
 import { calcularCostos, precioVenta, valor } from '../calculos/costos.js';
 import { bs, numero } from '../utilidades/formato.js';
 import { barraPasos, esc } from '../utilidades/ui.js';
+import { hayVoz, hablar } from '../utilidades/voz.js';
 import { preferencias } from '../datos/cotizaciones.js';
+
+const normal = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// "entretela" va antes que "tela" porque la contiene
+const ICONOS = [['entretela', '📄'], ['tela', '🧵'], ['cierre', '🤐'], ['hilo', '🪡'], ['boton', '🔘'], ['gancho', '🪝'], ['elastico', '〰️'], ['encaje', '🎀']];
+const icono = (nombre) => ICONOS.find(([p]) => normal(nombre).includes(p))?.[1] ?? '📦';
+const PALABRA = { m: 'metro', 'unid.': 'unidad', carrete: 'carrete' };
+const lleno = (v) => valor(v) > 0;
+
+// Ejemplo: la falda del afiche del taller
+const EJEMPLO_PRECIOS = [['entretela', '8'], ['tela', '35'], ['cierre', '5'], ['hilo', '2,5'], ['boton', '0,5'], ['gancho', '1']];
+const precioEjemplo = (nombre) => EJEMPLO_PRECIOS.find(([p]) => normal(nombre).includes(p))?.[1] ?? '3';
+
+const VOZ = {
+  mat: 'Materiales. Escribe cuánto usas de cada material y cuánto cuesta uno. Por ejemplo: usas cero coma nueve metros de tela, y un metro cuesta treinta y cinco bolivianos.',
+  tra: 'Tu trabajo. Escribe cuántas horas tardas en coser la prenda y cuánto vale una hora de tu trabajo. Después, cuánto gastas en el taller: luz, máquina, agujas.',
+  gan: 'Tu ganancia. Elige cuánto quieres ganar. Te mostramos el precio de venta con cada opción.',
+};
 
 // Datos iniciales: la tela calculada en el paso anterior + insumos de la prenda
 function estadoInicial(prenda, trabajo) {
@@ -18,136 +38,215 @@ function estadoInicial(prenda, trabajo) {
   };
 }
 
+
 export function mostrar(main, [id]) {
   const prenda = id ? buscarPrenda(id) : null;
-  const trabajo = leer('trabajo', { medidas: {} });
-  const e = estadoInicial(prenda, trabajo);
+  let e = estadoInicial(prenda, leer('trabajo', { medidas: {} }));
+  let esEjemplo = false;
   const titulo = prenda ? `: ${prenda.titulo ?? prenda.nombre}` : '';
+  const voz = (k) => (hayVoz ? `<button type="button" class="voz-c" data-voz="${k}" aria-label="Escuchar qué hacer">🔊</button>` : '');
 
-  main.innerHTML = `
-    ${prenda ? barraPasos(4, prenda.id) : ''}
-    <h1>Costo y precio${titulo}</h1>
-    <p class="ayuda">Escribe los precios en bolivianos. Los totales se calculan solos.</p>
-    <form class="costos" novalidate>
-      <section class="cuadro">
-        <h2><span class="cuadro-num">1</span> Materiales</h2>
-        <div id="materiales"></div>
-        <button type="button" class="btn btn-secundario btn-ancho" id="agregar">＋ Agregar material</button>
-        <p class="total">Total materiales <b id="t-materiales"></b></p>
-      </section>
-      <section class="cuadro">
-        <h2><span class="cuadro-num">2</span> Mano de obra y gastos</h2>
-        <div class="fila-calculo">
-          <label>Horas de trabajo<span class="campo"><input name="horas" inputmode="decimal" placeholder="ej. 3" value="${esc(e.horas)}"><span class="unidad">h</span></span></label>
-          <span class="por" aria-hidden="true">×</span>
-          <label>Pago por hora<span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="ej. 10" value="${esc(e.pagoHora)}"></span></label>
-        </div>
-        <p class="subtotal">Mano de obra <b id="t-mano"></b></p>
-        <label class="bloque">Gastos del taller <small>Luz, máquina, agujas, alquiler…</small>
-          <span class="campo"><span class="unidad">Bs</span><input name="gastos" inputmode="decimal" placeholder="ej. 5" value="${esc(e.gastos)}"></span>
-        </label>
-        <button type="button" class="enlace enlace-boton" id="sugerir-gastos">¿No sabes? Usar el 10 % de los materiales</button>
-        <p class="total">Total mano de obra y gastos <b id="t-mano-gastos"></b></p>
-      </section>
-      <section class="cuadro">
-        <h2><span class="cuadro-num">3</span> Resumen y precio</h2>
-        <p class="total">Costo para producir <b id="t-costo"></b></p>
-        <label class="bloque">¿Cuánto quieres ganar?
-          <span class="campo campo-corto"><input name="ganancia" inputmode="decimal" value="${esc(e.ganancia)}"><span class="unidad">%</span></span>
-        </label>
-        <fieldset class="tipo-ganancia">
-          <legend>Ese porcentaje es…</legend>
-          <label><input type="radio" name="tipo" value="costo" ${e.tipo === 'costo' ? 'checked' : ''}> del <b>costo</b> (se suma al costo)</label>
-          <label><input type="radio" name="tipo" value="venta" ${e.tipo === 'venta' ? 'checked' : ''}> del <b>precio de venta</b></label>
-        </fieldset>
-        <p class="error" id="error" role="alert"></p>
-        <div class="resultado" aria-live="polite">
-          <p class="resultado-etiqueta">Precio de venta sugerido</p>
-          <p class="resultado-valor" id="precio"></p>
-          <p id="ganas"></p>
-          <p class="resultado-detalle" id="redondeo"></p>
-        </div>
-        <p class="nota nota-info" id="comparacion"></p>
-      </section>
-    </form>
-    <a class="btn btn-principal btn-ancho" href="#/">✓ Terminar</a>`;
+  const dibujar = () => {
+    main.innerHTML = `
+      ${prenda ? barraPasos(4, prenda.id) : ''}
+      <h1>Costo y precio${titulo}</h1>
+      <p class="ayuda">Responde las preguntas. El precio se calcula solo.</p>
+      <div class="acciones-c">
+        <button type="button" class="btn-c" id="ejemplo">👀 Ver un ejemplo</button>
+        <button type="button" class="btn-c" id="borrar">🧹 Borrar y empezar</button>
+      </div>
+      ${esEjemplo ? '<p class="nota nota-info">👀 Este es un ejemplo con la falda del afiche del taller. Cambia los números por los tuyos, o toca «Borrar y empezar».</p>' : ''}
+      <form class="form-precio" novalidate>
 
-  const form = main.querySelector('form');
-  const $ = (s) => main.querySelector(s);
+        <section class="parte azul">
+          <header><span class="parte-icono" aria-hidden="true">🧵</span>
+            <div><h2>1. Materiales <span class="listo" id="ok-mat" hidden>✅</span></h2><small>Lo que compras para hacer la prenda</small></div>
+            ${voz('mat')}<b class="parte-total" id="t-materiales"></b></header>
+          <div id="materiales">${e.materiales.map((m, i) => `
+            <div class="mat">
+              <div class="mat-cabeza">
+                <span class="mat-icono" aria-hidden="true">${icono(m.nombre)}</span>
+                <input class="mat-nombre" data-i="${i}" data-campo="nombre" value="${esc(m.nombre)}" placeholder="Nombre del material" aria-label="Nombre del material">
+                <span class="lapiz" aria-hidden="true">✏️</span>
+                <button type="button" class="quitar-c" data-quitar="${i}" aria-label="Quitar ${esc(m.nombre)}">✕</button>
+              </div>
+              <div class="cuenta">
+                <label class="pregunta-c">¿Cuánto usas?
+                  <span class="campo"><input data-i="${i}" data-campo="cantidad" inputmode="decimal" placeholder="0" value="${esc(m.cantidad)}"><span class="unidad">${esc(m.unidad)}</span></span></label>
+                <span class="por" aria-hidden="true">×</span>
+                <label class="pregunta-c">¿Cuánto cuesta 1 ${PALABRA[m.unidad] ?? esc(m.unidad)}?
+                  <span class="campo"><span class="unidad">Bs</span><input data-i="${i}" data-campo="precio" inputmode="decimal" placeholder="0" value="${esc(m.precio)}"></span></label>
+                <b class="cuenta-res" id="s-${i}"></b>
+              </div>
+            </div>`).join('')}
+          </div>
+          <button type="button" class="btn-agregar" id="agregar">＋ Agregar otro material</button>
+          <p class="falta" id="falta-mat" role="status"></p>
+        </section>
 
-  const pintarMateriales = () => {
-    $('#materiales').innerHTML = e.materiales.map((m, i) => `
-      <div class="material">
-        <div class="material-cabeza">
-          <input data-i="${i}" data-campo="nombre" value="${esc(m.nombre)}" aria-label="Material" placeholder="Nombre del material">
-          <button type="button" class="quitar" data-quitar="${i}" aria-label="Quitar ${esc(m.nombre)}">✕</button>
-        </div>
-        <div class="material-cuenta">
-          <span class="campo"><input data-i="${i}" data-campo="cantidad" inputmode="decimal" value="${esc(m.cantidad)}" aria-label="Cantidad de ${esc(m.nombre)}"><span class="unidad">${esc(m.unidad)}</span></span>
-          <span class="por" aria-hidden="true">×</span>
-          <span class="campo"><span class="unidad">Bs</span><input data-i="${i}" data-campo="precio" inputmode="decimal" value="${esc(m.precio)}" placeholder="precio" aria-label="Precio por ${esc(m.unidad)} de ${esc(m.nombre)}"></span>
-          <b class="material-subtotal" id="s-${i}"></b>
-        </div>
-      </div>`).join('');
+        <section class="parte verde">
+          <header><span class="parte-icono" aria-hidden="true">✋</span>
+            <div><h2>2. Tu trabajo y el taller <span class="listo" id="ok-tra" hidden>✅</span></h2><small>Las horas que coses y los gastos del taller</small></div>
+            ${voz('tra')}<b class="parte-total" id="t-trabajo"></b></header>
+          <div class="cuenta">
+            <label class="pregunta-c">¿Cuántas horas tardas?
+              <span class="campo"><input name="horas" inputmode="decimal" placeholder="0" value="${esc(e.horas)}"><span class="unidad">horas</span></span></label>
+            <span class="por" aria-hidden="true">×</span>
+            <label class="pregunta-c">¿Cuánto vale tu hora?
+              <span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="0" value="${esc(e.pagoHora)}"></span></label>
+            <b class="cuenta-res" id="t-mano"></b>
+          </div>
+          <p class="cuenta-pie">⏱️ ¿No sabes cuánto tardas? Mídelo con el <a href="#/herramientas/cronometro">cronómetro de costura</a>.</p>
+          <label class="pregunta-c pregunta-sola">🏠 ¿Cuánto gastas en el taller por esta prenda? <small>Luz, máquina, agujas…</small>
+            <span class="campo"><span class="unidad">Bs</span><input name="gastos" inputmode="decimal" placeholder="0" value="${esc(e.gastos)}"></span></label>
+          <button type="button" class="enlace-chico" id="sugerir-gastos">¿No sabes? Usar el 10 % de los materiales</button>
+          <p class="falta" id="falta-tra" role="status"></p>
+        </section>
+
+        <section class="parte dorado">
+          <header><span class="parte-icono" aria-hidden="true">💰</span>
+            <div><h2>3. Tu ganancia <span class="listo" id="ok-gan" hidden>✅</span></h2><small>¿Cuánto quieres ganar?</small></div>
+            ${voz('gan')}</header>
+          <div class="chips" role="group" aria-label="Ganancia">
+            ${['20', '30', '50'].map((p) => `<button type="button" class="chip" data-pct="${p}">${p} %</button>`).join('')}
+            <label class="chip-otro">Otro <span class="campo"><input name="ganancia" inputmode="decimal" placeholder="0" value="${esc(e.ganancia)}" aria-label="Otro porcentaje de ganancia"><span class="unidad">%</span></span></label>
+          </div>
+          <p class="pregunta-c">¿Ese porcentaje es del costo o del precio de venta?</p>
+          <div class="opciones-ganancia" role="radiogroup" aria-label="Ese porcentaje es">
+            <button type="button" role="radio" data-tipo="costo"><span class="op-titulo">del costo</span><span class="op-precio" id="op-costo"></span><span class="op-gana" id="gana-costo"></span></button>
+            <button type="button" role="radio" data-tipo="venta"><span class="op-titulo">del precio de venta</span><span class="op-precio" id="op-venta"></span><span class="op-gana" id="gana-venta"></span></button>
+          </div>
+          <p class="ganarias" id="ganarias"></p>
+          <p class="error" id="error" role="alert"></p>
+        </section>
+
+        <section class="parte formula">
+          <h2>Así se forma tu precio</h2>
+          <div class="suma">
+            <span class="bloque-c azul"><small>🧵 Materiales</small><b id="f-mat"></b></span><span class="signo">+</span>
+            <span class="bloque-c verde"><small>✋ Trabajo</small><b id="f-tra"></b></span><span class="signo">=</span>
+            <span class="bloque-c gris"><small>Costo</small><b id="f-cos"></b></span>
+          </div>
+          <div class="suma">
+            <span class="bloque-c gris"><small>Costo</small><b id="f-cos2"></b></span><span class="signo">+</span>
+            <span class="bloque-c dorado"><small>💰 Ganancia</small><b id="f-gan"></b></span><span class="signo">=</span>
+            <span class="bloque-c precio"><small>Precio</small><b id="f-pre"></b></span>
+          </div>
+          <p class="redondeo" id="redondeo"></p>
+        </section>
+      </form>
+
+      <div class="barra-precio" aria-live="polite">
+        <div class="barra-precio-textos"><span>Costo <b id="b-costo"></b></span><span class="flecha-precio">→</span><span>Precio <b class="b-precio" id="b-precio"></b></span></div>
+        <div class="barra-colores" aria-hidden="true"><span class="azul" id="seg-mat"></span><span class="verde" id="seg-tra"></span><span class="dorado" id="seg-gan"></span></div>
+        <div class="leyenda" aria-hidden="true"><span class="azul">Materiales</span><span class="verde">Trabajo</span><span class="dorado">Ganancia</span></div>
+      </div>
+      <a class="btn btn-principal btn-ancho" href="#/">✓ Terminar</a>`;
+    conectar();
+    actualizar();
   };
+
+  const $ = (s) => main.querySelector(s);
+  const poner = (sel, v) => { $(sel).textContent = Number.isFinite(v) ? bs(v) : '—'; };
 
   const actualizar = () => {
     const c = calcularCostos(e);
-    const ganancia = valor(e.ganancia);
-    const precio = precioVenta(c.total, ganancia, e.tipo);
-    const otro = precioVenta(c.total, ganancia, e.tipo === 'costo' ? 'venta' : 'costo');
+    const g = valor(e.ganancia);
+    const precio = precioVenta(c.total, g, e.tipo);
+    const pCosto = precioVenta(c.total, g, 'costo');
+    const pVenta = precioVenta(c.total, g, 'venta');
+    const malo = !Number.isFinite(c.total) || !Number.isFinite(precio);
 
-    c.subtotales.forEach((s, i) => { $(`#s-${i}`).textContent = Number.isNaN(s) ? '—' : `= ${bs(s)}`; });
-    const mostrarBs = (sel, v) => { $(sel).textContent = Number.isNaN(v) ? '—' : bs(v); };
-    mostrarBs('#t-materiales', c.totalMateriales);
-    mostrarBs('#t-mano', c.manoDeObra);
-    mostrarBs('#t-mano-gastos', c.manoYGastos);
-    mostrarBs('#t-costo', c.total);
+    c.subtotales.forEach((s, i) => { $(`#s-${i}`).textContent = Number.isFinite(s) ? `= ${bs(s)}` : '—'; });
+    poner('#t-materiales', c.totalMateriales);
+    poner('#t-trabajo', c.manoYGastos);
+    $('#t-mano').textContent = Number.isFinite(c.manoDeObra) ? `= ${bs(c.manoDeObra)}` : '—';
 
-    const hayError = Number.isNaN(c.total) || Number.isNaN(precio);
-    $('#error').textContent = Number.isNaN(c.total)
-      ? 'Revisa los números: usa solo cifras positivas, por ejemplo 12,50.'
-      : Number.isNaN(precio) ? 'La ganancia sobre el precio de venta debe ser menor a 100 %.' : '';
-    $('#precio').textContent = hayError ? '—' : bs(precio);
-    $('#ganas').textContent = hayError ? '' : `Ganas ${bs(precio - c.total)} por prenda`;
-    $('#redondeo').textContent = hayError || c.total === 0 ? '' : `Puedes cobrar ${bs(Math.ceil(precio))} redondeando.`;
-    $('#comparacion').textContent = hayError || c.total === 0 || Number.isNaN(otro) ? '' : e.tipo === 'costo'
-      ? `Ojo: no es lo mismo. Si el ${numero(ganancia)} % fuera del precio de venta, cobrarías ${bs(otro)}.`
-      : `Ojo: no es lo mismo. Si el ${numero(ganancia)} % se sumara al costo, cobrarías ${bs(otro)}.`;
-    $('#comparacion').hidden = !$('#comparacion').textContent;
+    // ✅ y avisos de lo que falta (en palabras sencillas)
+    const sinPrecio = e.materiales.filter((m) => !lleno(m.cantidad) || !lleno(m.precio)).map((m) => m.nombre || 'un material');
+    const faltaTra = [!lleno(e.horas) && 'las horas que tardas', !lleno(e.pagoHora) && 'cuánto vale tu hora'].filter(Boolean);
+    $('#ok-mat').hidden = sinPrecio.length > 0 || !e.materiales.length;
+    $('#ok-tra').hidden = faltaTra.length > 0;
+    $('#ok-gan').hidden = !(g > 0) || malo;
+    $('#falta-mat').textContent = sinPrecio.length ? `✍️ Falta completar: ${sinPrecio.join(', ')}.` : '';
+    $('#falta-tra').textContent = faltaTra.length ? `✍️ Falta: ${faltaTra.join(' y ')}.` : '';
+
+    main.querySelectorAll('[data-pct]').forEach((b) => b.setAttribute('aria-pressed', valor(b.dataset.pct) === g));
+    poner('#op-costo', pCosto); poner('#op-venta', pVenta);
+    $('#gana-costo').textContent = Number.isFinite(pCosto) ? `ganas ${bs(pCosto - c.total)}` : '';
+    $('#gana-venta').textContent = Number.isFinite(pVenta) ? `ganas ${bs(pVenta - c.total)}` : 'menos de 100 %';
+    main.querySelectorAll('[data-tipo]').forEach((b) => b.setAttribute('aria-checked', b.dataset.tipo === e.tipo));
+    $('#ganarias').innerHTML = malo || !c.total ? '' : `Ganarías <b>${bs(precio - c.total)}</b> por prenda`;
+    $('#error').textContent = !Number.isFinite(c.total) ? 'Revisa los números: usa solo cifras, por ejemplo 12,50.'
+      : !Number.isFinite(precio) ? 'La ganancia sobre el precio de venta debe ser menor a 100 %.' : '';
+
+    poner('#f-mat', c.totalMateriales); poner('#f-tra', c.manoYGastos);
+    poner('#f-cos', c.total); poner('#f-cos2', c.total);
+    poner('#f-gan', malo ? NaN : precio - c.total); poner('#f-pre', malo ? NaN : precio);
+    $('#redondeo').textContent = malo || !c.total ? '' : `💡 Puedes cobrar ${bs(Math.ceil(precio))} redondeando.`;
+
+    poner('#b-costo', c.total); poner('#b-precio', malo ? NaN : precio);
+    const total = malo || !precio ? 0 : precio;
+    const pct = (v) => (total ? `${Math.max(0, (v / total) * 100)}%` : '0%');
+    $('#seg-mat').style.width = pct(c.totalMateriales);
+    $('#seg-tra').style.width = pct(c.manoYGastos);
+    $('#seg-gan').style.width = pct(malo ? 0 : precio - c.total);
 
     const t = leer('trabajo', { medidas: {} });
     guardar('trabajo', { ...t, costos: e, resumen: { costo: c.total, precio } });
   };
 
-  form.addEventListener('input', (ev) => {
-    const el = ev.target;
-    if (el.dataset.campo) e.materiales[el.dataset.i][el.dataset.campo] = el.value;
-    else if (el.name) e[el.name] = el.value;
-    actualizar();
-  });
-  form.addEventListener('submit', (ev) => ev.preventDefault());
-  $('#materiales').addEventListener('click', (ev) => {
-    const i = ev.target.dataset.quitar;
-    if (i == null) return;
-    e.materiales.splice(Number(i), 1);
-    pintarMateriales();
-    actualizar();
-  });
-  $('#agregar').addEventListener('click', () => {
-    e.materiales.push({ nombre: '', cantidad: '1', unidad: 'unid.', precio: '' });
-    pintarMateriales();
-    actualizar();
-    main.querySelector(`[data-i="${e.materiales.length - 1}"][data-campo="nombre"]`).focus();
-  });
-  $('#sugerir-gastos').addEventListener('click', () => {
-    const { totalMateriales } = calcularCostos(e);
-    e.gastos = Number.isNaN(totalMateriales) ? '' : numero(Math.round(totalMateriales * 10) / 100);
-    form.gastos.value = e.gastos;
-    actualizar();
-  });
+  const conectar = () => {
+    const form = $('form');
+    form.addEventListener('input', (ev) => {
+      const el = ev.target;
+      if (el.dataset.campo) {
+        e.materiales[el.dataset.i][el.dataset.campo] = el.value;
+        if (el.dataset.campo === 'nombre') el.closest('.mat').querySelector('.mat-icono').textContent = icono(el.value);
+      } else if (el.name) e[el.name] = el.value;
+      actualizar();
+    });
+    form.addEventListener('submit', (ev) => ev.preventDefault());
+    main.addEventListener('click', alTocar);
+  };
 
-  pintarMateriales();
-  actualizar();
+  // Un solo manejador para todos los botones (se quita y vuelve a poner al redibujar)
+  function alTocar(ev) {
+    const b = ev.target.closest('button');
+    if (!b || !main.contains(b)) return;
+    if (b.dataset.voz) return hablar(VOZ[b.dataset.voz]);
+    if (b.dataset.tipo) { e.tipo = b.dataset.tipo; return actualizar(); }
+    if (b.dataset.pct) { e.ganancia = b.dataset.pct; $('[name="ganancia"]').value = b.dataset.pct; return actualizar(); }
+    if (b.id === 'sugerir-gastos') {
+      const { totalMateriales } = calcularCostos(e);
+      e.gastos = Number.isFinite(totalMateriales) ? numero(Math.round(totalMateriales * 10) / 100) : '';
+      $('[name="gastos"]').value = e.gastos;
+      return actualizar();
+    }
+    let redibujar = false;
+    if (b.dataset.quitar != null) { e.materiales.splice(Number(b.dataset.quitar), 1); redibujar = true; }
+    if (b.id === 'agregar') { e.materiales.push({ nombre: '', cantidad: '1', unidad: 'unid.', precio: '' }); redibujar = true; }
+    if (b.id === 'ejemplo') {
+      e = { ...e, materiales: e.materiales.map((m) => ({ ...m, cantidad: m.cantidad || '0,9', precio: precioEjemplo(m.nombre) })),
+        horas: '3', pagoHora: '10', ganancia: '30', tipo: 'costo' };
+      const { totalMateriales } = calcularCostos(e);
+      e.gastos = numero(Math.round(totalMateriales * 10) / 100);
+      esEjemplo = true; redibujar = true;
+    }
+    if (b.id === 'borrar') {
+      const t = leer('trabajo', { medidas: {} });
+      e = estadoInicial(prenda, { ...t, costos: null });
+      esEjemplo = false; redibujar = true;
+    }
+    if (redibujar) {
+      main.removeEventListener('click', alTocar);
+      dibujar();
+      if (b.id === 'agregar') main.querySelector(`[data-i="${e.materiales.length - 1}"][data-campo="nombre"]`)?.focus();
+    }
+  }
+
+  // Al salir de esta pantalla se quita el manejador de botones
+  window.addEventListener('hashchange', () => main.removeEventListener('click', alTocar), { once: true });
+  dibujar();
   return prenda ? `#/tela/${prenda.id}` : '#/';
 }

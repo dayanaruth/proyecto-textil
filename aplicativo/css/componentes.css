@@ -80,7 +80,7 @@
   transition: transform .1s, border-color .1s;
 }
 .tarjeta:hover { border-color: var(--primario); }
-.tarjeta img { width: 100%; height: auto; aspect-ratio: 4 / 3; padding: .5rem; background: var(--lienzo); border-radius: 12px; }
+.tarjeta img { width: 100%; height: auto; aspect-ratio: 1; padding: .5rem; background: var(--lienzo); border-radius: 12px; }
 .tarjeta-nombre { font-weight: 700; font-size: 1.05rem; line-height: 1.25; }
 .tarjeta-detalle { font-size: .85rem; color: var(--texto-suave); }
 @media (min-width: 40rem) { .tarjetas { grid-template-columns: repeat(3, 1fr); } }
@@ -123,3 +123,12 @@
   font-size: 1.6rem; background: var(--primario-suave); border-radius: 12px;
 }
 @media (min-width: 40rem) { .menu { grid-template-columns: 1fr 1fr; } }
+.tarjeta img.foto { padding: 0; object-fit: cover; }
+
+/* Logo de "Mi Taller" en la barra: guirnalda de costura (fondo transparente) */
+.marca { display: inline-flex; align-items: center; gap: .375rem; }
+.marca-logo { flex: none; width: auto; height: 2.75rem; object-fit: contain; }
+/* En modo oscuro, un borde claro suave para que el gato y el hilo negros se vean */
+@media (prefers-color-scheme: dark) {
+  .marca-logo { filter: drop-shadow(0 0 1px rgb(255 255 255 / .85)) drop-shadow(0 0 4px rgb(255 255 255 / .25)); }
+}

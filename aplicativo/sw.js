@@ -3,7 +3,7 @@
 // actualizar la app nunca borra los datos de la persona.
 
 // ⚠️ Cambiar VERSION cada vez que se publique un cambio (así el celular se actualiza)
-const VERSION = 'mi-taller-v19';
+const VERSION = 'mi-taller-v27';
 
 const ARCHIVOS = [
   './',
@@ -11,6 +11,7 @@ const ARCHIVOS = [
   'manifest.webmanifest',
   'css/base.css',
   'css/componentes.css',
+  'css/costos.css',
   'css/decoracion.css',
   'css/pantallas.css',
   'css/impresion.css',
@@ -68,6 +69,16 @@ const ARCHIVOS = [
   'js/utilidades/ui.js',
   'js/utilidades/voz.js',
   'img/logo-cea.webp',
+  'img/marca.webp',
+  'img/fotos/blusa.webp',
+  'img/fotos/camisa.webp',
+  'img/fotos/camisa-dama.webp',
+  'img/fotos/camisa-varon.webp',
+  'img/fotos/falda-recta.webp',
+  'img/fotos/falda-uniforme.webp',
+  'img/fotos/pantalon-dama.webp',
+  'img/fotos/pantalon-varon.webp',
+  'img/fotos/vestido.webp',
   'img/iconos/icono-192.png',
   'img/iconos/icono-512.png',
   'img/iconos/icono-maskable-512.png',

@@ -4,7 +4,7 @@ import { barraPasos } from '../utilidades/ui.js';
 
 const tarjeta = (p) => `
   <a class="tarjeta" href="${p.variantes ? `#/prenda/${p.id}` : `#/para/${p.id}`}">
-    <img src="${p.img}" alt="" width="100" height="100">
+    <img src="${p.foto ?? p.img}" alt="" width="100" height="100"${p.foto ? ' class="foto"' : ''}>
     <span class="tarjeta-nombre">${p.nombre}</span>
     ${p.detalle ? `<span class="tarjeta-detalle">${p.detalle}</span>` : ''}
   </a>`;

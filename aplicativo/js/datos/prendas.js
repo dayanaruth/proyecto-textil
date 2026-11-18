@@ -1,6 +1,7 @@
 // Catálogo de las prendas: nombre, dibujo y variantes (dama/varón)
 // "medidas": lo que se pide, en orden (ids de datos/medidas.js)
 const img = (nombre) => `img/prendas/${nombre}.svg`;
+const foto = (nombre) => `img/fotos/${nombre}.webp`;
 const FALDA = ['cintura', 'cadera', 'altura-cadera', 'largo-falda'];
 // "insumos": materiales sugeridos para el cuadro de costos (además de la tela)
 const INSUMOS_FALDA = [
@@ -41,24 +42,24 @@ const INSUMOS_VESTIDO = [
 ];
 
 export const PRENDAS = [
-  { id: 'blusa', nombre: 'Blusa básica', img: img('blusa'), medidas: BLUSA, insumos: INSUMOS_BLUSA },
-  { id: 'falda-recta', nombre: 'Falda recta', img: img('falda-recta'), medidas: FALDA, insumos: INSUMOS_FALDA },
+  { id: 'blusa', nombre: 'Blusa básica', img: img('blusa'), foto: foto('blusa'), medidas: BLUSA, insumos: INSUMOS_BLUSA },
+  { id: 'falda-recta', nombre: 'Falda recta', img: img('falda-recta'), foto: foto('falda-recta'), medidas: FALDA, insumos: INSUMOS_FALDA },
   {
-    id: 'camisa', nombre: 'Camisa básica', detalle: 'Dama o varón', img: img('camisa-varon'),
+    id: 'camisa', nombre: 'Camisa básica', detalle: 'Dama o varón', img: img('camisa-varon'), foto: foto('camisa'),
     variantes: [
-      { id: 'camisa-dama', nombre: 'Dama', titulo: 'Camisa de dama', img: img('camisa-dama'), medidas: CAMISA_DAMA, insumos: INSUMOS_CAMISA(8) },
-      { id: 'camisa-varon', nombre: 'Varón', titulo: 'Camisa de varón', img: img('camisa-varon'), medidas: CAMISA_VARON, insumos: INSUMOS_CAMISA(10) },
+      { id: 'camisa-dama', nombre: 'Dama', titulo: 'Camisa de dama', img: img('camisa-dama'), foto: foto('camisa-dama'), medidas: CAMISA_DAMA, insumos: INSUMOS_CAMISA(8) },
+      { id: 'camisa-varon', nombre: 'Varón', titulo: 'Camisa de varón', img: img('camisa-varon'), foto: foto('camisa-varon'), medidas: CAMISA_VARON, insumos: INSUMOS_CAMISA(10) },
     ],
   },
   {
-    id: 'pantalon', nombre: 'Pantalón recto', detalle: 'Dama o varón', img: img('pantalon-dama'),
+    id: 'pantalon', nombre: 'Pantalón recto', detalle: 'Dama o varón', img: img('pantalon-dama'), foto: foto('pantalon-dama'),
     variantes: [
-      { id: 'pantalon-dama', nombre: 'Dama', titulo: 'Pantalón de dama', img: img('pantalon-dama'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
-      { id: 'pantalon-varon', nombre: 'Varón', titulo: 'Pantalón de varón', img: img('pantalon-varon'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
+      { id: 'pantalon-dama', nombre: 'Dama', titulo: 'Pantalón de dama', img: img('pantalon-dama'), foto: foto('pantalon-dama'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
+      { id: 'pantalon-varon', nombre: 'Varón', titulo: 'Pantalón de varón', img: img('pantalon-varon'), foto: foto('pantalon-varon'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
     ],
   },
-  { id: 'falda-uniforme', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA },
-  { id: 'vestido', nombre: 'Vestido básico', img: img('vestido'), medidas: VESTIDO, insumos: INSUMOS_VESTIDO },
+  { id: 'falda-uniforme', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), foto: foto('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA },
+  { id: 'vestido', nombre: 'Vestido básico', img: img('vestido'), foto: foto('vestido'), medidas: VESTIDO, insumos: INSUMOS_VESTIDO },
 ];
 
 // Busca una prenda o una variante por su id

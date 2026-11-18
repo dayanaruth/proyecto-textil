@@ -1,0 +1,59 @@
+/* VISTA DE PRUEBA: marco ilustrado animado (#/marco). Se puede borrar sin afectar nada. */
+.marco-capa { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.con-marco main { position: relative; z-index: 1; }
+/* Con el marco, el fondo queda solo con las manchas de color (sin el dibujo repetido) */
+.con-marco { background-image: radial-gradient(circle at 8% 0%, var(--mancha-1), transparent 38%), radial-gradient(circle at 95% 100%, var(--mancha-2), transparent 42%); }
+.con-marco .barra { z-index: 10; }
+
+.pieza { position: absolute; top: var(--y); width: var(--t); translate: 0 -50%; }
+.pieza-izq { left: max(1rem, calc((100vw - 42rem) / 4 - var(--t) / 2)); animation: llegar-izq 1.2s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d); }
+.pieza-der { right: max(1rem, calc((100vw - 42rem) / 4 - var(--t) / 2)); animation: llegar-der 1.2s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d); }
+.pieza-dentro { animation: mecerse 6s ease-in-out infinite; animation-delay: var(--f); }
+.pieza svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Llegan volando desde su costado, girando, y se acomodan */
+@keyframes llegar-izq {
+  from { transform: translateX(-60vw) rotate(-120deg) scale(.6); opacity: 0; }
+  55% { opacity: 1; }
+  80% { transform: translateX(8px) rotate(calc(var(--r) + 6deg)) scale(1.04); }
+  to { transform: translateX(0) rotate(var(--r)) scale(1); opacity: 1; }
+}
+@keyframes llegar-der {
+  from { transform: translateX(60vw) rotate(120deg) scale(.6); opacity: 0; }
+  55% { opacity: 1; }
+  80% { transform: translateX(-8px) rotate(calc(var(--r) - 6deg)) scale(1.04); }
+  to { transform: translateX(0) rotate(var(--r)) scale(1); opacity: 1; }
+}
+@keyframes mecerse { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-8px) rotate(3deg); } }
+
+/* El contorno se dibuja solo mientras llega */
+.linea { fill: none; stroke: #7A3B49; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.trazo { stroke-dasharray: 1; stroke-dashoffset: 1; animation: dibujar 1.6s ease forwards; animation-delay: calc(var(--d) + .35s); }
+.trazo-fijo { stroke-dashoffset: 0; animation: aparecer-trazo .6s ease both; animation-delay: calc(var(--d) + 1.6s); }
+@keyframes dibujar { to { stroke-dashoffset: 0; } }
+@keyframes aparecer-trazo { from { opacity: 0; } to { opacity: 1; } }
+
+/* La mancha de acuarela aparece al final */
+.mancha { transform-box: fill-box; transform-origin: center; opacity: 0; animation: tenir 1.4s ease forwards; animation-delay: calc(var(--d) + 1s); }
+@keyframes tenir { from { opacity: 0; transform: scale(.7); transform-origin: center; } to { opacity: .55; transform: scale(1); } }
+
+@media (prefers-color-scheme: dark) {
+  .linea { stroke: #F1DCD3; }
+  @keyframes tenir { from { opacity: 0; } to { opacity: .28; } }
+}
+
+/* Celular: los costados son angostos, así que las figuras se asoman desde los bordes */
+@media (max-width: 760px) {
+  .pieza { width: calc(var(--t) * .5); opacity: .32; }
+  .pieza-izq { left: calc(var(--t) * -.26); }
+  .pieza-der { right: calc(var(--t) * -.26); }
+}
+
+.aviso-prueba { margin-bottom: .5rem; padding: .375rem .75rem; text-align: center; font-size: .85rem; background: var(--nota-fondo); color: var(--nota-texto); border-radius: 999px; }
+.aviso-prueba button { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: inherit; cursor: pointer; text-decoration: underline; }
+.aviso-prueba a { color: inherit; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pieza, .pieza-dentro, .trazo, .mancha, .trazo-fijo { animation: none !important; stroke-dashoffset: 0; opacity: 1; }
+  .mancha { opacity: .5; }
+}

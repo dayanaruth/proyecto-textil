@@ -2,6 +2,9 @@
 import { guardar } from '../datos/almacenamiento.js';
 import { puedeInstalar, esIphone, instalar, instalada } from '../utilidades/pwa.js';
 
+// Dirección pública de la app (la misma del código QR)
+const URL_APP = 'https://dayanaruth.github.io/proyecto-textil/';
+
 const pasos = (lista) => `<ol class="pasos-ayuda">${lista.map((p) => `<li>${p}</li>`).join('')}</ol>`;
 const ir = (ruta, texto) => `<a class="btn btn-secundario btn-chico" href="${ruta}">${texto} ▶</a>`;
 
@@ -49,6 +52,24 @@ const TEMAS = [
 export function mostrar(main) {
   main.innerHTML = `
     <h1>Ayuda</h1>
+    <section class="compartir-app">
+      <img class="qr-chico" src="img/qr-mi-taller.svg" alt="Código QR para abrir Mi Taller" width="160" height="160">
+      <div>
+        <h2>📲 Comparte Mi Taller</h2>
+        <p>Pide a tu compañera que apunte la <b>cámara de su celular</b> a este código.</p>
+        <div class="compartir-botones">
+          <button type="button" class="btn btn-principal" id="qr-grande">🔍 Mostrar en grande</button>
+          <button type="button" class="btn btn-secundario" id="enviar-enlace">📤 Enviar el enlace</button>
+        </div>
+        <p class="aviso-respaldo" id="enlace-mensaje" role="status"></p>
+      </div>
+    </section>
+    <dialog class="dialogo dialogo-qr" id="dialogo-qr">
+      <h2>Escanea con la cámara</h2>
+      <img src="img/qr-mi-taller.svg" alt="Código QR para abrir Mi Taller" width="320" height="320">
+      <p>o escribe: <b>dayanaruth.github.io/proyecto-textil</b></p>
+      <button type="button" class="btn btn-principal btn-ancho" id="cerrar-qr">Listo</button>
+    </dialog>
     <p class="ayuda">Toca una pregunta para ver la respuesta.</p>
     ${TEMAS.map((t) => `
       <section class="zona">
@@ -65,6 +86,26 @@ export function mostrar(main) {
       <p>Las fórmulas de los moldes y las tablas de tallas son provisionales, hasta su revisión con el docente del taller.</p>
     </section>`;
   main.querySelector('[data-instalar]')?.addEventListener('click', async (e) => { await instalar(); e.target.remove(); });
+  // Compartir: QR en grande o enviar el enlace (WhatsApp en el celular; copiar en la PC)
+  const dialogo = main.querySelector('#dialogo-qr');
+  main.querySelector('#qr-grande').addEventListener('click', () => dialogo.showModal());
+  main.querySelector('#cerrar-qr').addEventListener('click', () => dialogo.close());
+  dialogo.addEventListener('click', (e) => { if (e.target === dialogo) dialogo.close(); });
+  main.querySelector('#enviar-enlace').addEventListener('click', async () => {
+    const mensaje = main.querySelector('#enlace-mensaje');
+    const datos = { title: 'Mi Taller', text: 'Mi Taller: moldes, tela y precios para Corte y Confección. Ábrela aquí:', url: URL_APP };
+    if (navigator.share) {
+      try { await navigator.share(datos); } catch { /* la persona canceló */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(URL_APP);
+      mensaje.textContent = '✅ Enlace copiado. Pégalo en WhatsApp o donde quieras.';
+    } catch {
+      mensaje.textContent = `Copia este enlace: ${URL_APP}`;
+    }
+  });
+
   main.querySelector('#ver-bienvenida').addEventListener('click', () => {
     guardar('bienvenida', false);
     location.hash = '#/bienvenida';

@@ -79,6 +79,7 @@ function resultado(plano, piezas) {
     <h2 class="subtitulo">Cómo acomodar las piezas</h2>
     <p class="ayuda">Dobla la tela a lo largo, orillo con orillo. Las piezas «al doblez» van pegadas al doblez.</p>
     <div class="lienzo-molde lienzo-tela">${dibujoPlano(plano)}</div>
+    <a class="btn btn-secundario btn-ancho" href="#/herramientas/lista">✅ Antes de cortar, revisa la lista</a>
     <details class="calculos">
       <summary>¿Y con otro ancho de tela?</summary>
       <table>${comparar.map(({ a, p }) => `

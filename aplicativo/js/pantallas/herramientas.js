@@ -9,12 +9,16 @@ import { numero } from '../utilidades/formato.js';
 import { hayVoz, hablar } from '../utilidades/voz.js';
 import * as diccionario from './diccionario.js';
 import * as ejercicios from './ejercicios.js';
+import * as cronometro from './cronometro.js';
+import * as listaCorte from './lista-corte.js';
 
 const OPCIONES = [
   { ruta: 'conversor', icono: '📏', nombre: 'Conversor de medidas', desc: 'Centímetros, metros, pulgadas y yardas' },
   { ruta: 'guia', icono: '📖', nombre: 'Cómo tomar medidas', desc: 'Consejos, el orden y práctica en pareja' },
   { ruta: 'diccionario', icono: '📚', nombre: 'Diccionario de costura', desc: 'Palabras del taller, cuellos, mangas y bolsillos' },
   { ruta: 'ejercicios', icono: '✏️', nombre: 'Ejercicios para practicar', desc: 'Pon a prueba lo que sabes, por niveles' },
+  { ruta: 'cronometro', icono: '⏱️', nombre: 'Cronómetro de costura', desc: 'Cuánto tardas de verdad en coser una prenda' },
+  { ruta: 'lista', icono: '✅', nombre: 'Antes de cortar', desc: 'Lista para revisar antes de meter la tijera' },
 ];
 
 export function mostrar(main, [a, ...resto]) {
@@ -22,6 +26,8 @@ export function mostrar(main, [a, ...resto]) {
   if (a === 'guia') return guia(main, resto);
   if (a === 'diccionario') return diccionario.mostrar(main, resto);
   if (a === 'ejercicios') return ejercicios.mostrar(main, resto);
+  if (a === 'cronometro') return cronometro.mostrar(main);
+  if (a === 'lista') return listaCorte.mostrar(main);
   main.innerHTML = `
     <h1>Aprender y practicar</h1>
     <p class="ayuda">Herramientas para el taller y para estudiar.</p>

@@ -4,6 +4,7 @@ import { leer, guardar } from '../datos/almacenamiento.js';
 import { calcularCostos, precioVenta, valor } from '../calculos/costos.js';
 import { bs, numero } from '../utilidades/formato.js';
 import { barraPasos, esc } from '../utilidades/ui.js';
+import { preferencias } from '../datos/cotizaciones.js';
 
 // Datos iniciales: la tela calculada en el paso anterior + insumos de la prenda
 function estadoInicial(prenda, trabajo) {
@@ -13,7 +14,7 @@ function estadoInicial(prenda, trabajo) {
   return {
     prenda: prenda?.id ?? null,
     materiales: [{ nombre: 'Tela', cantidad: metrosTela, unidad: 'm', precio: '' }, ...(prenda?.insumos ?? []).map((i) => ({ ...i, precio: '' }))],
-    horas: '', pagoHora: '', gastos: '', ganancia: '30', tipo: 'costo',
+    horas: preferencias().horas[prenda?.id] ?? '', pagoHora: preferencias().pagoHora, gastos: '', ganancia: '30', tipo: 'costo',
   };
 }
 

@@ -322,3 +322,33 @@
 .errores { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .625rem; }
 .errores li { padding: .75rem 1rem; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
 .errores p + p { margin-top: .25rem; }
+
+/* Cronómetro de costura */
+.cronometro { margin: 1rem 0; padding: 1.25rem 1rem; text-align: center; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
+.cronometro.corriendo { border-color: var(--primario); }
+.reloj { font-size: 3.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.corriendo .reloj { color: var(--primario); }
+.reloj-estado { margin: .25rem 0 1rem; color: var(--texto-suave); font-weight: 600; }
+.cronometro .enlace-boton { margin-top: .5rem; }
+.consejos-chicos { margin-bottom: 1rem; font-size: .9rem; color: var(--texto-suave); }
+.consejos-chicos li span { font-size: 1.2rem; }
+.tiempo img { flex: none; width: 2.5rem; height: 2.5rem; background: var(--lienzo); border-radius: 8px; padding: .125rem; }
+
+/* Lista antes de cortar */
+.grupo-icono { font-size: 1.75rem; }
+.lista-control { list-style: none; margin: 0; padding: 0; }
+.lista-control li { padding: .5rem 1rem; border-top: 1px solid var(--borde); }
+.lista-control li:first-child { border-top: 0; }
+.control { display: flex; align-items: flex-start; gap: .75rem; padding: .25rem 0; cursor: pointer; font-weight: 600; }
+.control input { flex: none; width: 1.6rem; height: 1.6rem; margin-top: .1rem; accent-color: var(--primario); }
+.control:has(input:checked) span { color: var(--texto-suave); text-decoration: line-through; }
+.lista-control details { margin: .125rem 0 .25rem 2.35rem; }
+.lista-control summary { color: var(--primario); font-weight: 600; font-size: .9rem; cursor: pointer; }
+.lista-control details p { margin-top: .25rem; color: var(--texto-suave); font-size: .9rem; }
+.listo-cortar { font-size: 1.2rem; font-weight: 800; }
+
+/* Relojito del cronómetro en la barra de arriba */
+.reloj-barra {
+  flex: none; padding: .25rem .625rem; border-radius: 999px; font-weight: 700; font-size: .85rem; text-decoration: none;
+  background: var(--primario-suave); color: var(--primario); font-variant-numeric: tabular-nums;
+}

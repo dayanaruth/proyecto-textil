@@ -10,6 +10,7 @@ import * as cotizaciones from './pantallas/cotizaciones.js';
 import * as herramientas from './pantallas/herramientas.js';
 import { tieneMolde } from './moldes/registro.js';
 import { iniciarPwa } from './utilidades/pwa.js';
+import * as tiempos from './datos/tiempos.js';
 import { buscarPrenda, prendaMadre } from './datos/prendas.js';
 
 const main = document.getElementById('app');
@@ -65,6 +66,18 @@ function navegar() {
   window.scrollTo(0, 0);
   main.focus({ preventScroll: true });
 }
+
+// Relojito arriba mientras el cronómetro de costura cuenta (menos en su propia pantalla)
+const relojBarra = document.getElementById('reloj-barra');
+function actualizarReloj() {
+  const visible = tiempos.corriendo() && !location.hash.startsWith('#/herramientas/cronometro');
+  relojBarra.hidden = !visible;
+  if (visible) relojBarra.querySelector('span').textContent = tiempos.reloj(tiempos.transcurrido()).replace(/:\d\d$/, '');
+}
+setInterval(actualizarReloj, 15000);
+window.addEventListener('cronometro', actualizarReloj);
+window.addEventListener('hashchange', actualizarReloj);
+actualizarReloj();
 
 window.addEventListener('hashchange', navegar);
 navegar();

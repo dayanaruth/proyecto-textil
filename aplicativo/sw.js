@@ -3,7 +3,7 @@
 // actualizar la app nunca borra los datos de la persona.
 
 // ⚠️ Cambiar VERSION cada vez que se publique un cambio (así el celular se actualiza)
-const VERSION = 'mi-taller-v8';
+const VERSION = 'mi-taller-v9';
 
 const ARCHIVOS = [
   './',
@@ -27,6 +27,7 @@ const ARCHIVOS = [
   'js/datos/medidas.js',
   'js/datos/prendas.js',
   'js/datos/tallas.js',
+  'js/datos/tiempos.js',
   'js/moldes/dibujo-svg.js',
   'js/moldes/geometria.js',
   'js/moldes/impresion.js',
@@ -42,6 +43,7 @@ const ARCHIVOS = [
   'js/moldes/prendas/pantalon-varon.js',
   'js/moldes/prendas/vestido.js',
   'js/pantallas/costos.js',
+  'js/pantallas/cronometro.js',
   'js/pantallas/cotizaciones.js',
   'js/pantallas/diccionario.js',
   'js/pantallas/ejercicios.js',
@@ -49,6 +51,7 @@ const ARCHIVOS = [
   'js/pantallas/guardadas.js',
   'js/pantallas/herramientas.js',
   'js/pantallas/inicio.js',
+  'js/pantallas/lista-corte.js',
   'js/pantallas/medidas.js',
   'js/pantallas/molde.js',
   'js/pantallas/tela.js',

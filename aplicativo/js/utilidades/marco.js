@@ -71,13 +71,18 @@ function ponerEstilos() {
   document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: 'css/marco.css' }));
 }
 
-// Activa el marco (solo en la bienvenida). Las figuras llegan una vez y se quitan al salir.
-export function activarMarco() {
+// Activa el marco en la pantalla actual (bienvenida o entrada). Las figuras llegan una vez y se quitan al salir.
+// "rapido": las figuras llegan el doble de rápido (para la entrada corta)
+export function activarMarco(ruta = '#/bienvenida', { rapido = false } = {}) {
   ponerEstilos();
-  if (!document.querySelector('.marco-capa')) document.body.prepend(crearMarco());
+  if (!document.querySelector('.marco-capa')) {
+    const capa = crearMarco();
+    capa.classList.toggle('rapido', rapido);
+    document.body.prepend(capa);
+  }
   document.body.classList.add('con-marco');
   const quitar = () => {
-    if (location.hash.startsWith('#/bienvenida')) return window.addEventListener('hashchange', quitar, { once: true });
+    if (location.hash.startsWith(ruta)) return window.addEventListener('hashchange', quitar, { once: true });
     document.querySelector('.marco-capa')?.remove();
     document.body.classList.remove('con-marco');
   };

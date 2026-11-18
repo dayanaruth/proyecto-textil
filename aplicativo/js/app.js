@@ -10,6 +10,7 @@ import * as cotizaciones from './pantallas/cotizaciones.js';
 import * as herramientas from './pantallas/herramientas.js';
 import * as bienvenida from './pantallas/bienvenida.js';
 import * as ayuda from './pantallas/ayuda.js';
+import * as entrada from './pantallas/entrada.js';
 import { leer } from './datos/almacenamiento.js';
 import { tieneMolde } from './moldes/registro.js';
 import { iniciarPwa } from './utilidades/pwa.js';
@@ -35,6 +36,7 @@ const RUTAS = {
   herramientas: herramientas.mostrar,
   bienvenida: bienvenida.mostrar,
   ayuda: ayuda.mostrar,
+  entrada: entrada.mostrar,
 };
 
 // Pantalla temporal para lo que aún no está hecho
@@ -61,13 +63,18 @@ function destinoAtras(ruta, [id]) {
   return '#/';
 }
 
+// La pantalla de entrada se ve una vez cada vez que se abre la app (por sesión del navegador)
+const entradaVista = () => { try { return sessionStorage.getItem('mi-taller:entrada') === '1'; } catch { return true; } };
+const marcarEntrada = () => { try { sessionStorage.setItem('mi-taller:entrada', '1'); } catch { /* sin almacenamiento: no pasa nada */ } };
+
 function navegar() {
   const [ruta = '', ...datos] = location.hash.replace(/^#\/?/, '').split('/');
   const nombre = ruta || 'inicio';
   // La primera vez que se abre la app, se muestra la bienvenida
-  if (nombre === 'inicio' && !leer('bienvenida', false)) return location.replace('#/bienvenida');
+  if (nombre === 'inicio' && !leer('bienvenida', false)) { marcarEntrada(); return location.replace('#/bienvenida'); }
+  if (nombre === 'inicio' && !entradaVista()) { marcarEntrada(); return location.replace('#/entrada'); }
   const destino = (RUTAS[nombre] ?? pronto)(main, datos);
-  const sinBotones = nombre === 'inicio' || nombre === 'bienvenida';
+  const sinBotones = nombre === 'inicio' || nombre === 'bienvenida' || nombre === 'entrada';
   atras.hidden = sinBotones;
   irInicio.hidden = sinBotones;
   atras.href = destino ?? destinoAtras(nombre, datos);

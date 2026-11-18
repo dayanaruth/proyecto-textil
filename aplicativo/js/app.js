@@ -10,7 +10,6 @@ import * as cotizaciones from './pantallas/cotizaciones.js';
 import * as herramientas from './pantallas/herramientas.js';
 import * as bienvenida from './pantallas/bienvenida.js';
 import * as ayuda from './pantallas/ayuda.js';
-import * as inicioB from './pantallas/inicio-b.js';
 import { leer } from './datos/almacenamiento.js';
 import { tieneMolde } from './moldes/registro.js';
 import { iniciarPwa } from './utilidades/pwa.js';
@@ -36,7 +35,6 @@ const RUTAS = {
   herramientas: herramientas.mostrar,
   bienvenida: bienvenida.mostrar,
   ayuda: ayuda.mostrar,
-  inicio2: inicioB.mostrar, // inicio animado de prueba
 };
 
 // Pantalla temporal para lo que aún no está hecho

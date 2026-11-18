@@ -13,8 +13,8 @@ const CELULAR = `
     <rect x="83" y="26" width="20" height="20" rx="5" fill="#A9C6E8"/>
     <rect x="57" y="52" width="20" height="20" rx="5" fill="#B9D8C2"/><rect x="83" y="52" width="20" height="20" rx="5" fill="#F2C6A0"/>
     <text x="67" y="84" font-size="6" text-anchor="middle" fill="#2B2420" font-family="system-ui">Mi Taller</text>
-    <path d="M140 20 Q150 40 125 46" fill="none" stroke="#9E2F45" stroke-width="3" stroke-linecap="round"/>
-    <path d="M128 39 L124 47 L133 48" fill="none" stroke="#9E2F45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="flecha-instalar"><path d="M140 20 Q150 40 125 46" fill="none" stroke="#9E2F45" stroke-width="3" stroke-linecap="round"/>
+    <path d="M128 39 L124 47 L133 48" fill="none" stroke="#9E2F45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
     <rect x="114" y="114" width="44" height="24" rx="12" fill="#E3F2EC"/>
     <text x="136" y="130" font-size="11" text-anchor="middle" fill="#1E5A38" font-family="system-ui" font-weight="700">✈️ ✓</text>
   </svg>`;

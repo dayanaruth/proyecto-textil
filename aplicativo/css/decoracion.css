@@ -1,0 +1,104 @@
+/* Decoración: fondo con motivos de costura, costura en la barra y animaciones suaves.
+   Todo es opcional: si se quita este archivo, la app funciona igual. */
+
+/* ---------- Fondo: puntadas, botones, carretes, tijeras y aguja (muy suaves) ---------- */
+:root {
+  --patron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%239E2F45' stroke-opacity='.10' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M-10 40 Q50 0 110 40 T230 40' stroke-dasharray='7 6'/%3E%3Cpath d='M-10 170 Q60 210 120 170 T240 170' stroke-dasharray='7 6'/%3E%3Ccircle cx='170' cy='95' r='11'/%3E%3Ccircle cx='166' cy='91' r='1.6'/%3E%3Ccircle cx='174' cy='91' r='1.6'/%3E%3Ccircle cx='166' cy='99' r='1.6'/%3E%3Ccircle cx='174' cy='99' r='1.6'/%3E%3Crect x='29' y='82' width='24' height='5' rx='2.5'/%3E%3Crect x='29' y='115' width='24' height='5' rx='2.5'/%3E%3Cpath d='M34 87 v28 M48 87 v28 M34 92 L48 97 M34 99 L48 104 M34 106 L48 111'/%3E%3Ccircle cx='95' cy='122' r='6'/%3E%3Ccircle cx='109' cy='122' r='6'/%3E%3Cpath d='M99 117 L120 96 M105 117 L84 96'/%3E%3Cpath d='M190 140 L215 115'/%3E%3Cellipse cx='212' cy='118' rx='1.5' ry='3' transform='rotate(45 212 118)'/%3E%3Cpath d='M190 140 Q170 150 180 160 T160 175' stroke-dasharray='3 4'/%3E%3C/g%3E%3C/svg%3E");
+  --mancha-1: rgb(158 47 69 / .10);
+  --mancha-2: rgb(127 183 164 / .14);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --patron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23E58A9C' stroke-opacity='.08' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M-10 40 Q50 0 110 40 T230 40' stroke-dasharray='7 6'/%3E%3Cpath d='M-10 170 Q60 210 120 170 T240 170' stroke-dasharray='7 6'/%3E%3Ccircle cx='170' cy='95' r='11'/%3E%3Ccircle cx='166' cy='91' r='1.6'/%3E%3Ccircle cx='174' cy='91' r='1.6'/%3E%3Ccircle cx='166' cy='99' r='1.6'/%3E%3Ccircle cx='174' cy='99' r='1.6'/%3E%3Crect x='29' y='82' width='24' height='5' rx='2.5'/%3E%3Crect x='29' y='115' width='24' height='5' rx='2.5'/%3E%3Cpath d='M34 87 v28 M48 87 v28 M34 92 L48 97 M34 99 L48 104 M34 106 L48 111'/%3E%3Ccircle cx='95' cy='122' r='6'/%3E%3Ccircle cx='109' cy='122' r='6'/%3E%3Cpath d='M99 117 L120 96 M105 117 L84 96'/%3E%3Cpath d='M190 140 L215 115'/%3E%3Cellipse cx='212' cy='118' rx='1.5' ry='3' transform='rotate(45 212 118)'/%3E%3Cpath d='M190 140 Q170 150 180 160 T160 175' stroke-dasharray='3 4'/%3E%3C/g%3E%3C/svg%3E");
+    --mancha-1: rgb(229 138 156 / .10);
+    --mancha-2: rgb(127 183 164 / .08);
+  }
+}
+
+body {
+  background-color: var(--fondo);
+  background-image:
+    radial-gradient(circle at 8% 0%, var(--mancha-1), transparent 38%),
+    radial-gradient(circle at 95% 100%, var(--mancha-2), transparent 42%),
+    var(--patron);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* ---------- Barra de arriba: semitransparente y con una "costura" ---------- */
+.barra {
+  background: color-mix(in srgb, var(--superficie) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 0;
+}
+.barra::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--primario) 0 8px, transparent 8px 14px);
+  opacity: .45;
+}
+
+/* Tarjetas un poco más vivas */
+.tarjeta, .menu-item, .persona, .tipo-cotizacion, .opcion-prenda { transition: transform .15s ease, box-shadow .15s ease, border-color .15s; }
+.tarjeta:hover, .menu-item:hover, .persona:hover, .tipo-cotizacion:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgb(0 0 0 / .10);
+}
+
+/* ---------- Animaciones ---------- */
+@keyframes aparecer { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes flotar { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(-2deg); } }
+@keyframes coser { from { width: 0; } to { width: 7rem; } }
+@keyframes brillo { 0%, 70% { transform: translateX(-120%) skewX(-20deg); } 100% { transform: translateX(260%) skewX(-20deg); } }
+@keyframes saltito { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(3px, -4px); } }
+
+/* El contenido de cada pantalla aparece subiendo, uno tras otro */
+main > *, .bienvenida-zona > * { animation: aparecer .4s ease both; }
+main > :nth-child(2), .bienvenida-zona > :nth-child(2) { animation-delay: .05s; }
+main > :nth-child(3), .bienvenida-zona > :nth-child(3) { animation-delay: .1s; }
+main > :nth-child(4), .bienvenida-zona > :nth-child(4) { animation-delay: .15s; }
+main > :nth-child(5), .bienvenida-zona > :nth-child(5) { animation-delay: .2s; }
+main > :nth-child(n+6), .bienvenida-zona > :nth-child(n+6) { animation-delay: .25s; }
+
+/* Inicio: las opciones del menú entran una por una */
+.menu .menu-item { animation: aparecer .4s ease both; }
+.menu .menu-item:nth-child(2) { animation-delay: .06s; }
+.menu .menu-item:nth-child(3) { animation-delay: .12s; }
+.menu .menu-item:nth-child(4) { animation-delay: .18s; }
+.menu .menu-item:nth-child(5) { animation-delay: .24s; }
+.menu .menu-item:nth-child(n+6) { animation-delay: .3s; }
+
+/* Botón grande del inicio: un brillo que pasa cada tanto */
+.btn-grande { position: relative; overflow: hidden; }
+.btn-grande::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent);
+  animation: brillo 4.5s ease-in-out infinite 1s;
+  pointer-events: none;
+}
+
+/* Bienvenida: prendas que flotan, título con una costura que se "cose" y flecha que salta */
+.bienvenida-zona { max-width: 34rem; margin: 0 auto; }
+.bienvenida-prendas img { animation: flotar 4s ease-in-out infinite; box-shadow: 0 6px 16px rgb(0 0 0 / .12); }
+.bienvenida-prendas img:nth-child(2) { animation-delay: -.7s; }
+.bienvenida-prendas img:nth-child(3) { animation-delay: -1.4s; }
+.bienvenida-prendas img:nth-child(4) { animation-delay: -2.1s; }
+.bienvenida-prendas img:nth-child(5) { animation-delay: -2.8s; }
+.bienvenida-prendas img:nth-child(6) { animation-delay: -3.5s; }
+.bienvenida-zona h1 { position: relative; padding-bottom: .6rem; }
+.bienvenida-zona h1::after {
+  content: ""; position: absolute; left: 50%; bottom: 0; height: 3px; translate: -50% 0; width: 7rem;
+  background: repeating-linear-gradient(90deg, var(--primario) 0 8px, transparent 8px 13px);
+  animation: coser .9s ease-out both .3s;
+}
+.bienvenida-pasos li { animation: aparecer .4s ease both; }
+.bienvenida-pasos li:nth-child(2) { animation-delay: .1s; }
+.bienvenida-pasos li:nth-child(3) { animation-delay: .2s; }
+.bienvenida-pasos li:nth-child(4) { animation-delay: .3s; }
+.bienvenida-icono { animation: flotar 3.5s ease-in-out infinite; }
+.flecha-instalar { animation: saltito 1.6s ease-in-out infinite; transform-box: fill-box; }
+
+/* Si el celular pide "reducir movimiento", sin animaciones */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

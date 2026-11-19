@@ -6,12 +6,14 @@ import { punto as P } from '../geometria.js';
 import { numero as n } from '../../utilidades/formato.js';
 
 export const FORMULAS = {
-  holguraCadera: 0,        // el taller usa cadera ÷ 4 exacto
+  holguraCadera: 1,        // 1 cm por cuarto = 4 cm en total: lo mínimo para sentarse y caminar
+                           // (el cuaderno usa cadera ÷ 4 exacto; los libros de patronaje dejan 4 cm)
   pinzaMaxima: 3,          // ancho máximo de la pinza
   subidaCostado: 1,        // cuánto sube la cintura en el costado
   bajadaEspalda: 1,        // cuánto baja la cintura en el centro de la espalda
   largoPinza: { delantero: 8, espalda: 11 },
   entradaRuedo: 2,         // falda tubular: el costado entra 2 cm abajo
+  abertura: 18,            // con el ruedo cerrado hace falta una abertura atrás para caminar
   margen: { cintura: 1, costado: 2, ruedo: 3, centroEspalda: 2 },
   pretina: { ancho: 3, cruce: 3, margen: 1 },
 };
@@ -64,6 +66,8 @@ function mitad(cual, m, ancho, cintura, pinza) {
     { paso: 3, tipo: 'punto', p: [G], nombre: 'G', der: true },
     ...(espalda ? [{ paso: 3, tipo: 'punto', p: [A1], nombre: 'A1', der: true }] : []),
     { paso: 4, tipo: 'curva', p: [G, control, E] },
+    ...(espalda && F.entradaRuedo > 0 ? [{ paso: 6, tipo: 'linea', p: [P(0, L - F.abertura), P(4, L - F.abertura)] },
+      { paso: 6, tipo: 'texto', p: [P(5, L - F.abertura / 2)], texto: 'ABERTURA', tam: 1.4 }] : []),
     ...(hayPinza ? [{ paso: 5, tipo: 'pinza', p: [enCintura(xp - pinza / 2), P(xp, enCintura(xp).y + largoPinza), enCintura(xp + pinza / 2)] }] : []),
   ];
 
@@ -76,7 +80,7 @@ function mitad(cual, m, ancho, cintura, pinza) {
     hayPinza
       ? `Pinza: en el medio de la cintura marca ${n(pinza)} cm de ancho y baja ${n(largoPinza)} cm por el centro. Une las puntas con la parte de abajo.`
       : 'Con estas medidas no hace falta pinza: la cintura y la cadera son casi iguales.',
-    `Agrega el margen de costura: ${n(mg.cintura)} cm en la cintura, ${n(mg.costado)} cm en el costado y ${n(mg.ruedo)} cm en el ruedo. ${espalda ? `En el centro de la espalda, ${n(mg.centroEspalda)} cm para el cierre.` : 'El doblez no lleva margen.'} Recorta por la línea de afuera.`,
+    `Agrega el margen de costura: ${n(mg.cintura)} cm en la cintura, ${n(mg.costado)} cm en el costado y ${n(mg.ruedo)} cm en el ruedo. ${espalda ? `En el centro de la espalda, ${n(mg.centroEspalda)} cm para el cierre arriba y para la abertura abajo: deja sin coser los últimos ${n(F.abertura)} cm desde el ruedo, así se puede caminar.` : 'El doblez no lleva margen.'} Recorta por la línea de afuera.`,
   ];
 
   return {
@@ -84,6 +88,8 @@ function mitad(cual, m, ancho, cintura, pinza) {
     cortar: espalda ? 'Cortar 2' : 'Cortar 1 al doblez',
     alDoblez: !espalda,
     centro: espalda ? 'CENTRO ESPALDA · CIERRE' : 'DOBLEZ',
+    // En la espalda el texto va arriba, donde va el cierre (abajo está la abertura)
+    ...(espalda ? { lineaCentro: { a: A1, b: P(0, L - F.abertura) } } : {}),
     elementos,
     pasos,
     contorno: [

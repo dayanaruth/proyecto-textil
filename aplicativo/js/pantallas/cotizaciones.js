@@ -2,7 +2,7 @@
 import * as cotizaciones from '../datos/cotizaciones.js';
 import { dibujo } from '../utilidades/iconos.js';
 import * as personas from '../datos/personas.js';
-import { buscarPrenda } from '../datos/prendas.js';
+import { buscarPrenda, sirvePara } from '../datos/prendas.js';
 import { TABLAS, tablasPara } from '../datos/tallas.js';
 import { telaDePrenda, precioUnidad, telaTotal } from '../calculos/cotizacion.js';
 import { ANCHOS_COMUNES } from '../calculos/tela.js';
@@ -55,7 +55,8 @@ function inicio(main) {
 // ---------- Nueva cotización ----------
 function nueva(main, tipo) {
   const pref = cotizaciones.preferencias();
-  const todasPersonas = personas.listar();
+  // Solo las personas para quienes sirve la prenda (una falda no se cotiza para un varón)
+  const personasPara = (prenda) => personas.listar().filter((p) => sirvePara(prenda, avatar(p.avatar).tipo));
   const e = {
     tipo, prenda: null, tabla: null,
     cantidades: {},                     // por persona (id) o por talla
@@ -109,6 +110,7 @@ function nueva(main, tipo) {
   // ----- Paso 2: personas o tallas -----
   const pintarQuienes = () => {
     const prenda = buscarPrenda(e.prenda);
+    const todasPersonas = personasPara(prenda);
     if (tipo === 'medida') {
       $('#quienes').innerHTML = `
         <h2><span class="cuadro-num">2</span> ¿Para quiénes?</h2>
@@ -154,7 +156,7 @@ function nueva(main, tipo) {
   const lineas = () => {
     const prenda = buscarPrenda(e.prenda);
     if (tipo === 'medida') {
-      return todasPersonas.filter((p) => (e.cantidades[p.id] ?? 0) > 0 && prenda.medidas.every((id) => p.medidas[id] != null))
+      return personasPara(prenda).filter((p) => (e.cantidades[p.id] ?? 0) > 0 && prenda.medidas.every((id) => p.medidas[id] != null))
         .map((p) => ({ clave: p.id, detalle: `${tituloDe(e.prenda)} – ${p.nombre}`, cantidad: e.cantidades[p.id], medidas: p.medidas }));
     }
     return TABLAS[e.tabla].tallas.filter((t) => (e.cantidades[t] ?? 0) > 0)

@@ -17,7 +17,10 @@ function pieza(m, F, cual) {
   const xc = (W - ext) / 2;                                   // línea de plancha (hilo)
   const lado = del ? -1 : 1;
   const rodilla = m.rodilla ?? Bo + F.rodillaExtra;      // el taller mide el contorno de rodilla
-  const k = (rodilla / 2 + lado) / 2, b = (Bo / 2 + lado) / 2;
+  // Rodilla (cuaderno y guía del buzo): delantero = rodilla ÷ 2; el trasero sale 2 cm a cada lado.
+  // Nunca más angosta que la bota (si no, la pierna se abriría hacia abajo).
+  const b = (Bo / 2 + lado) / 2;
+  const k = Math.max(rodilla / 2 + (del ? 0 : 4), 2 * b) / 2;
   const pinza = F.pinza[cual];
   const anchoCintura = (m.cintura + F.holguraCintura) / 4 + pinza;
 
@@ -97,7 +100,8 @@ export function construirPantalon(m, F) {
       { nombre: 'Tiro de espalda', formula: `cadera ÷ ${F.tiro.espalda}`, valor: esp.datos.ext },
       { nombre: 'Cintura delantera', formula: `(cintura + ${n(F.holguraCintura)}) ÷ 4 + pinza`, valor: del.datos.anchoCintura },
       { nombre: 'Cintura de espalda', formula: `(cintura + ${n(F.holguraCintura)}) ÷ 4 + pinza`, valor: esp.datos.anchoCintura },
-      { nombre: 'Rodilla (cada pieza)', formula: 'contorno de rodilla ÷ 2', valor: (m.rodilla ?? m.bota + F.rodillaExtra) / 2 },
+      { nombre: 'Rodilla delantero', formula: 'contorno de rodilla ÷ 2', valor: 2 * del.datos.k },
+      { nombre: 'Rodilla trasero', formula: 'rodilla ÷ 2 + 4 (2 a cada lado)', valor: 2 * esp.datos.k },
     ],
     piezas: [del, esp],
     rectangulos: [

@@ -21,7 +21,7 @@ const F = FORMULAS;
 
 function base(m) {
   const c6 = m.cuello / 6;
-  const busto = m.busto / 4 + BLUSA.holguraBusto + F.holgura;
+  const busto = m.busto / 4 + F.holgura;
   const ys = m.busto / 8 + BLUSA.sisaExtra;
   const hombroX = m['ancho-espalda'] / 2 + BLUSA.hombroExtra.espalda + F.holgura;
   const R = P(hombroX, BLUSA.caidaHombro.espalda);
@@ -32,7 +32,7 @@ function base(m) {
   const QP = Math.hypot(Pc.x, Pc.y - yQ);
   const yW = BLUSA.escoteEspalda + m['talle-espalda'], yH = yW + m['altura-cadera'], yR = m['largo-polera'];
   const cintura = m.cintura / 4 + BLUSA.pinzaCintura + F.holgura;
-  const cadera = m.cadera / 4 + BLUSA.holguraCadera + F.holgura;
+  const cadera = m.cadera / 4 + F.holgura;
   return { c6, busto, ys, R, Pc, yQ, QP, yW, yH, yR, cintura: Math.min(cintura, Math.max(busto, cadera)), cadera };
 }
 

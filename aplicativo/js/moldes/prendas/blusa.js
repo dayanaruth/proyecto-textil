@@ -6,9 +6,10 @@ import { punto as P, largoTramo } from '../geometria.js';
 import { numero as n } from '../../utilidades/formato.js';
 
 export const FORMULAS = {
-  holguraBusto: 0,        // cuaderno del taller: busto ÷ 4 exacto
+  holguraBusto: 1.5,      // 1,5 cm por cuarto = 6 cm en total (los libros dejan de 5 a 8 cm en un cuerpo con manga;
+                          // el cuaderno usa busto ÷ 4 exacto, que queda pegado al cuerpo)
   sisaExtra: 11,          // profundidad de sisa = busto ÷ 8 + sisaExtra
-  holguraCadera: 0,       // cuaderno del taller: cadera ÷ 4 exacto
+  holguraCadera: 1,       // 1 cm por cuarto = 4 cm en total (igual que la falda)
   pinzaCintura: 3,        // ancho de la pinza de cintura (delantero y espalda)
   escoteEspalda: 2,       // profundidad del escote de espalda
   escoteDelantero: 1,     // se suma a cuello ÷ 6 para la profundidad del escote delantero

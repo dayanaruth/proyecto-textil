@@ -2,7 +2,7 @@
 import * as personas from '../datos/personas.js';
 import { dibujo } from '../utilidades/iconos.js';
 import { MEDIDAS, ZONAS, medidasDe, figuraMedida, figuraZona } from '../datos/medidas.js';
-import { buscarPrenda, prendaMadre } from '../datos/prendas.js';
+import { buscarPrenda, prendaMadre, sirvePara, NOMBRE_TIPO } from '../datos/prendas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
 import { revisarMedida } from '../calculos/validacion.js';
 import { AVATARES, avatar } from '../utilidades/avatares.js';
@@ -91,6 +91,10 @@ function lista(main) {
 // ---------- Agregar o editar persona ----------
 function formulario(main, p, { para, desdeTrabajo }) {
   const prenda = para ? buscarPrenda(para) : null;
+  // Nueva persona para una prenda: solo los dibujos que corresponden (falda → mujer, señora, niña)
+  const trabajo = desdeTrabajo ? buscarPrenda(leer('trabajo', {}).prenda ?? '') : null;
+  const tipo = (prenda ?? trabajo)?.para;
+  const dibujos = AVATARES.filter((x) => !tipo || x.tipo === tipo);
   main.innerHTML = `
     ${prenda ? barraPasos(0) : ''}
     <h1>${p ? 'Cambiar datos' : 'Nueva persona'}</h1>
@@ -101,7 +105,7 @@ function formulario(main, p, { para, desdeTrabajo }) {
       <p class="error" id="error" role="alert"></p>
       <fieldset class="elegir-avatar">
         <legend>Elige un dibujo</legend>
-        ${AVATARES.map((x, i) => `
+        ${dibujos.map((x, i) => `
           <label class="opcion-avatar">
             <input type="radio" name="avatar" value="${x.id}" ${(p ? p.avatar === x.id : i === 0) ? 'checked' : ''}>
             <span class="avatar">${x.svg}</span><span>${x.nombre}</span>
@@ -156,7 +160,7 @@ function ficha(main, p) {
         <a class="enlace-chico" href="#/guardadas/${p.id}/editar">✏️ Cambiar nombre o dibujo</a></div>
     </section>
     ${personas.esAntigua(p) ? '<p class="nota">⏰ Estas medidas tienen más de 6 meses. El cuerpo cambia: conviene volver a medir.</p>' : ''}
-    <a class="btn btn-principal btn-ancho" href="#/prendas">✂️ Hacer una prenda para ${esc(p.nombre)}</a>
+    <a class="btn btn-principal btn-ancho" href="#/prendas/${p.id}">✂️ Hacer una prenda para ${esc(p.nombre)}</a>
     <p class="ayuda centrada">Toca una medida para agregarla o cambiarla.</p>
     ${ZONAS.map((z) => {
       const ids = medidasDe(z, tipo);
@@ -250,18 +254,20 @@ function editarMedida(main, p, id) {
 export function para(main, [prendaId, elegida]) {
   const prenda = buscarPrenda(prendaId);
   if (!prenda?.medidas) return void location.replace('#/prendas');
-  const todas = personas.listar();
+  const guardadas = personas.listar();
+  const todas = guardadas.filter((p) => sirvePara(prenda, tipoDe(p)));
   const madre = prendaMadre(prendaId);
   const volver = madre ? `#/prenda/${madre.id}` : '#/prendas';
 
-  if (elegida === 'sola' || (!elegida && !todas.length)) {
+  if (elegida === 'sola' || (!elegida && !guardadas.length)) {
     const t = leer('trabajo', { medidas: {} });
     guardar('trabajo', { prenda: prendaId, persona: null, medidas: t.persona ? {} : t.medidas });
     return void location.replace(`#/medidas/${prendaId}`);
   }
   if (elegida) {
     const p = personas.buscar(elegida);
-    if (!p) return void location.replace(`#/para/${prendaId}`);
+    // Una persona que no corresponde (ej. un varón para una falda) no se puede elegir
+    if (!p || !sirvePara(prenda, tipoDe(p))) return void location.replace(`#/para/${prendaId}`);
     guardar('trabajo', { prenda: prendaId, persona: p.id, medidas: { ...p.medidas } });
     const falta = prenda.medidas.findIndex((id) => p.medidas[id] == null);
     return void location.replace(falta < 0 ? `#/medidas/${prendaId}/revisar` : `#/medidas/${prendaId}/${falta}`);
@@ -270,7 +276,8 @@ export function para(main, [prendaId, elegida]) {
   main.innerHTML = `
     ${barraPasos(0)}
     <h1>¿Para quién es?</h1>
-    <p class="ayuda">${prenda.titulo ?? prenda.nombre}. Si eliges a alguien guardado, solo te pediremos las medidas que falten.</p>
+    <p class="ayuda">${prenda.titulo ?? prenda.nombre}, para ${NOMBRE_TIPO[prenda.para]}. Si eliges a alguien guardado, solo te pediremos las medidas que falten.</p>
+    ${todas.length < guardadas.length ? `<p class="nota nota-info">Solo aparecen las personas para esta prenda (${NOMBRE_TIPO[prenda.para]}).</p>` : ''}
     <div class="tarjetas">
       ${todas.map((p) => {
         const faltan = prenda.medidas.filter((id) => p.medidas[id] == null).length;

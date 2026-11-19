@@ -26,7 +26,7 @@ export function imprimir(titulo, molde) {
     return hojas.map((h) => `
       <section class="hoja">
         <p class="hoja-titulo">${titulo} · <b>${pieza.nombre}</b> · fila ${h.fila}, columna ${h.columna} · hoja ${++numero} de ${total}</p>
-        <svg width="${HOJA.ancho}cm" height="${HOJA.alto}cm" viewBox="${r(h.x)} ${r(h.y)} ${HOJA.ancho} ${HOJA.alto}" font-family="system-ui, sans-serif">
+        <svg width="${HOJA.ancho}cm" height="${HOJA.alto}cm" viewBox="${r(h.x)} ${r(h.y)} ${HOJA.ancho} ${HOJA.alto}" font-family="Nunito, system-ui, sans-serif">
           ${dibujo}
           <rect x="${r(h.x)}" y="${r(h.y)}" width="${HOJA.ancho}" height="${HOJA.alto}" fill="none" stroke="#999" stroke-width=".05" stroke-dasharray=".4 .3"/>
           <text x="${r(h.x + .5)}" y="${r(h.y + 1.2)}" font-size="1" fill="#999">${pieza.nombre} ${h.fila}-${h.columna}</text>

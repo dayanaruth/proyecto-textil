@@ -382,7 +382,7 @@
 .entrada-zona { display: grid; justify-items: center; align-content: center; gap: .5rem; min-height: 78vh; text-align: center; cursor: pointer; }
 .entrada-logo { width: 9rem; height: 9rem; object-fit: contain; filter: drop-shadow(0 8px 18px rgb(0 0 0 / .2)); animation: entrada-logo .9s cubic-bezier(.3, 1.5, .5, 1) both .15s; }
 @keyframes entrada-logo { from { opacity: 0; transform: scale(.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
-.entrada-titulo { position: relative; margin-top: .5rem; padding-bottom: .6rem; font-size: 2.4rem; color: var(--primario); }
+.entrada-titulo { position: relative; margin-top: .5rem; padding-bottom: .6rem; font-family: var(--letra-nombre); font-size: 3.2rem; line-height: 1.1; color: var(--primario); }
 .entrada-titulo::after {
   content: ""; position: absolute; left: 50%; bottom: 0; height: 3px; width: 8rem; translate: -50% 0;
   background: repeating-linear-gradient(90deg, var(--primario) 0 8px, transparent 8px 13px);

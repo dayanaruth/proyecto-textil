@@ -1,5 +1,35 @@
 /* Colores, letra grande y modo claro/oscuro */
+
+/* Tipos de letra (guardados en la app para que funcionen sin internet)
+   - Fraunces: títulos, con remates suaves tipo etiqueta de costura
+   - Nunito: texto, redondeada, amigable y fácil de leer
+   - Dancing Script: solo el nombre «Mi Taller», como bordado a mano */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url(../fuentes/fraunces.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url(../fuentes/nunito.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src: url(../fuentes/dancing-script.woff2) format('woff2');
+}
+
 :root {
+  --letra-titulo: 'Fraunces', Georgia, serif;
+  --letra-texto: 'Nunito', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --letra-nombre: 'Dancing Script', 'Fraunces', cursive;
   --fondo: #FBF7F2;
   --superficie: #FFFFFF;
   --texto: #2B2420;
@@ -40,7 +70,7 @@
 [hidden] { display: none !important; }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--letra-texto);
   background: var(--fondo);
   color: var(--texto);
   line-height: 1.5;
@@ -54,5 +84,7 @@ button, input, select { font: inherit; color: inherit; }
 main { max-width: 42rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
 main:focus { outline: none; }
 
-h1 { font-size: 1.5rem; line-height: 1.25; margin-bottom: .25rem; }
+h1, h2, h3 { font-family: var(--letra-titulo); font-weight: 700; letter-spacing: -.01em; }
+.marca-texto { font-family: var(--letra-nombre); font-weight: 700; font-size: 1.45em; line-height: 1; }
+h1 { font-size: 1.6rem; line-height: 1.2; margin-bottom: .25rem; }
 .ayuda { color: var(--texto-suave); margin-bottom: 1rem; }

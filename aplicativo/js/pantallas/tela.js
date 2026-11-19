@@ -99,7 +99,7 @@ function dibujoPlano({ util, largo, colocadas }) {
       <text x="${r(c.x + c.ancho / 2)}" y="${r(c.y + c.alto / 2)}" font-size="${r(tam)}" font-weight="700"
             text-anchor="middle" dominant-baseline="middle" fill="#2B2420">${c.nombre}</text>`;
   }).join('');
-  return `<svg viewBox="-6 -5 ${r(util + 20)} ${r(largo + 10)}" role="img" font-family="system-ui, sans-serif"
+  return `<svg viewBox="-6 -5 ${r(util + 20)} ${r(largo + 10)}" role="img" font-family="Nunito, system-ui, sans-serif"
       aria-label="Plano de corte: ${colocadas.map((c) => c.nombre).join(', ')}">
     <rect x="0" y="0" width="${r(util)}" height="${r(largo)}" fill="#F4EEE6" stroke="#8A7A6E" stroke-width=".3"/>
     ${piezas}

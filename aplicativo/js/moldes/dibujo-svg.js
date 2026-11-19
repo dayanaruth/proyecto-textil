@@ -71,5 +71,5 @@ export function svgPieza(pieza, paso) {
   const c = cajaPieza(pieza);
   const ancho = pieza.verAncho ? ` style="min-width:${pieza.verAncho}px"` : '';
   return `<svg viewBox="${r(c.x)} ${r(c.y)} ${r(c.ancho)} ${r(c.alto)}"${ancho} role="img"
-    aria-label="Molde ${pieza.nombre}" font-family="system-ui, sans-serif">${contenidoPieza(pieza, paso)}</svg>`;
+    aria-label="Molde ${pieza.nombre}" font-family="Nunito, system-ui, sans-serif">${contenidoPieza(pieza, paso)}</svg>`;
 }

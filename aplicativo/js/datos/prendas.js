@@ -42,6 +42,13 @@ const INSUMOS_POLERA = [
   { nombre: 'Rib para el cuello', cantidad: '0,1', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
 ];
+// Buzos (pantalón deportivo con elástico): guía de ropa deportiva del CEA
+const BUZO_VARON = ['cintura', 'cadera', 'tiro', 'largo-pantalon', 'bota'];
+const BUZO_DAMA = ['cintura', 'cadera', 'tiro', 'altura-rodilla', 'largo-pantalon', 'bota'];
+const INSUMOS_BUZO = [
+  { nombre: 'Elástico (4 cm)', cantidad: '1', unidad: 'm' },
+  { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
+];
 const INSUMOS_VESTIDO = [
   { nombre: 'Cierre invisible (50 cm)', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
@@ -72,6 +79,13 @@ export const PRENDAS = [
     variantes: [
       { id: 'polera-dama', nombre: 'Dama', titulo: 'Polera de dama', img: img('polera-dama'), medidas: POLERA_DAMA, insumos: INSUMOS_POLERA },
       { id: 'polera-varon', nombre: 'Varón', titulo: 'Polera de varón', img: img('polera-varon'), medidas: POLERA_VARON, insumos: INSUMOS_POLERA },
+    ],
+  },
+  {
+    id: 'buzo', nombre: 'Buzo deportivo', detalle: 'Dama o varón', img: img('buzo-varon'),
+    variantes: [
+      { id: 'buzo-dama', nombre: 'Dama', titulo: 'Buzo de dama', img: img('buzo-dama'), medidas: BUZO_DAMA, insumos: INSUMOS_BUZO },
+      { id: 'buzo-varon', nombre: 'Varón', titulo: 'Buzo de varón', img: img('buzo-varon'), medidas: BUZO_VARON, insumos: INSUMOS_BUZO },
     ],
   },
 ];

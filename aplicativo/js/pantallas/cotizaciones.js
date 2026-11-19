@@ -11,7 +11,7 @@ import { avatar } from '../utilidades/avatares.js';
 import { bs, metros, numero } from '../utilidades/formato.js';
 import { esc } from '../utilidades/ui.js';
 
-const PRENDAS_MOLDE = ['falda-recta', 'falda-uniforme', 'blusa', 'vestido', 'camisa-dama', 'camisa-varon', 'pantalon-dama', 'pantalon-varon', 'polera-dama', 'polera-varon'];
+const PRENDAS_MOLDE = ['falda-recta', 'falda-uniforme', 'blusa', 'vestido', 'camisa-dama', 'camisa-varon', 'pantalon-dama', 'pantalon-varon', 'polera-dama', 'polera-varon', 'buzo-dama', 'buzo-varon'];
 const tituloDe = (id) => { const p = buscarPrenda(id); return p.titulo ?? p.nombre; };
 const fechaCorta = (iso) => personas.fecha(iso);
 const hoyIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };

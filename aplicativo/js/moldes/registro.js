@@ -8,6 +8,8 @@ const MOLDES = {
   'camisa-varon': () => import('./prendas/camisa-varon.js'),
   'pantalon-dama': () => import('./prendas/pantalon-dama.js'),
   'pantalon-varon': () => import('./prendas/pantalon-varon.js'),
+  'buzo-dama': () => import('./prendas/buzo-dama.js'),
+  'buzo-varon': () => import('./prendas/buzo-varon.js'),
   'polera-dama': () => import('./prendas/polera-dama.js'),
   'polera-varon': () => import('./prendas/polera-varon.js'),
 };

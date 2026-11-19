@@ -4,7 +4,7 @@ import * as cotizaciones from '../datos/cotizaciones.js';
 import { buscarPrenda } from '../datos/prendas.js';
 import { numero } from '../utilidades/formato.js';
 
-const PRENDAS = ['falda-recta', 'falda-uniforme', 'blusa', 'vestido', 'camisa-dama', 'camisa-varon', 'pantalon-dama', 'pantalon-varon', 'polera-dama', 'polera-varon'];
+const PRENDAS = ['falda-recta', 'falda-uniforme', 'blusa', 'vestido', 'camisa-dama', 'camisa-varon', 'pantalon-dama', 'pantalon-varon', 'polera-dama', 'polera-varon', 'buzo-dama', 'buzo-varon'];
 const titulo = (id) => { const p = buscarPrenda(id); return p ? p.titulo ?? p.nombre : 'Prenda'; };
 
 export function mostrar(main) {

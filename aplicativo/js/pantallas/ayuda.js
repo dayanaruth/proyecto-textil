@@ -1,5 +1,6 @@
 // Pantalla: ayuda con preguntas frecuentes (respuestas paso a paso y enlaces a cada pantalla)
 import { guardar } from '../datos/almacenamiento.js';
+import { dibujo } from '../utilidades/iconos.js';
 import { puedeInstalar, esIphone, instalar, instalada } from '../utilidades/pwa.js';
 
 // Dirección pública de la app (la misma del código QR)
@@ -9,7 +10,7 @@ const pasos = (lista) => `<ol class="pasos-ayuda">${lista.map((p) => `<li>${p}</
 const ir = (ruta, texto) => `<a class="btn btn-secundario btn-chico" href="${ruta}">${texto} ▶</a>`;
 
 const TEMAS = [
-  { icono: '👋', nombre: 'Para empezar', preguntas: [
+  { icono: 'maquina', nombre: 'Para empezar', preguntas: [
     ['¿Qué puedo hacer con Mi Taller?', `<p>Sacar el molde de 6 prendas con tus medidas, saber cuánta tela comprar y cuánto cobrar. También guardar medidas de tu familia, hacer cotizaciones y practicar con ejercicios.</p>`],
     ['¿Cómo hago mi primera prenda?', pasos(['En el inicio toca <b>✂️ Hacer una prenda</b>.', 'Elige la prenda (y si es para dama o varón).', 'Escribe las medidas que te pide: cada una tiene un dibujo y el botón 🔊 para escuchar.', 'Mira el molde paso a paso, luego la tela y el precio.']) + ir('#/prendas', 'Hacer una prenda')],
     ['¿Cómo instalo la app en mi celular?', `${pasos(esIphone
@@ -17,7 +18,7 @@ const TEMAS = [
       : ['Abre la app en <b>Chrome</b>.', 'Toca el menú <b>⋮</b> (los tres puntos de arriba).', 'Elige <b>«Instalar app»</b> o «Agregar a la pantalla principal».'])}
       ${instalada() ? '<p>✅ Ya la tienes instalada.</p>' : puedeInstalar() && !esIphone ? '<button type="button" class="btn btn-principal btn-chico" data-instalar>📲 Instalar ahora</button>' : ''}`],
   ] },
-  { icono: '🖨️', nombre: 'Moldes e impresión', preguntas: [
+  { icono: 'molde', nombre: 'Moldes e impresión', preguntas: [
     ['¿Cómo imprimo el molde en tamaño real?', pasos([
       'En el molde toca <b>🖨️ Imprimir en tamaño real</b>. Verás cómo saldrán las hojas.',
       'Toca <b>Imprimir</b>. En la ventana de la impresora elige <b>escala 100 %</b> o <b>«Tamaño real»</b>. Nunca «Ajustar a la página».',
@@ -27,7 +28,7 @@ const TEMAS = [
     ['El cuadro de control no mide 10 cm, ¿qué hago?', `<p>La impresora cambió el tamaño. Vuelve a imprimir revisando que diga <b>escala 100 %</b> o <b>«Tamaño real»</b>. Si imprimes desde un PDF, desactiva «Ajustar a la página».</p>`],
     ['¿Puedo hacer el molde sin imprimir?', `<p>¡Sí! Es lo que más enseña. Sigue los pasos del molde y trázalo en papel kraft con regla y escuadra. Cada paso te dice las medidas exactas.</p>`],
   ] },
-  { icono: '📋', nombre: 'Medidas y datos', preguntas: [
+  { icono: 'guardadas', nombre: 'Medidas y datos', preguntas: [
     ['¿Dónde se guardan mis medidas?', `<p>Solo en <b>este celular</b>. No se envían a internet y nadie más las ve.</p>`],
     ['¿Cómo paso las medidas a otro celular?', pasos([
       'Ve a <b>📋 Medidas guardadas</b>.',
@@ -35,12 +36,12 @@ const TEMAS = [
       'En el otro celular abre Mi Taller → Medidas guardadas → <b>⬆️ Recuperar copia</b> y elige el archivo.']) + ir('#/guardadas', 'Medidas guardadas')],
     ['¿Qué pasa si borro los datos del navegador?', `<p>Se borran las medidas, cotizaciones y tiempos guardados. Por eso conviene <b>guardar una copia</b> de vez en cuando.</p>`],
   ] },
-  { icono: '📶', nombre: 'Internet', preguntas: [
+  { icono: 'celular', nombre: 'Internet', preguntas: [
     ['¿Qué hago si no tengo internet?', `<p>Nada especial: <b>la app funciona igual</b> después de abrirla una vez con internet. Arriba verás el aviso «Sin internet». Puedes sacar moldes, calcular tela y precios, y guardar medidas.</p>
       <p>Solo necesitas internet para <b>enviar</b> por WhatsApp y para recibir las mejoras de la app.</p>`],
     ['¿Cómo recibo las mejoras de la app?', `<p>Cuando haya una versión nueva, abajo aparece <b>«Hay una versión nueva de la app»</b>. Toca <b>Actualizar</b>. Tus medidas y datos no se borran.</p>`],
   ] },
-  { icono: '💰', nombre: 'Precios y cotizaciones', preguntas: [
+  { icono: 'costos', nombre: 'Precios y cotizaciones', preguntas: [
     ['¿Ganancia «del costo» o «del precio de venta»?', `<p>No es lo mismo. Si la prenda cuesta Bs 100:</p>
       <ul><li><b>30 % del costo:</b> 100 + 30 = <b>Bs 130</b> (ganas 30).</li><li><b>30 % del precio de venta:</b> 100 ÷ 0,70 = <b>Bs 142,86</b> (ganas 42,86).</li></ul>
       <p>La app te muestra los dos para que elijas.</p>` + ir('#/herramientas/ejercicios/5', 'Practicar con ejercicios')],
@@ -73,7 +74,7 @@ export function mostrar(main) {
     <p class="ayuda">Toca una pregunta para ver la respuesta.</p>
     ${TEMAS.map((t) => `
       <section class="zona">
-        <header class="zona-cabeza"><span class="grupo-icono" aria-hidden="true">${t.icono}</span><div><h2>${t.nombre}</h2></div></header>
+        <header class="zona-cabeza">${dibujo(t.icono, 'grupo-icono')}<div><h2>${t.nombre}</h2></div></header>
         <div class="preguntas">${t.preguntas.map(([p, r]) => `
           <details class="pregunta-ayuda"><summary>${p}</summary><div class="respuesta">${r}</div></details>`).join('')}
         </div>

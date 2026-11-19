@@ -1,5 +1,6 @@
 // Pantalla: medidas guardadas de cada persona + "¿Para quién es?" al hacer una prenda
 import * as personas from '../datos/personas.js';
+import { dibujo } from '../utilidades/iconos.js';
 import { MEDIDAS, ZONAS, medidasDe, figuraMedida, figuraZona } from '../datos/medidas.js';
 import { buscarPrenda, prendaMadre } from '../datos/prendas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
@@ -178,7 +179,7 @@ function ficha(main, p) {
     }).join('')}
     <button type="button" class="btn btn-peligro btn-ancho" id="borrar">🗑️ Borrar a ${esc(p.nombre)}</button>
     <dialog class="dialogo" id="confirmar">
-      <p class="dialogo-icono" aria-hidden="true">🗑️</p>
+      ${dibujo('papelera', 'dialogo-icono')}
       <h2>¿Borrar a ${esc(p.nombre)}?</h2>
       <p>Se borrarán sus ${cuantas(p)} medidas. Esto no se puede deshacer.</p>
       <div class="acciones">

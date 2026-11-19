@@ -1,5 +1,6 @@
 // Pantalla: bienvenida (3 pantallas cortas la primera vez que se abre la app)
 import { guardar } from '../datos/almacenamiento.js';
+import { dibujo } from '../utilidades/iconos.js';
 import { PRENDAS } from '../datos/prendas.js';
 import { puedeInstalar, esIphone, instalar, instalada } from '../utilidades/pwa.js';
 import { activarMarco } from '../utilidades/marco.js';
@@ -21,10 +22,10 @@ const CELULAR = `
   </svg>`;
 
 const PASOS = [
-  ['📏', 'Medidas', 'con dibujos'],
-  ['📐', 'Molde', 'paso a paso'],
-  ['🧵', 'Tela', 'cuánta comprar'],
-  ['💰', 'Precio', 'cuánto cobrar'],
+  ['guia', 'Medidas', 'con dibujos'],
+  ['molde', 'Molde', 'paso a paso'],
+  ['tela', 'Tela', 'cuánta comprar'],
+  ['costos', 'Precio', 'cuánto cobrar'],
 ];
 
 function pantallas() {
@@ -40,7 +41,7 @@ function pantallas() {
       titulo: 'Así funciona',
       texto: 'Elige la prenda y sigue los pasos. Además puedes guardar medidas, hacer cotizaciones y practicar con ejercicios.',
       dibujo: `<ol class="bienvenida-pasos">${PASOS.map(([i, t, s], n) => `
-        <li><span class="bienvenida-icono">${i}</span><b>${n + 1}. ${t}</b><small>${s}</small></li>`).join('')}</ol>`,
+        <li>${dibujo(i, 'bienvenida-icono')}<b>${n + 1}. ${t}</b><small>${s}</small></li>`).join('')}</ol>`,
     },
     {
       titulo: 'Tenla siempre a mano',

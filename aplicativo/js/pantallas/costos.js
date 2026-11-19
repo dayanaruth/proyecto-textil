@@ -8,11 +8,9 @@ import { bs, numero } from '../utilidades/formato.js';
 import { barraPasos, esc } from '../utilidades/ui.js';
 import { hayVoz, hablar } from '../utilidades/voz.js';
 import { preferencias } from '../datos/cotizaciones.js';
+import { dibujo, iconoMaterial } from '../utilidades/iconos.js';
 
 const normal = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-// "entretela" va antes que "tela" porque la contiene
-const ICONOS = [['entretela', '📄'], ['tela', '🧵'], ['cierre', '🤐'], ['hilo', '🪡'], ['boton', '🔘'], ['gancho', '🪝'], ['elastico', '〰️'], ['encaje', '🎀']];
-const icono = (nombre) => ICONOS.find(([p]) => normal(nombre).includes(p))?.[1] ?? '📦';
 const PALABRA = { m: 'metro', 'unid.': 'unidad', carrete: 'carrete' };
 const lleno = (v) => valor(v) > 0;
 
@@ -59,13 +57,13 @@ export function mostrar(main, [id]) {
       <form class="form-precio" novalidate>
 
         <section class="parte azul">
-          <header><span class="parte-icono" aria-hidden="true">🧵</span>
+          <header>${dibujo('hilo', 'parte-icono')}
             <div><h2>1. Materiales <span class="listo" id="ok-mat" hidden>✅</span></h2><small>Lo que compras para hacer la prenda</small></div>
             ${voz('mat')}<b class="parte-total" id="t-materiales"></b></header>
           <div id="materiales">${e.materiales.map((m, i) => `
             <div class="mat">
               <div class="mat-cabeza">
-                <span class="mat-icono" aria-hidden="true">${icono(m.nombre)}</span>
+                ${dibujo(iconoMaterial(m.nombre), 'mat-icono')}
                 <input class="mat-nombre" data-i="${i}" data-campo="nombre" value="${esc(m.nombre)}" placeholder="Nombre del material" aria-label="Nombre del material">
                 <span class="lapiz" aria-hidden="true">✏️</span>
                 <button type="button" class="quitar-c" data-quitar="${i}" aria-label="Quitar ${esc(m.nombre)}">✕</button>
@@ -85,7 +83,7 @@ export function mostrar(main, [id]) {
         </section>
 
         <section class="parte verde">
-          <header><span class="parte-icono" aria-hidden="true">✋</span>
+          <header>${dibujo('cronometro', 'parte-icono')}
             <div><h2>2. Tu trabajo y el taller <span class="listo" id="ok-tra" hidden>✅</span></h2><small>Las horas que coses y los gastos del taller</small></div>
             ${voz('tra')}<b class="parte-total" id="t-trabajo"></b></header>
           <div class="cuenta">
@@ -104,7 +102,7 @@ export function mostrar(main, [id]) {
         </section>
 
         <section class="parte dorado">
-          <header><span class="parte-icono" aria-hidden="true">💰</span>
+          <header>${dibujo('monedas', 'parte-icono')}
             <div><h2>3. Tu ganancia <span class="listo" id="ok-gan" hidden>✅</span></h2><small>¿Cuánto quieres ganar?</small></div>
             ${voz('gan')}</header>
           <div class="chips" role="group" aria-label="Ganancia">
@@ -202,7 +200,7 @@ export function mostrar(main, [id]) {
       const el = ev.target;
       if (el.dataset.campo) {
         e.materiales[el.dataset.i][el.dataset.campo] = el.value;
-        if (el.dataset.campo === 'nombre') el.closest('.mat').querySelector('.mat-icono').textContent = icono(el.value);
+        if (el.dataset.campo === 'nombre') el.closest('.mat').querySelector('.mat-icono').outerHTML = dibujo(iconoMaterial(el.value), 'mat-icono');
       } else if (el.name) e[el.name] = el.value;
       actualizar();
     });

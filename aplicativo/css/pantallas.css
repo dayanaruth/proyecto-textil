@@ -322,7 +322,7 @@
 .tiempo img { flex: none; width: 2.5rem; height: 2.5rem; background: var(--lienzo); border-radius: 8px; padding: .125rem; }
 
 /* Lista antes de cortar */
-.grupo-icono { font-size: 1.75rem; }
+.grupo-icono { width: 2.9rem; height: 2.9rem; border-radius: 14px; }
 .lista-control { list-style: none; margin: 0; padding: 0; }
 .lista-control li { padding: .5rem 1rem; border-top: 1px solid var(--borde); }
 .lista-control li:first-child { border-top: 0; }
@@ -351,7 +351,7 @@
 .bienvenida-pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(8rem, 1fr)); gap: .625rem; width: 100%; max-width: 22rem; }
 .bienvenida-pasos li { display: grid; justify-items: center; gap: .125rem; padding: .75rem .5rem; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
 .bienvenida-pasos small { color: var(--texto-suave); }
-.bienvenida-icono { display: grid; place-items: center; width: 3rem; height: 3rem; font-size: 1.6rem; background: var(--primario-suave); border-radius: 50%; }
+.bienvenida-icono { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; background: var(--fondo-icono, var(--primario-suave)); border-radius: 50%; }
 .bienvenida-celular svg { width: 11rem; height: auto; }
 .puntos { display: flex; gap: .5rem; margin: .25rem 0; }
 .puntos span { width: .7rem; height: .7rem; border-radius: 50%; background: var(--borde); }

@@ -1,13 +1,15 @@
 // Pantalla: inicio
 import { puedeInstalar, esIphone, instalar, alCambiarInstalar } from '../utilidades/pwa.js';
+import { ICONOS, dibujo } from '../utilidades/iconos.js';
 
+// El ícono de cada opción es un dibujo propio (js/utilidades/iconos.js), con el mismo nombre que la ruta
 const OPCIONES = [
-  { ruta: 'guardadas', icono: '📋', nombre: 'Medidas guardadas', desc: 'Tuyas, de tu familia o compañeras' },
-  { ruta: 'tela', icono: '🧵', nombre: 'Calcular tela', desc: '¿Cuántos metros comprar?' },
-  { ruta: 'costos', icono: '💰', nombre: 'Calcular precio', desc: 'Costo y precio de venta' },
-  { ruta: 'cotizaciones', icono: '📄', nombre: 'Cotizaciones', desc: 'Enviar el precio a quien te encarga' },
-  { ruta: 'herramientas', icono: '📏', nombre: 'Aprender y practicar', desc: 'Conversor, guía, diccionario, ejercicios…' },
-  { ruta: 'ayuda', icono: '❓', nombre: 'Ayuda', desc: 'Preguntas frecuentes e instalación' },
+  { ruta: 'guardadas', nombre: 'Medidas guardadas', desc: 'Tuyas, de tu familia o compañeras' },
+  { ruta: 'tela', nombre: 'Calcular tela', desc: '¿Cuántos metros comprar?' },
+  { ruta: 'costos', nombre: 'Calcular precio', desc: 'Costo y precio de venta' },
+  { ruta: 'cotizaciones', nombre: 'Cotizaciones', desc: 'Enviar el precio a quien te encarga' },
+  { ruta: 'herramientas', nombre: 'Aprender y practicar', desc: 'Conversor, guía, diccionario, ejercicios…' },
+  { ruta: 'ayuda', nombre: 'Ayuda', desc: 'Preguntas frecuentes e instalación' },
 ];
 
 export function mostrar(main) {
@@ -15,13 +17,13 @@ export function mostrar(main) {
     <div class="institucion"><img class="logo-cea" src="img/logo-cea.webp" alt="Logo del C.E.A. Man Césped" width="56" height="56"><div><strong>C.E.A. «Man Césped»</strong><small>Corte y Confección · Cochabamba</small></div></div>
     <section class="bienvenida">
       <h1>¡Hola! ¿Qué vamos a hacer hoy?</h1>
-      <a class="btn btn-principal btn-grande" href="#/prendas"><span aria-hidden="true">✂️</span> Hacer una prenda</a>
+      <a class="btn btn-principal btn-grande" href="#/prendas"><span class="icono-boton">${ICONOS.tijeras.svg}</span> Hacer una prenda</a>
     </section>
     <h2 class="subtitulo">Otras herramientas</h2>
     <nav class="menu" aria-label="Herramientas">
       ${OPCIONES.map((o) => `
         <a class="menu-item" href="#/${o.ruta}">
-          <span class="menu-icono" aria-hidden="true">${o.icono}</span>
+          ${dibujo(o.ruta, 'menu-icono')}
           <span><strong>${o.nombre}</strong><small>${o.desc}</small></span>
         </a>`).join('')}
     </nav>

@@ -1,5 +1,6 @@
 // Pantalla: cotizaciones "a medida" (personas guardadas) y "por tallas" (pedidos por cantidad)
 import * as cotizaciones from '../datos/cotizaciones.js';
+import { dibujo } from '../utilidades/iconos.js';
 import * as personas from '../datos/personas.js';
 import { buscarPrenda } from '../datos/prendas.js';
 import { TABLAS, tablasPara } from '../datos/tallas.js';
@@ -309,7 +310,7 @@ function ver(main, c) {
     <button type="button" class="btn btn-secundario btn-ancho" id="imprimir">🖨️ Imprimir o guardar PDF</button>
     <button type="button" class="btn btn-peligro btn-ancho" id="borrar">🗑️ Borrar cotización</button>
     <dialog class="dialogo" id="confirmar">
-      <p class="dialogo-icono" aria-hidden="true">🗑️</p><h2>¿Borrar la cotización Nº ${c.numero}?</h2>
+      ${dibujo('papelera', 'dialogo-icono')}<h2>¿Borrar la cotización Nº ${c.numero}?</h2>
       <p>Esto no se puede deshacer.</p>
       <div class="acciones"><button type="button" class="btn btn-secundario" data-r="no">No, volver</button>
         <button type="button" class="btn btn-peligro" data-r="si">Sí, borrar</button></div>

@@ -1,5 +1,6 @@
 // Pantalla: ejercicios por niveles que se corrigen solos; el resultado se puede enviar al docente
 import { NIVELES } from '../datos/ejercicios.js';
+import { dibujo } from '../utilidades/iconos.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
 import { compartirArchivo } from '../utilidades/compartir.js';
 import { numero } from '../utilidades/formato.js';
@@ -24,7 +25,7 @@ function lista(main) {
     <p class="ayuda">10 preguntas por nivel. Los números cambian cada vez, así que puedes repetirlos todas las veces que quieras.</p>
     <nav class="menu">${NIVELES.map((n) => `
       <a class="menu-item" href="#/herramientas/ejercicios/${n.id}">
-        <span class="menu-icono" aria-hidden="true">${n.icono}</span>
+        ${dibujo(n.icono, 'menu-icono')}
         <span><strong>Nivel ${n.id}: ${n.nombre}</strong><small>${n.desc}</small>
           ${mejores[n.id] != null ? `<small>Tu mejor resultado: ${mejores[n.id]} de 10 ${pintarEstrellas(estrellas(mejores[n.id], 10))}</small>` : ''}</span>
       </a>`).join('')}

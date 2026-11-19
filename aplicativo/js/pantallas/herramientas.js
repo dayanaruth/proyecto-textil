@@ -1,5 +1,6 @@
 // Pantalla: herramientas para aprender y practicar (menú, conversor y guía de medidas)
 import { UNIDADES, convertir, leerFraccion } from '../calculos/unidades.js';
+import { dibujo } from '../utilidades/iconos.js';
 import { MEDIDAS, ZONAS, medidasDe, figuraMedida, figuraZona } from '../datos/medidas.js';
 import * as personas from '../datos/personas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
@@ -13,12 +14,12 @@ import * as cronometro from './cronometro.js';
 import * as listaCorte from './lista-corte.js';
 
 const OPCIONES = [
-  { ruta: 'conversor', icono: '📏', nombre: 'Conversor de medidas', desc: 'Centímetros, metros, pulgadas y yardas' },
-  { ruta: 'guia', icono: '📖', nombre: 'Cómo tomar medidas', desc: 'Consejos, el orden y práctica en pareja' },
-  { ruta: 'diccionario', icono: '📚', nombre: 'Diccionario de costura', desc: 'Palabras del taller, cuellos, mangas y bolsillos' },
-  { ruta: 'ejercicios', icono: '✏️', nombre: 'Ejercicios para practicar', desc: 'Pon a prueba lo que sabes, por niveles' },
-  { ruta: 'cronometro', icono: '⏱️', nombre: 'Cronómetro de costura', desc: 'Cuánto tardas de verdad en coser una prenda' },
-  { ruta: 'lista', icono: '✅', nombre: 'Antes de cortar', desc: 'Lista para revisar antes de meter la tijera' },
+  { ruta: 'conversor', nombre: 'Conversor de medidas', desc: 'Centímetros, metros, pulgadas y yardas' },
+  { ruta: 'guia', nombre: 'Cómo tomar medidas', desc: 'Consejos, el orden y práctica en pareja' },
+  { ruta: 'diccionario', nombre: 'Diccionario de costura', desc: 'Palabras del taller, cuellos, mangas y bolsillos' },
+  { ruta: 'ejercicios', nombre: 'Ejercicios para practicar', desc: 'Pon a prueba lo que sabes, por niveles' },
+  { ruta: 'cronometro', nombre: 'Cronómetro de costura', desc: 'Cuánto tardas de verdad en coser una prenda' },
+  { ruta: 'lista', nombre: 'Antes de cortar', desc: 'Lista para revisar antes de meter la tijera' },
 ];
 
 export function mostrar(main, [a, ...resto]) {
@@ -33,7 +34,7 @@ export function mostrar(main, [a, ...resto]) {
     <p class="ayuda">Herramientas para el taller y para estudiar.</p>
     <nav class="menu">${OPCIONES.map((o) => `
       <a class="menu-item" href="#/herramientas/${o.ruta}">
-        <span class="menu-icono" aria-hidden="true">${o.icono}</span>
+        ${dibujo(o.ruta, 'menu-icono')}
         <span><strong>${o.nombre}</strong><small>${o.desc}</small></span>
       </a>`).join('')}
     </nav>`;
@@ -214,7 +215,7 @@ function finPractica(main, tipo, orden) {
   const tomadas = orden.filter((id) => medidas[id] != null);
   const avatares = AVATARES.filter((a) => a.tipo === tipo);
   main.innerHTML = `
-    <p class="aviso-icono centrada" aria-hidden="true">🎉</p>
+    ${dibujo('medalla', 'aviso-icono')}
     <h1 class="centrada">¡Terminaste!</h1>
     <p class="ayuda centrada">Tomaste ${tomadas.length} de ${orden.length} medidas.</p>
     ${tomadas.length ? `

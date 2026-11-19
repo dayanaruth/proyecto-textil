@@ -19,7 +19,7 @@
 .parte > header h2 { font-size: 1.15rem; line-height: 1.2; }
 .parte > header small { display: block; font-size: .85rem; color: var(--texto-suave); }
 .parte > header div { flex: 1; min-width: 0; }
-.parte-icono { display: grid; place-items: center; flex: none; width: 3rem; height: 3rem; font-size: 1.6rem; border-radius: 50%; background: var(--superficie); }
+.parte-icono { display: grid; place-items: center; flex: none; width: 3.25rem; height: 3.25rem; border-radius: 50%; background: var(--fondo-icono, var(--superficie)); box-shadow: 0 0 0 3px var(--superficie); }
 .parte-total { flex: none; padding: .375rem .75rem; border-radius: 999px; color: #fff; font-size: 1rem; white-space: nowrap; }
 .parte.azul { border-color: var(--azul); } .parte.azul > header { background: var(--azul-suave); } .parte.azul .parte-total { background: var(--azul); }
 .parte.verde { border-color: var(--verde); } .parte.verde > header { background: var(--verde-suave); } .parte.verde .parte-total { background: var(--verde); }
@@ -40,7 +40,7 @@
 /* Materiales: ícono + nombre como título */
 .mat { padding: .75rem 0; border-top: 1px solid var(--borde); }
 .mat:first-child { border-top: 0; padding-top: 0; }
-.mat-icono { display: grid; place-items: center; flex: none; width: 2.4rem; height: 2.4rem; font-size: 1.25rem; border-radius: 12px; background: var(--azul-suave); }
+.mat-icono { display: grid; place-items: center; flex: none; width: 2.6rem; height: 2.6rem; border-radius: 12px; background: var(--fondo-icono, var(--azul-suave)); }
 .mat-cuerpo { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: .375rem; }
 .mat-cabeza { display: flex; align-items: center; gap: .25rem; }
 .mat-nombre {

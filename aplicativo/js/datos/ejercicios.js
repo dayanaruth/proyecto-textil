@@ -107,9 +107,9 @@ function costosYPrecios() {
 }
 
 export const NIVELES = [
-  { id: 1, nombre: 'Palabras del taller', icono: '📚', desc: 'Vocabulario con dibujos', crear: vocabulario },
-  { id: 2, nombre: 'Medidas', icono: '📏', desc: 'Cómo y dónde se mide', crear: medidas },
-  { id: 3, nombre: 'Cálculos de molde', icono: '📐', desc: 'Fórmulas del trazado', crear: calculosMolde },
-  { id: 4, nombre: 'Tela y conversiones', icono: '🧵', desc: 'Metros, pulgadas, yardas', crear: telaYConversiones },
-  { id: 5, nombre: 'Costos y precios', icono: '💰', desc: 'Cuánto cobrar', crear: costosYPrecios },
+  { id: 1, nombre: 'Palabras del taller', icono: 'diccionario', desc: 'Vocabulario con dibujos', crear: vocabulario },
+  { id: 2, nombre: 'Medidas', icono: 'guia', desc: 'Cómo y dónde se mide', crear: medidas },
+  { id: 3, nombre: 'Cálculos de molde', icono: 'molde', desc: 'Fórmulas del trazado', crear: calculosMolde },
+  { id: 4, nombre: 'Tela y conversiones', icono: 'tela', desc: 'Metros, pulgadas, yardas', crear: telaYConversiones },
+  { id: 5, nombre: 'Costos y precios', icono: 'costos', desc: 'Cuánto cobrar', crear: costosYPrecios },
 ];

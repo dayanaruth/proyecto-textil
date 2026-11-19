@@ -5,7 +5,7 @@ const foto = (nombre) => `img/fotos/${nombre}.webp`;
 const FALDA = ['cintura', 'cadera', 'altura-cadera', 'largo-falda'];
 // "insumos": materiales sugeridos para el cuadro de costos (además de la tela)
 const INSUMOS_FALDA = [
-  { nombre: 'Cierre', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Cierre (15 cm)', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
   { nombre: 'Botón o gancho', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Entretela', cantidad: '0,1', unidad: 'm' },
@@ -28,9 +28,9 @@ const INSUMOS_CAMISA = (botones) => [
   { nombre: 'Entretela (cuello y puños)', cantidad: '0,3', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
-const PANTALON = ['cintura', 'cadera', 'altura-cadera', 'tiro', 'altura-rodilla', 'largo-pantalon', 'bota'];
+const PANTALON = ['cintura', 'cadera', 'altura-cadera', 'tiro', 'altura-rodilla', 'rodilla', 'largo-pantalon', 'bota'];
 const INSUMOS_PANTALON = [
-  { nombre: 'Cierre (18 cm)', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Cierre (20 cm)', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Botón o gancho', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Entretela (pretina)', cantidad: '0,15', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },

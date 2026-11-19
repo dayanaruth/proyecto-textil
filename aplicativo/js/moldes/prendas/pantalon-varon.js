@@ -5,7 +5,7 @@ import { construirPantalon } from './pantalon-comun.js';
 export const FORMULAS = {
   holguraCadera: { delantero: 1, espalda: 3 },  // se suman a cadera ÷ 4
   holguraCintura: 2,
-  tiro: { delantero: 16, espalda: 8 },          // extensión del tiro = cadera ÷ este número
+  tiro: { delantero: 20, espalda: 10 },         // extensión del tiro = cadera ÷ este número (guía de buzo de varón)
   bajadaTiroEspalda: 1,
   entradaDelantero: 1,
   entradaEspalda: 3,

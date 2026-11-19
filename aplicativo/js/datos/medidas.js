@@ -84,6 +84,10 @@ export const MEDIDAS = {
     nombre: 'Largo de pantalón', min: 40, max: 125,
     como: 'De costado, desde la cintura hasta donde quieres que llegue el pantalón (con zapatos).',
   },
+  'rodilla': {
+    nombre: 'Contorno de rodilla', min: 22, max: 70,
+    como: 'Rodea la rodilla por la mitad, con la pierna estirada y sin apretar.',
+  },
   'bota': {
     nombre: 'Ancho de bota', min: 20, max: 70,
     como: 'Contorno que quieres en el ruedo del pantalón. Recto: unos 40 a 46 cm.',
@@ -126,6 +130,7 @@ const MARCAS = {
   'tiro': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 Q86 92 84 104 L82 114 H38 L36 104 Q34 92 48 80 Z"/>${flecha(104, 80, 114, 72, 61)}`,
   'altura-rodilla': `${flecha(104, 80, 150, 72, 76)}<path d="M62 150 H76" stroke-width="2"/>`,
   'largo-pantalon': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 Q86 92 84 104 L76 150 L71 190 H62 L60 114 L58 190 H49 L44 150 L36 104 Q34 92 48 80 Z"/>${flecha(104, 80, 190, 72, 71)}`,
+  'rodilla': '<ellipse cx="68" cy="150" rx="7.5" ry="2"/><ellipse cx="52" cy="150" rx="7.5" ry="2"/>',
   'bota': '<ellipse cx="66.5" cy="186" rx="6.5" ry="1.8"/><ellipse cx="53.5" cy="186" rx="6.5" ry="1.8"/>',
 };
 
@@ -140,7 +145,7 @@ export const figuraMedida = (id) => `
 export const ZONAS = [
   { id: 'torso', nombre: 'Torso', medidas: ['busto', 'pecho', 'cuello', 'ancho-espalda', 'talle-espalda', 'talle-delantero', 'busto-a-busto', 'alto-busto'] },
   { id: 'cintura', nombre: 'Cintura y cadera', medidas: ['cintura', 'cadera', 'altura-cadera'] },
-  { id: 'piernas', nombre: 'Piernas', medidas: ['tiro', 'altura-rodilla', 'bota'] },
+  { id: 'piernas', nombre: 'Piernas', medidas: ['tiro', 'altura-rodilla', 'rodilla', 'bota'] },
   { id: 'brazos', nombre: 'Brazos', medidas: ['contorno-brazo', 'muneca'] },
   { id: 'largos', nombre: 'Largos de las prendas', medidas: ['largo-blusa', 'largo-camisa', 'largo-falda', 'largo-pantalon', 'largo-manga', 'largo-manga-larga'] },
 ];

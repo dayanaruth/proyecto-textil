@@ -1,15 +1,18 @@
 // Molde: falda recta (delantero al doblez, espalda con cierre, pretina)
-// ⚠️ PROVISIONAL: método estándar. Reemplazar FORMULAS por las del docente del CEA.
+// Método del cuaderno del taller («Patrón de falda tubular»): cadera ÷ 4, cintura ÷ 4 + 3 (pinza),
+// subir 1 cm en el costado, pinza de 3 cm (8 cm adelante, 11 cm atrás), entrar 2 cm en el ruedo,
+// margen +2 en costados y cierre, +3 en el ruedo, cierre de 15 cm, pretina = cintura + 3 cm para el ojal.
 import { punto as P } from '../geometria.js';
 import { numero as n } from '../../utilidades/formato.js';
 
 export const FORMULAS = {
-  holguraCadera: 1,        // cm que se suman a cadera ÷ 4
+  holguraCadera: 0,        // el taller usa cadera ÷ 4 exacto
   pinzaMaxima: 3,          // ancho máximo de la pinza
   subidaCostado: 1,        // cuánto sube la cintura en el costado
   bajadaEspalda: 1,        // cuánto baja la cintura en el centro de la espalda
-  largoPinza: { delantero: 9, espalda: 12 },
-  margen: { cintura: 1, costado: 1.5, ruedo: 4, centroEspalda: 2 },
+  largoPinza: { delantero: 8, espalda: 11 },
+  entradaRuedo: 2,         // falda tubular: el costado entra 2 cm abajo
+  margen: { cintura: 1, costado: 2, ruedo: 3, centroEspalda: 2 },
   pretina: { ancho: 3, cruce: 3, margen: 1 },
 };
 
@@ -38,7 +41,7 @@ export function construir(m) {
 function mitad(cual, m, ancho, cintura, pinza) {
   const espalda = cual === 'espalda';
   const L = m['largo-falda'], AC = m['altura-cadera'];
-  const A = P(0, 0), B = P(0, L), D = P(0, AC), E = P(ancho, AC), Fp = P(ancho, L);
+  const A = P(0, 0), B = P(0, L), D = P(0, AC), E = P(ancho, AC), Fp = P(ancho - F.entradaRuedo, L);
   const A1 = espalda ? P(0, F.bajadaEspalda) : A;
   const G = P(cintura, -F.subidaCostado);
   const control = P(ancho, G.y + (E.y - G.y) * 0.4);
@@ -67,7 +70,7 @@ function mitad(cual, m, ancho, cintura, pinza) {
   const pasos = [
     `Traza una línea recta hacia abajo, de A a B, del largo de la falda: ${n(L)} cm. ${espalda ? 'Es el centro de la espalda, donde va el cierre.' : 'Es el centro del delantero: irá al doblez de la tela.'}`,
     `Desde A, baja ${n(AC)} cm (altura de cadera) y marca D. Desde D, traza hacia la derecha D–E = cadera ÷ 4 + ${n(F.holguraCadera)} = ${n(ancho)} cm.`,
-    `Desde B, traza hacia la derecha B–F = ${n(ancho)} cm. Une E con F con una línea recta: es el costado.`,
+    `Desde B, traza hacia la derecha ${n(ancho)} cm y entra ${n(F.entradaRuedo)} cm: punto F (${n(Fp.x)} cm). Une E con F: es el costado, un poco cerrado abajo como falda tubular.`,
     `${espalda ? `Baja ${n(F.bajadaEspalda)} cm desde A y marca A1. Desde A1` : 'Desde A'}, mide hacia la derecha cintura ÷ 4 + pinza = ${n(cintura)} cm, sube ${n(F.subidaCostado)} cm y marca G. Une ${espalda ? 'A1' : 'A'} con G: es la cintura.`,
     'Une G con E con una curva suave hacia afuera: es la curva de la cadera.',
     hayPinza

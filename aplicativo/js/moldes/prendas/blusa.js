@@ -6,9 +6,9 @@ import { punto as P, largoTramo } from '../geometria.js';
 import { numero as n } from '../../utilidades/formato.js';
 
 export const FORMULAS = {
-  holguraBusto: 1,        // cm que se suman a busto ÷ 4
+  holguraBusto: 0,        // cuaderno del taller: busto ÷ 4 exacto
   sisaExtra: 11,          // profundidad de sisa = busto ÷ 8 + sisaExtra
-  holguraCadera: 1,       // cm que se suman a cadera ÷ 4
+  holguraCadera: 0,       // cuaderno del taller: cadera ÷ 4 exacto
   pinzaCintura: 3,        // ancho de la pinza de cintura (delantero y espalda)
   escoteEspalda: 2,       // profundidad del escote de espalda
   escoteDelantero: 1,     // se suma a cuello ÷ 6 para la profundidad del escote delantero

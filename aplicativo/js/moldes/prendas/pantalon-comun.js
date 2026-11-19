@@ -16,7 +16,7 @@ function pieza(m, F, cual) {
   const yX = m.tiro + (del ? 0 : F.bajadaTiroEspalda);
   const xc = (W - ext) / 2;                                   // línea de plancha (hilo)
   const lado = del ? -1 : 1;
-  const rodilla = Bo + F.rodillaExtra;
+  const rodilla = m.rodilla ?? Bo + F.rodillaExtra;      // el taller mide el contorno de rodilla
   const k = (rodilla / 2 + lado) / 2, b = (Bo / 2 + lado) / 2;
   const pinza = F.pinza[cual];
   const anchoCintura = (m.cintura + F.holguraCintura) / 4 + pinza;
@@ -97,7 +97,7 @@ export function construirPantalon(m, F) {
       { nombre: 'Tiro de espalda', formula: `cadera ÷ ${F.tiro.espalda}`, valor: esp.datos.ext },
       { nombre: 'Cintura delantera', formula: `(cintura + ${n(F.holguraCintura)}) ÷ 4 + pinza`, valor: del.datos.anchoCintura },
       { nombre: 'Cintura de espalda', formula: `(cintura + ${n(F.holguraCintura)}) ÷ 4 + pinza`, valor: esp.datos.anchoCintura },
-      { nombre: 'Rodilla (pierna completa)', formula: `bota + ${n(F.rodillaExtra)}`, valor: m.bota + F.rodillaExtra },
+      { nombre: 'Rodilla (cada pieza)', formula: 'contorno de rodilla ÷ 2', valor: (m.rodilla ?? m.bota + F.rodillaExtra) / 2 },
     ],
     piezas: [del, esp],
     rectangulos: [

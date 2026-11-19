@@ -11,7 +11,7 @@ const ir = (ruta, texto) => `<a class="btn btn-secundario btn-chico" href="${rut
 
 const TEMAS = [
   { icono: 'maquina', nombre: 'Para empezar', preguntas: [
-    ['¿Qué puedo hacer con Mi Taller?', `<p>Sacar el molde de 6 prendas con tus medidas, saber cuánta tela comprar y cuánto cobrar. También guardar medidas de tu familia, hacer cotizaciones y practicar con ejercicios.</p>`],
+    ['¿Qué puedo hacer con Mi Taller?', `<p>Sacar el molde de 7 prendas con tus medidas, saber cuánta tela comprar y cuánto cobrar. También guardar medidas de tu familia, hacer cotizaciones y practicar con ejercicios.</p>`],
     ['¿Cómo hago mi primera prenda?', pasos(['En el inicio toca <b>✂️ Hacer una prenda</b>.', 'Elige la prenda (y si es para dama o varón).', 'Escribe las medidas que te pide: cada una tiene un dibujo y el botón 🔊 para escuchar.', 'Mira el molde paso a paso, luego la tela y el precio.']) + ir('#/prendas', 'Hacer una prenda')],
     ['¿Cómo instalo la app en mi celular?', `${pasos(esIphone
       ? ['Abre la app en <b>Safari</b>.', 'Toca <b>Compartir</b> (el cuadrado con la flecha hacia arriba).', 'Elige <b>«Agregar a inicio»</b>.']

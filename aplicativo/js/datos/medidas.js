@@ -48,6 +48,10 @@ export const MEDIDAS = {
     nombre: 'Largo de blusa', min: 28, max: 95,
     como: 'Por la espalda, desde la base del cuello hasta donde quieres que llegue la blusa.',
   },
+  'largo-polera': {
+    nombre: 'Largo de polera', min: 30, max: 100,
+    como: 'Desde el hombro, junto al cuello, hasta donde quieres que llegue la polera (a la cadera: unos 60 a 75 cm).',
+  },
   'contorno-brazo': {
     nombre: 'Contorno de brazo', min: 14, max: 55,
     como: 'Rodea la parte más ancha del brazo, debajo de la axila, sin apretar.',
@@ -121,6 +125,7 @@ const MARCAS = {
   'busto-a-busto': '<path d="M51 60 H69"/><circle cx="51" cy="60" r="1.6" fill="#9E2F45"/><circle cx="69" cy="60" r="1.6" fill="#9E2F45"/>',
   'alto-busto': '<path d="M56 34 L51 60"/><circle cx="56" cy="34" r="1.5" fill="#9E2F45"/><circle cx="51" cy="60" r="1.6" fill="#9E2F45"/>',
   'largo-blusa': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 112 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 112, 65, 85)}`,
+  'largo-polera': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 110 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 110, 58, 85)}`,
   'contorno-brazo': '<ellipse cx="85" cy="58" rx="5" ry="2"/>',
   'largo-manga': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M80 40 L90 44 L93 64 L83 66 L79 50 Z"/><path d="M82 40 L88 66 M80 41 L84 39 M86 66 L90 66"/>`,
   'pecho': '<ellipse cx="60" cy="58" rx="21" ry="4"/>',
@@ -147,9 +152,9 @@ export const ZONAS = [
   { id: 'cintura', nombre: 'Cintura y cadera', medidas: ['cintura', 'cadera', 'altura-cadera'] },
   { id: 'piernas', nombre: 'Piernas', medidas: ['tiro', 'altura-rodilla', 'rodilla', 'bota'] },
   { id: 'brazos', nombre: 'Brazos', medidas: ['contorno-brazo', 'muneca'] },
-  { id: 'largos', nombre: 'Largos de las prendas', medidas: ['largo-blusa', 'largo-camisa', 'largo-falda', 'largo-pantalon', 'largo-manga', 'largo-manga-larga'] },
+  { id: 'largos', nombre: 'Largos de las prendas', medidas: ['largo-blusa', 'largo-camisa', 'largo-falda', 'largo-pantalon', 'largo-polera', 'largo-manga', 'largo-manga-larga'] },
 ];
-const SOLO_DAMA = ['busto', 'talle-delantero', 'busto-a-busto', 'alto-busto', 'largo-blusa', 'largo-falda', 'largo-manga'];
+const SOLO_DAMA = ['busto', 'talle-delantero', 'busto-a-busto', 'alto-busto', 'largo-blusa', 'largo-falda'];
 export const medidasDe = (zona, tipo) =>
   zona.medidas.filter((id) => (tipo === 'varon' ? !SOLO_DAMA.includes(id) : id !== 'pecho'));
 

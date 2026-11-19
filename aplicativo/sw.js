@@ -3,7 +3,7 @@
 // actualizar la app nunca borra los datos de la persona.
 
 // ⚠️ Cambiar VERSION cada vez que se publique un cambio (así el celular se actualiza)
-const VERSION = 'mi-taller-v33';
+const VERSION = 'mi-taller-v34';
 
 const ARCHIVOS = [
   './',
@@ -47,6 +47,9 @@ const ARCHIVOS = [
   'js/moldes/prendas/pantalon-comun.js',
   'js/moldes/prendas/pantalon-dama.js',
   'js/moldes/prendas/pantalon-varon.js',
+  'js/moldes/prendas/polera-comun.js',
+  'js/moldes/prendas/polera-dama.js',
+  'js/moldes/prendas/polera-varon.js',
   'js/moldes/prendas/vestido.js',
   'js/pantallas/ayuda.js',
   'js/pantallas/bienvenida.js',
@@ -96,6 +99,8 @@ const ARCHIVOS = [
   'img/prendas/falda-uniforme.svg',
   'img/prendas/pantalon-dama.svg',
   'img/prendas/pantalon-varon.svg',
+  'img/prendas/polera-dama.svg',
+  'img/prendas/polera-varon.svg',
   'img/prendas/vestido.svg',
 ];
 

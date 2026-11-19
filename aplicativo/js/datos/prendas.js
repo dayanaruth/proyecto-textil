@@ -35,6 +35,13 @@ const INSUMOS_PANTALON = [
   { nombre: 'Entretela (pretina)', cantidad: '0,15', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
+// Poleras (tejido de punto): método de la guía de ropa deportiva del CEA
+const POLERA_VARON = ['pecho', 'cuello', 'ancho-espalda', 'largo-polera', 'contorno-brazo', 'largo-manga'];
+const POLERA_DAMA = ['busto', 'cintura', 'cadera', 'cuello', 'talle-espalda', 'ancho-espalda', 'altura-cadera', 'largo-polera', 'contorno-brazo', 'largo-manga'];
+const INSUMOS_POLERA = [
+  { nombre: 'Rib para el cuello', cantidad: '0,1', unidad: 'm' },
+  { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
+];
 const INSUMOS_VESTIDO = [
   { nombre: 'Cierre invisible (50 cm)', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
@@ -60,6 +67,13 @@ export const PRENDAS = [
   },
   { id: 'falda-uniforme', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), foto: foto('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA },
   { id: 'vestido', nombre: 'Vestido básico', img: img('vestido'), foto: foto('vestido'), medidas: VESTIDO, insumos: INSUMOS_VESTIDO },
+  {
+    id: 'polera', nombre: 'Polera', detalle: 'Dama o varón', img: img('polera-varon'),
+    variantes: [
+      { id: 'polera-dama', nombre: 'Dama', titulo: 'Polera de dama', img: img('polera-dama'), medidas: POLERA_DAMA, insumos: INSUMOS_POLERA },
+      { id: 'polera-varon', nombre: 'Varón', titulo: 'Polera de varón', img: img('polera-varon'), medidas: POLERA_VARON, insumos: INSUMOS_POLERA },
+    ],
+  },
 ];
 
 // Busca una prenda o una variante por su id

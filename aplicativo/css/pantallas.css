@@ -43,7 +43,7 @@
 .deslizar { margin-top: .375rem; text-align: center; color: var(--texto-suave); font-size: .85rem; }
 /* La caja del paso queda fija abajo para ver el dibujo cambiar */
 .paso-caja {
-  position: sticky; bottom: .5rem; z-index: 5;
+  position: sticky; bottom: calc(.5rem + env(safe-area-inset-bottom)); z-index: 5;
   margin: .75rem 0 1rem; padding: .75rem 1rem;
   background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio);
   box-shadow: 0 -4px 16px rgb(0 0 0 / .12);
@@ -175,6 +175,9 @@
   background: var(--superficie); color: var(--texto); border: 0; border-radius: var(--radio);
 }
 .dialogo::backdrop { background: rgb(0 0 0 / .5); }
+/* Celulares sin <dialog> (iPhone con iOS 14–15.3): la ventana se muestra igual (ver compat.js) */
+dialog:not([open]) { display: none; }
+.dialogo-abierto { position: fixed; inset: 0; z-index: 50; height: fit-content; margin: auto; box-shadow: 0 0 0 100vmax rgb(0 0 0 / .5); }
 .dialogo h2 { margin-bottom: .5rem; }
 .dialogo p { margin-bottom: 1rem; }
 .dialogo-icono { font-size: 2.5rem; margin-bottom: .25rem !important; }

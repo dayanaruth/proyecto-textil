@@ -48,7 +48,7 @@ function pantallas() {
       texto: instalada()
         ? 'Ya la tienes instalada. Funciona aunque no tengas internet.'
         : esIphone
-          ? 'En iPhone: toca Compartir (el cuadrado con la flecha) y luego «Agregar a inicio». Después funciona sin internet.'
+          ? 'En iPhone o iPad, desde Safari: toca Compartir (el cuadrado con la flecha) y luego «Agregar a pantalla de inicio». Después funciona sin internet.'
           : 'Instálala en tu celular: queda como una app más y funciona sin internet. En Chrome: menú ⋮ → «Instalar app».',
       dibujo: `<div class="bienvenida-celular">${CELULAR}</div>${instalada() ? '' : instalar}`,
     },

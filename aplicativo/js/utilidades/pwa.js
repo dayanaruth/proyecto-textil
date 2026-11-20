@@ -4,7 +4,9 @@ let pedidoInstalar = null;
 let aviso = () => {};
 
 // Botón de instalar: Android/Chrome lo permite; en iPhone se explica cómo
-export const esIphone = /iphone|ipad|ipod/i.test(navigator.userAgent);
+// (el iPad desde iPadOS 13 dice ser "Macintosh": se reconoce porque tiene pantalla táctil)
+export const esIphone = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  || (/macintosh/i.test(navigator.userAgent) && (navigator.maxTouchPoints > 1 || 'ontouchend' in document));
 export const instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 export const puedeInstalar = () => !instalada() && (pedidoInstalar !== null || esIphone);
 export const alCambiarInstalar = (fn) => { aviso = fn; };

@@ -35,7 +35,7 @@ export function mostrar(main) {
     if (!zona) return;
     if (!puedeInstalar()) return void (zona.innerHTML = '');
     zona.innerHTML = esIphone
-      ? '<p class="nota nota-info instalar-nota">📲 Para tenerla en tu iPhone: toca <b>Compartir</b> y luego <b>«Agregar a inicio»</b>.</p>'
+      ? '<p class="nota nota-info instalar-nota">📲 Para tenerla en tu iPhone o iPad: ábrela en <b>Safari</b>, toca <b>Compartir</b> y luego <b>«Agregar a pantalla de inicio»</b>.</p>'
       : `<button type="button" class="btn btn-secundario btn-ancho">📲 Instalar en el celular</button>
          <p class="instalar-nota">Queda como una app y funciona sin internet.</p>`;
     zona.querySelector('button')?.addEventListener('click', instalar);

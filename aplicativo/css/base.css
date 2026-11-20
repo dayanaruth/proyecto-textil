@@ -81,7 +81,9 @@ img { max-width: 100%; display: block; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
 
-main { max-width: 42rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
+main { max-width: 42rem; margin: 0 auto; padding: 1rem 1rem calc(3rem + env(safe-area-inset-bottom)); }
+/* iPhone: que nada quede debajo de la muesca (de costado) ni de la barra de inicio */
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 main:focus { outline: none; }
 
 h1, h2, h3 { font-family: var(--letra-titulo); font-weight: 700; letter-spacing: -.01em; }

@@ -102,3 +102,6 @@ main > :nth-child(n+6), .bienvenida-zona > :nth-child(n+6) { animation-delay: .2
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* iPhone con muesca: la barra de arriba no queda debajo de la hora y la batería */
+.barra { padding-top: max(.5rem, env(safe-area-inset-top)); }

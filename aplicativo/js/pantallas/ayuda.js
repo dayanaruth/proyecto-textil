@@ -14,7 +14,7 @@ const TEMAS = [
     ['¿Qué puedo hacer con Mi Taller?', `<p>Sacar el molde de 8 prendas con tus medidas, saber cuánta tela comprar y cuánto cobrar. También guardar medidas de tu familia, hacer cotizaciones y practicar con ejercicios.</p>`],
     ['¿Cómo hago mi primera prenda?', pasos(['En el inicio toca <b>✂️ Hacer una prenda</b>.', 'Elige la prenda (y si es para dama o varón).', 'Escribe las medidas que te pide: cada una tiene un dibujo y el botón 🔊 para escuchar.', 'Mira el molde paso a paso, luego la tela y el precio.']) + ir('#/prendas', 'Hacer una prenda')],
     ['¿Cómo instalo la app en mi celular?', `${pasos(esIphone
-      ? ['Abre la app en <b>Safari</b>.', 'Toca <b>Compartir</b> (el cuadrado con la flecha hacia arriba).', 'Elige <b>«Agregar a inicio»</b>.']
+      ? ['Abre la app en <b>Safari</b>.', 'Toca <b>Compartir</b> (el cuadrado con la flecha hacia arriba).', 'Elige <b>«Agregar a pantalla de inicio»</b> (si no aparece, baja un poco en la lista).']
       : ['Abre la app en <b>Chrome</b>.', 'Toca el menú <b>⋮</b> (los tres puntos de arriba).', 'Elige <b>«Instalar app»</b> o «Agregar a la pantalla principal».'])}
       ${instalada() ? '<p>✅ Ya la tienes instalada.</p>' : puedeInstalar() && !esIphone ? '<button type="button" class="btn btn-principal btn-chico" data-instalar>📲 Instalar ahora</button>' : ''}`],
   ] },
@@ -34,6 +34,9 @@ const TEMAS = [
       'Ve a <b>📋 Medidas guardadas</b>.',
       'Abajo toca <b>⬇️ Guardar copia</b> o <b>📤 Enviar copia</b> (por WhatsApp o correo).',
       'En el otro celular abre Mi Taller → Medidas guardadas → <b>⬆️ Recuperar copia</b> y elige el archivo.']) + ir('#/guardadas', 'Medidas guardadas')],
+    ['Tengo iPhone, ¿se pueden borrar mis medidas?', `<p>En iPhone conviene <b>instalar la app</b> (Safari → Compartir → «Agregar a pantalla de inicio»).
+      Si solo la usas dentro de Safari y pasas <b>más de 7 días sin abrirla</b>, Safari puede borrar lo guardado.</p>
+      <p>Ojo: la app instalada y Safari guardan sus datos por separado. Si ya tenías medidas en Safari, pásalas con <b>Guardar copia</b> y <b>Recuperar copia</b>.</p>`],
     ['¿Qué pasa si borro los datos del navegador?', `<p>Se borran las medidas, cotizaciones y tiempos guardados. Por eso conviene <b>guardar una copia</b> de vez en cuando.</p>`],
   ] },
   { icono: 'celular', nombre: 'Internet', preguntas: [

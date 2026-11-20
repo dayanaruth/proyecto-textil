@@ -1,4 +1,5 @@
 // Punto de entrada: navegación entre pantallas con la dirección (#/ruta/dato)
+import './utilidades/compat.js';   // primero: arreglos para celulares antiguos (iPhone con iOS 14–15)
 import * as inicio from './pantallas/inicio.js';
 import * as elegirPrenda from './pantallas/elegir-prenda.js';
 import * as medidas from './pantallas/medidas.js';

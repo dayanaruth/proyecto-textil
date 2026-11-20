@@ -83,7 +83,7 @@
 
 /* Barra fija abajo: el precio siempre a la vista */
 .barra-precio {
-  position: sticky; bottom: .5rem; z-index: 5; margin: 0 0 .75rem; padding: .5rem .875rem .375rem;
+  position: sticky; bottom: calc(.5rem + env(safe-area-inset-bottom)); z-index: 5; margin: 0 0 .75rem; padding: .5rem .875rem .375rem;
   background: var(--superficie); border: 2px solid var(--primario); border-radius: var(--radio); box-shadow: 0 -4px 18px rgb(0 0 0 / .15);
 }
 .barra-precio-textos { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; font-weight: 600; font-size: .9rem; }

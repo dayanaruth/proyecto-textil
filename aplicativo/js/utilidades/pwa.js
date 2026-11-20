@@ -18,13 +18,16 @@ export async function instalar() {
   return true;
 }
 
-function mostrarBarra(texto, boton, accion) {
+export function mostrarBarra(texto, boton, accion) {
   document.querySelector('.barra-aviso')?.remove();
   const barra = document.createElement('div');
   barra.className = 'barra-aviso';
   barra.setAttribute('role', 'status');
-  barra.innerHTML = `<span>${texto}</span>${boton ? `<button type="button" class="btn btn-principal">${boton}</button>` : ''}`;
-  barra.querySelector('button')?.addEventListener('click', accion);
+  barra.innerHTML = `<span>${texto}</span>${boton ? `<button type="button" class="btn btn-principal">${boton}</button>` : ''}
+    <button type="button" class="cerrar-aviso" aria-label="Cerrar aviso (se actualiza la próxima vez que abras la app)">✕</button>`;
+  barra.querySelector('.btn')?.addEventListener('click', accion);
+  // Cerrar: el aviso se va; la versión nueva queda esperando y se usa al volver a abrir la app
+  barra.querySelector('.cerrar-aviso').addEventListener('click', () => barra.remove());
   document.body.append(barra);
 }
 

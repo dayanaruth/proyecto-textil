@@ -87,6 +87,29 @@ export function planoDeCorte(todas, anchoTela) {
   };
 }
 
+// Tela doblada con los DOS orillos al centro: quedan dos dobleces (uno a cada lado) y dos franjas de
+// ancho ÷ 4. Sirve en pedidos: dos piezas «al doblez» (delantero y espalda) van lado a lado en vez de
+// una detrás de otra. Las piezas se reparten entre las dos franjas; el largo es el de la franja más larga.
+// Las piezas que no entran en una franja (ej. mangas anchas) se cortan después, volviendo a doblar la
+// tela de la forma de siempre (un doblez).
+export function planoDosDobleces(todas, anchoTela) {
+  if (todas.some((p) => p.paneles)) return null;
+  const franja = anchoTela / 4;
+  const entra = (p) => p.formas.some((f) => f.ancho <= franja);
+  const resto = todas.filter((p) => !entra(p));
+  const area = (p) => p.formas[0].ancho * p.formas[0].alto;
+  const franjas = [[], []], usado = [0, 0];
+  [...todas].filter(entra).sort((a, b) => area(b) - area(a)).forEach((p) => {
+    const i = usado[0] <= usado[1] ? 0 : 1;
+    franjas[i].push(p);
+    usado[i] += area(p);
+  });
+  const planos = franjas.map((f) => (f.length ? planoDeCorte(f, anchoTela / 2) : { largo: 0, notas: [] }));
+  const despues = resto.length ? planoDeCorte(resto, anchoTela) : { largo: 0, notas: [] };
+  if ([...planos, despues].some((p) => p.error)) return null;
+  return { largo: Math.max(...planos.map((p) => p.largo)) + despues.largo, notas: [...planos, despues].flatMap((p) => p.notas) };
+}
+
 // Las piezas al doblez van al inicio de la fila (x = 0 es el doblez)
 function poner(fila, pieza, forma, xEncaje) {
   const colocada = { nombre: pieza.nombre, doblez: pieza.doblez, ...forma, x: 0, y: fila.y };

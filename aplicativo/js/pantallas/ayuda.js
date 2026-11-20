@@ -45,6 +45,11 @@ const TEMAS = [
     ['¿Cómo recibo las mejoras de la app?', `<p>Cuando haya una versión nueva, abajo aparece <b>«Hay una versión nueva de la app»</b>. Toca <b>Actualizar</b>. Tus medidas y datos no se borran.</p>`],
   ] },
   { icono: 'costos', nombre: 'Precios y cotizaciones', preguntas: [
+    ['¿Cuánto cobro por mi hora de trabajo?', `<p>Lo mínimo por ley en Bolivia (2026) es <b>Bs 13,75 por hora</b>: el salario mínimo de Bs 3.300 al mes ÷ 30 días ÷ 8 horas.
+      Si ya coses bien, unos <b>Bs 18</b>; con mucha experiencia, unos <b>Bs 22</b>.</p>
+      <p>En <b>Costo y precio</b> y en <b>Cotizaciones</b> toca «¿No sabes cuánto cobrar por hora?»: hay botones y una calculadora.</p>`],
+    ['¿Por qué en una docena cada prenda sale más barata?', `<p>Porque se trabaja <b>en serie</b>: se corta todo junto y se repite la misma costura, así cada prenda toma menos tiempo.
+      Y la tela se aprovecha mejor acomodando las piezas de todas las prendas juntas. La app ya lo calcula así.</p>`],
     ['¿Ganancia «del costo» o «del precio de venta»?', `<p>No es lo mismo. Si la prenda cuesta Bs 100:</p>
       <ul><li><b>30 % del costo:</b> 100 + 30 = <b>Bs 130</b> (ganas 30).</li><li><b>30 % del precio de venta:</b> 100 ÷ 0,70 = <b>Bs 142,86</b> (ganas 42,86).</li></ul>
       <p>La app te muestra los dos para que elijas.</p>` + ir('#/herramientas/ejercicios/5', 'Practicar con ejercicios')],

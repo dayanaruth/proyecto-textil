@@ -8,6 +8,7 @@ import { bs, numero } from '../utilidades/formato.js';
 import { barraPasos, esc } from '../utilidades/ui.js';
 import { hayVoz, hablar } from '../utilidades/voz.js';
 import { preferencias } from '../datos/cotizaciones.js';
+import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { dibujo, iconoMaterial } from '../utilidades/iconos.js';
 
 const normal = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -94,7 +95,8 @@ export function mostrar(main, [id]) {
               <span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="0" value="${esc(e.pagoHora)}"></span></label>
             <b class="cuenta-res" id="t-mano"></b>
           </div>
-          <p class="cuenta-pie">⏱️ ¿No sabes cuánto tardas? Mídelo con el <a href="#/herramientas/cronometro">cronómetro de costura</a>.</p>
+          ${ayudaHorasYPago(e.prenda)}
+          <p class="cuenta-pie">⏱️ Lo mejor es medir tu tiempo con el <a href="#/herramientas/cronometro">cronómetro de costura</a>.</p>
           <label class="pregunta-c pregunta-sola">🏠 ¿Cuánto gastas en el taller por esta prenda? <small>Luz, máquina, agujas…</small>
             <span class="campo"><span class="unidad">Bs</span><input name="gastos" inputmode="decimal" placeholder="0" value="${esc(e.gastos)}"></span></label>
           <button type="button" class="enlace-chico" id="sugerir-gastos">¿No sabes? Usar el 10 % de los materiales</button>
@@ -205,6 +207,8 @@ export function mostrar(main, [id]) {
       actualizar();
     });
     form.addEventListener('submit', (ev) => ev.preventDefault());
+    const ayuda = main.querySelector('.ayuda-precio');
+    if (ayuda) conectarAyuda(ayuda, { horas: () => $('[name="horas"]'), pago: () => $('[name="pagoHora"]') });
     main.addEventListener('click', alTocar);
   };
 
@@ -226,7 +230,7 @@ export function mostrar(main, [id]) {
     if (b.id === 'agregar') { e.materiales.push({ nombre: '', cantidad: '1', unidad: 'unid.', precio: '' }); redibujar = true; }
     if (b.id === 'ejemplo') {
       e = { ...e, materiales: e.materiales.map((m) => ({ ...m, cantidad: m.cantidad || '0,9', precio: precioEjemplo(m.nombre) })),
-        horas: '3', pagoHora: '10', ganancia: '30', tipo: 'costo' };
+        horas: '2', pagoHora: '14', ganancia: '30', tipo: 'costo' };
       const { totalMateriales } = calcularCostos(e);
       e.gastos = numero(Math.round(totalMateriales * 10) / 100);
       esEjemplo = true; redibujar = true;

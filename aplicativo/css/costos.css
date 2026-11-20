@@ -124,3 +124,16 @@
 .parte > header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: .75rem; row-gap: .375rem; }
 .parte > header .parte-total { grid-column: 2 / 4; justify-self: end; }
 .parte > header .voz-c { grid-column: 3; grid-row: 1; }
+
+/* Ayuda: horas de referencia y cuánto cobrar por hora (Costo y precio, Cotizaciones) */
+.ayuda-precio { margin: .5rem 0 .75rem; }
+.ayuda-ref { margin: .5rem 0 .375rem; font-size: .95rem; }
+details.ayuda-ref { padding: .25rem .75rem; background: var(--superficie); border: 2px solid var(--borde); border-radius: var(--radio); }
+details.ayuda-ref summary { display: flex; align-items: center; min-height: 2.75rem; cursor: pointer; font-weight: 800; color: var(--primario); }
+details.ayuda-ref p { margin: .375rem 0 .5rem; }
+.ayuda-precio .chips { align-items: stretch; }
+.ayuda-precio .chip { min-height: 2.75rem; padding: .375rem .875rem; font-size: 1rem; border-radius: 16px; text-align: left; line-height: 1.25; }
+.ayuda-precio .chip small { display: block; font-size: .8rem; font-weight: 600; color: var(--texto-suave); }
+.chips-pago .chip { flex: 1 1 9rem; }
+.calc-hora { margin: .5rem 0; }
+.calc-hora .chip { margin-left: .25rem; }

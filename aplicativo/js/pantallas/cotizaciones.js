@@ -4,7 +4,9 @@ import { dibujo } from '../utilidades/iconos.js';
 import * as personas from '../datos/personas.js';
 import { buscarPrenda, sirvePara } from '../datos/prendas.js';
 import { TABLAS, tablasPara } from '../datos/tallas.js';
-import { telaDePrenda, precioUnidad, telaTotal } from '../calculos/cotizacion.js';
+import { telaDePrenda, telaDelPedido, precioUnidad, telaTotal } from '../calculos/cotizacion.js';
+import { compararConMercado, EN_SERIE } from '../datos/referencias.js';
+import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { ANCHOS_COMUNES } from '../calculos/tela.js';
 import { valor } from '../calculos/costos.js';
 import { avatar } from '../utilidades/avatares.js';
@@ -63,7 +65,7 @@ function nueva(main, tipo) {
     anchoTela: pref.anchoTela, precioTela: pref.precioTela,
     insumos: [], horas: '', pagoHora: pref.pagoHora, gastosPct: pref.gastosPct, ganancia: pref.ganancia, tipoGanancia: pref.tipo,
   };
-  const cache = new Map();             // metros de tela ya calculados
+  const cache = new Map();             // metros de tela ya calculados (una prenda y pedido completo)
   let ultimoCalculo = null;
 
   main.innerHTML = `
@@ -87,10 +89,11 @@ function nueva(main, tipo) {
         <h2 class="separado"><span class="cuadro-num">4</span> Costo de cada prenda</h2>
         <div id="insumos"></div>
         <div class="fila-calculo">
-          <label>Horas por prenda<span class="campo"><input name="horas" inputmode="decimal" placeholder="ej. 3"><span class="unidad">h</span></span></label>
+          <label>Horas por prenda<span class="campo"><input name="horas" inputmode="decimal" placeholder="ej. 1,5"><span class="unidad">h</span></span></label>
           <span class="por" aria-hidden="true">×</span>
-          <label>Pago por hora<span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="ej. 10" value="${esc(e.pagoHora)}"></span></label>
+          <label>Pago por hora<span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="ej. 14" value="${esc(e.pagoHora)}"></span></label>
         </div>
+        <div id="ayuda-precio"></div>
         <label class="bloque">Gastos del taller <small>Luz, máquina, agujas: % de los materiales</small>
           <span class="campo campo-corto"><input name="gastosPct" inputmode="decimal" value="${esc(e.gastosPct)}"><span class="unidad">%</span></span></label>
         <label class="bloque">Ganancia
@@ -182,7 +185,16 @@ function nueva(main, tipo) {
       if (ultimoCalculo === turno) zona.innerHTML = `<p class="nota">⚠️ ${esc(error.message)} Elige una tela más ancha.</p>`;
       return;
     }
+    let pedido;
+    try {
+      const clave = `pedido|${e.prenda}|${e.anchoTela}|${JSON.stringify(conMetros.map((l) => [l.medidas, l.cantidad]))}`;
+      if (!cache.has(clave)) cache.set(clave, telaDelPedido(e.prenda, conMetros, e.anchoTela));
+      pedido = await cache.get(clave);
+    } catch {
+      pedido = { lineas: conMetros, doblez: 'uno', ahorro: 0 };
+    }
     if (ultimoCalculo !== turno) return;
+    conMetros = pedido.lineas;
     const datos = { precioTela: e.precioTela, insumos: e.insumos, horas: e.horas, pagoHora: e.pagoHora, gastosPct: e.gastosPct, ganancia: e.ganancia, tipo: e.tipoGanancia };
     const filas = conMetros.map((l) => {
       const u = precioUnidad(l.metros, datos);
@@ -194,6 +206,12 @@ function nueva(main, tipo) {
     const costo = filas.reduce((s, f) => s + f.costo * f.cantidad, 0);
     const tela = telaTotal(filas);
     const falta = !valor(e.precioTela) || !valor(e.horas) || !valor(e.pagoHora);
+    const mercado = falta || !unidades ? null : compararConMercado(e.prenda, total / unidades);
+    const MERCADO_TEXTO = {
+      parecido: '✅ Tu precio está cerca del mercado.',
+      caro: '⬆️ Tu precio está bastante más alto. Revisa las horas (en serie se tarda menos), el pago por hora o la ganancia.',
+      barato: '⬇️ Tu precio está bastante más bajo. Revisa que estés cobrando tu trabajo y todos los materiales.',
+    };
     zona.innerHTML = `
       <h2><span class="cuadro-num">5</span> Resultado</h2>
       ${!valido ? '<p class="error">Revisa los números: usa solo cifras positivas, y una ganancia sobre la venta menor a 100 %.</p>' : `
@@ -204,7 +222,10 @@ function nueva(main, tipo) {
           <td>${f.cantidad}</td><td>${bs(f.precio)}</td><td>${bs(f.precio * f.cantidad)}</td></tr>`).join('')}</tbody>
         <tfoot><tr><td colspan="3">Total (${unidades} prendas)</td><td>${bs(total)}</td></tr></tfoot>
       </table>
-      <p class="nota nota-info">🧵 Tela a comprar para todo el pedido: <b>${numero(tela)} m</b> (ancho ${metros(e.anchoTela)}).<br>
+      ${mercado ? `<p class="nota ${mercado.estado === 'parecido' ? 'nota-info' : ''}">📊 En La Paz (2026) ${mercado.que} se vende ${mercado.desde ? 'desde' : 'a unos'} <b>Bs ${mercado.precio}</b>. Tu precio por prenda: <b>${bs(total / unidades)}</b>.<br>${MERCADO_TEXTO[mercado.estado]}</p>` : ''}
+      ${unidades >= EN_SERIE ? '<p class="nota nota-info">💡 En pedidos grandes se suele ganar de 20 a 25 % por prenda: la ganancia está en la cantidad.</p>' : ''}
+      <p class="nota nota-info">🧵 Tela a comprar para todo el pedido: <b>${numero(tela)} m</b> (ancho ${metros(e.anchoTela)}).
+        ${pedido.doblez === 'dos' ? '<br>✂️ Dobla la tela con <b>los dos orillos al centro</b>: así los delanteros y espaldas van lado a lado, cada uno en su doblez. Las piezas anchas (como las mangas) se cortan después con la tela doblada como siempre.' : ''}<br>
         💰 Tu ganancia: <b>${bs(total - costo)}</b>. Esto no aparece en la cotización.</p>
       <h2 class="separado">Datos para enviar</h2>
       <label class="bloque" for="cliente">¿Para quién es la cotización?
@@ -248,6 +269,9 @@ function nueva(main, tipo) {
     e.cantidades = {};
     e.horas = pref.horas[e.prenda] ?? '';
     form.horas.value = e.horas;
+    const ayuda = $('#ayuda-precio');
+    ayuda.innerHTML = ayudaHorasYPago(e.prenda, { serie: tipo !== 'medida' });
+    conectarAyuda(ayuda.firstElementChild, { horas: () => form.horas, pago: () => form.pagoHora });
     e.insumos = (buscarPrenda(e.prenda).insumos ?? []).map((m) => ({ ...m, precio: pref.insumos[m.nombre] ?? '' }));
     pintarQuienes();
     pintarInsumos();

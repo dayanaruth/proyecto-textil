@@ -3,7 +3,7 @@
 // actualizar la app nunca borra los datos de la persona.
 
 // ⚠️ Cambiar VERSION cada vez que se publique un cambio (así el celular se actualiza)
-const VERSION = 'mi-taller-v36';
+const VERSION = 'mi-taller-v38';
 
 const ARCHIVOS = [
   './',
@@ -29,6 +29,7 @@ const ARCHIVOS = [
   'js/datos/cotizaciones.js',
   'js/datos/diccionario.js',
   'js/datos/ejercicios.js',
+  'js/datos/figurin.js',
   'js/datos/personas.js',
   'js/datos/medidas.js',
   'js/datos/prendas.js',
@@ -77,6 +78,7 @@ const ARCHIVOS = [
   'js/utilidades/pwa.js',
   'js/utilidades/ui.js',
   'js/utilidades/voz.js',
+  'img/figurin.webp',
   'img/logo-cea.webp',
   'img/marca.webp',
   'img/qr-mi-taller.svg',
@@ -125,7 +127,10 @@ self.addEventListener('activate', (e) => {
 // 3. Cada archivo se busca primero en el celular; si no está, en internet
 self.addEventListener('fetch', (e) => {
   const { request } = e;
-  if (request.method !== 'GET' || new URL(request.url).origin !== location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== location.origin) return;
+  // Las páginas de prueba no se guardan: así siempre se ve la última versión
+  if (url.pathname.includes('/pruebas/')) return;
   e.respondWith(
     caches.match(request, { ignoreSearch: true }).then((guardado) => guardado ?? fetch(request).then((respuesta) => {
       if (respuesta.ok) {

@@ -11,7 +11,7 @@
 /* Medidas */
 .contador { margin-bottom: .5rem; color: var(--texto-suave); font-size: .9rem; }
 .figura { display: grid; place-items: center; margin-bottom: 1rem; padding: .5rem; background: var(--lienzo); border-radius: var(--radio); }
-.figura svg { width: auto; max-width: 100%; height: min(15rem, 32vh); }
+.figura svg { width: auto; max-width: 100%; height: min(20rem, 40vh); border-radius: 12px; }
 .como { display: flex; align-items: flex-start; gap: .75rem; margin: .25rem 0 1rem; }
 .btn-voz {
   flex: none; width: 3rem; height: 3rem; font-size: 1.3rem; cursor: pointer;
@@ -162,6 +162,7 @@
 .filas-medida a:hover { background: var(--primario-suave); }
 .mini-figura { flex: none; width: 2rem; height: 3.25rem; background: var(--lienzo); border-radius: 6px; }
 .mini-figura svg { width: 100%; height: 100%; }
+.mini-figura .fm-nota { display: none; }  /* en las miniaturas solo se ve la cinta */
 .fila-nombre { flex: 1; }
 .filas-medida b { white-space: nowrap; }
 .agregar { color: var(--primario); font-weight: 600; white-space: nowrap; }

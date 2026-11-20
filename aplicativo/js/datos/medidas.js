@@ -1,3 +1,4 @@
+import { dibujoMedida } from './figurin.js';
 // Catálogo único de medidas: nombre, cómo tomarla, rango válido (cm) y dibujo
 export const MEDIDAS = {
   'cintura': {
@@ -108,42 +109,8 @@ const CUERPO = `
              L59 150 L58 193 L45 193 L49 188 L44 150 L36 104 Q34 92 48 80 Q40 64 42 52 L38 40 Z"/>
   </g>`;
 
-const flecha = (x, y1, y2, desde1, desde2) => `
-  <path stroke-width="1.2" stroke-dasharray="3 3" d="M${desde1} ${y1} H${x} M${desde2} ${y2} H${x}"/>
-  <path d="M${x} ${y1} V${y2} M${x - 3} ${y1 + 4} L${x} ${y1} L${x + 3} ${y1 + 4} M${x - 3} ${y2 - 4} L${x} ${y2} L${x + 3} ${y2 - 4}"/>`;
-
-const MARCAS = {
-  'cintura': '<ellipse cx="60" cy="80" rx="14" ry="3.5"/>',
-  'cadera': '<ellipse cx="60" cy="104" rx="25" ry="4"/>',
-  'altura-cadera': flecha(104, 80, 104, 72, 84),
-  'largo-falda': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 L86 146 H34 Z"/>${flecha(104, 80, 146, 72, 86)}`,
-  'busto': '<ellipse cx="60" cy="60" rx="20" ry="4"/>',
-  'cuello': '<ellipse cx="60" cy="32" rx="6.5" ry="2"/>',
-  'talle-espalda': flecha(104, 34, 80, 65, 72),
-  'talle-delantero': '<path d="M56 34 Q50 46 51 60 Q52 72 53 80"/><circle cx="56" cy="34" r="1.5" fill="#9E2F45"/><circle cx="53" cy="80" r="1.5" fill="#9E2F45"/>',
-  'ancho-espalda': '<path d="M42 48 H78 M46 45 L42 48 L46 51 M74 45 L78 48 L74 51"/>',
-  'busto-a-busto': '<path d="M51 60 H69"/><circle cx="51" cy="60" r="1.6" fill="#9E2F45"/><circle cx="69" cy="60" r="1.6" fill="#9E2F45"/>',
-  'alto-busto': '<path d="M56 34 L51 60"/><circle cx="56" cy="34" r="1.5" fill="#9E2F45"/><circle cx="51" cy="60" r="1.6" fill="#9E2F45"/>',
-  'largo-blusa': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 112 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 112, 65, 85)}`,
-  'largo-polera': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 110 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 110, 58, 85)}`,
-  'contorno-brazo': '<ellipse cx="85" cy="58" rx="5" ry="2"/>',
-  'largo-manga': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M80 40 L90 44 L93 64 L83 66 L79 50 Z"/><path d="M82 40 L88 66 M80 41 L84 39 M86 66 L90 66"/>`,
-  'pecho': '<ellipse cx="60" cy="58" rx="21" ry="4"/>',
-  'largo-camisa': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M38 40 H82 L78 52 Q80 64 72 80 Q86 92 85 116 H35 Q34 92 48 80 Q40 64 42 52 Z"/>${flecha(104, 34, 116, 65, 85)}`,
-  'largo-manga-larga': '<path d="M83 40 L91 70 L90 97"/><circle cx="83" cy="40" r="1.5" fill="#9E2F45"/><circle cx="90" cy="97" r="1.5" fill="#9E2F45"/>',
-  'muneca': '<ellipse cx="90" cy="95" rx="3.5" ry="1.5"/>',
-  'tiro': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 Q86 92 84 104 L82 114 H38 L36 104 Q34 92 48 80 Z"/>${flecha(104, 80, 114, 72, 61)}`,
-  'altura-rodilla': `${flecha(104, 80, 150, 72, 76)}<path d="M62 150 H76" stroke-width="2"/>`,
-  'largo-pantalon': `<path fill="#9E2F45" fill-opacity=".15" stroke="none" d="M48 80 H72 Q86 92 84 104 L76 150 L71 190 H62 L60 114 L58 190 H49 L44 150 L36 104 Q34 92 48 80 Z"/>${flecha(104, 80, 190, 72, 71)}`,
-  'rodilla': '<ellipse cx="68" cy="150" rx="7.5" ry="2"/><ellipse cx="52" cy="150" rx="7.5" ry="2"/>',
-  'bota': '<ellipse cx="66.5" cy="186" rx="6.5" ry="1.8"/><ellipse cx="53.5" cy="186" rx="6.5" ry="1.8"/>',
-};
-
-export const figuraMedida = (id) => `
-  <svg viewBox="0 0 120 200" role="img" aria-label="Dónde medir: ${MEDIDAS[id].nombre}">
-    ${CUERPO}
-    <g fill="none" stroke="#9E2F45" stroke-width="2.5" stroke-linecap="round">${MARCAS[id] ?? ''}</g>
-  </svg>`;
+// Dónde medir: el figurín con la cinta métrica y los puntos ① ② (js/datos/figurin.js)
+export const figuraMedida = (id) => dibujoMedida(id, MEDIDAS[id].nombre);
 
 // ---- Zonas del cuerpo: para ordenar las medidas guardadas de cada persona ----
 // "solo": la medida se muestra solo para ese tipo de persona (dama o varón)

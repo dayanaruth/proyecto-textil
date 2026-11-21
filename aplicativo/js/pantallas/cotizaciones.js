@@ -2,10 +2,10 @@
 import * as cotizaciones from '../datos/cotizaciones.js';
 import { dibujo } from '../utilidades/iconos.js';
 import * as personas from '../datos/personas.js';
-import { buscarPrenda, sirvePara } from '../datos/prendas.js';
+import { PRENDAS, buscarPrenda, prendaMadre, sirvePara } from '../datos/prendas.js';
 import { TABLAS, tablasPara } from '../datos/tallas.js';
-import { telaDePrenda, telaDelPedido, precioUnidad, telaTotal } from '../calculos/cotizacion.js';
-import { compararConMercado, EN_SERIE } from '../datos/referencias.js';
+import { telaDePrenda, telaDelPedido, calcularPedido, manoDeObraPedido, pendientes } from '../calculos/cotizacion.js';
+import { compararConMercado } from '../datos/referencias.js';
 import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { ANCHOS_COMUNES } from '../calculos/tela.js';
 import { valor } from '../calculos/costos.js';
@@ -13,15 +13,45 @@ import { avatar } from '../utilidades/avatares.js';
 import { bs, metros, numero } from '../utilidades/formato.js';
 import { esc } from '../utilidades/ui.js';
 
-const PRENDAS_MOLDE = ['falda-recta', 'falda-uniforme', 'blusa', 'vestido', 'camisa-dama', 'camisa-varon', 'pantalon-dama', 'pantalon-varon', 'polera-dama', 'polera-varon', 'buzo-dama', 'buzo-varon'];
-const tituloDe = (id) => { const p = buscarPrenda(id); return p.titulo ?? p.nombre; };
+const NOMBRES_COTIZACION = { polera: 'Poleras', buzo: 'Buzos deportivos', camisa: 'Camisas', pantalon: 'Pantalones' };
+const tituloDe = (id) => NOMBRES_COTIZACION[id] ?? buscarPrenda(id).nombre;
+const imagenDe = (prenda) => prenda.id === 'buzo' ? prenda.foto : prenda.img;
+
+function gruposDeTallas(prenda) {
+  if (!prenda.variantes) return tablasPara(prenda.id).map((tabla) => ({ id: tabla, tabla, nombre: TABLAS[tabla].nombre, prendaId: prenda.id }));
+  const adultos = prenda.variantes.map((v) => ({ id: v.para, tabla: v.para, nombre: v.nombre, prendaId: v.id }));
+  const menores = prenda.variantes.map((v) => ({ id: `ninos-${v.para}`, tabla: 'ninos', nombre: v.para === 'dama' ? 'Niñas' : 'Niños', prendaId: v.id }));
+  return [...adultos, ...menores];
+}
+
+function sugerirInsumos(prenda, precios) {
+  const modelos = prenda.variantes ?? [prenda];
+  const porMaterial = new Map();
+  for (const modelo of modelos) {
+    for (const insumo of modelo.insumos ?? []) {
+      if (!porMaterial.has(insumo.nombre)) porMaterial.set(insumo.nombre, { ...insumo, cantidadesPorMolde: {} });
+      porMaterial.get(insumo.nombre).cantidadesPorMolde[modelo.id] = valor(insumo.cantidad);
+    }
+  }
+  return [...porMaterial.values()].map(({ cantidadesPorMolde, ...insumo }) => {
+    const hilo = insumo.nombre === 'Hilo';
+    const cantidades = modelos.map((modelo) => cantidadesPorMolde[modelo.id] ?? 0);
+    const automatico = !hilo && new Set(cantidades).size > 1;
+    return {
+      ...insumo, precio: precios[insumo.nombre] ?? '', cliente: false,
+      cantidad: hilo ? '1' : insumo.cantidad, alcance: hilo || automatico ? 'pedido' : 'prenda',
+      ...(automatico ? { cantidadesPorMolde } : {}),
+    };
+  });
+}
 const fechaCorta = (iso) => personas.fecha(iso);
 const hoyIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const sumarDias = (iso, dias) => { const d = new Date(`${iso}T12:00:00`); d.setDate(d.getDate() + dias); return d.toISOString().slice(0, 10); };
 
 export function mostrar(main, [a, b]) {
   if (a === 'nueva' && (b === 'medida' || b === 'tallas')) return nueva(main, b);
-  if (a === 'ver' && cotizaciones.buscar(b)) return ver(main, cotizaciones.buscar(b));
+  const guardada = cotizaciones.buscar(b);
+  if (a === 'ver' && guardada) return guardada.estado === 'borrador' ? nueva(main, guardada.tipo, guardada) : ver(main, guardada);
   return inicio(main);
 }
 
@@ -47,79 +77,174 @@ function inicio(main) {
     ${todas.length ? `<ul class="personas">${todas.map((c) => `
       <li><a class="persona" href="#/cotizaciones/ver/${c.id}">
         <span class="numero-cot">Nº ${c.numero}</span>
-        <span class="persona-datos"><strong>${esc(c.cliente || 'Sin nombre')}</strong>
-          <small>${esc(c.prendaTitulo)} · ${c.unidades} unid. · ${fechaCorta(c.fecha)}</small></span>
-        <b>${bs(c.total)}</b>
+        <span class="persona-datos"><strong>${esc(c.cliente || c.prendaTitulo)}</strong>
+          <small>${c.cliente ? `${esc(c.prendaTitulo)} · ` : ''}${c.unidades} unid. · ${fechaCorta(c.fecha)}</small></span>
+        <b>${c.estado === 'borrador' ? 'Borrador · continuar' : bs(c.total)}</b>
       </a></li>`).join('')}</ul>` : '<p class="ayuda">Todavía no hay cotizaciones.</p>'}`;
   return '#/';
 }
 
 // ---------- Nueva cotización ----------
-function nueva(main, tipo) {
+function nueva(main, tipo, borrador = null) {
   const pref = cotizaciones.preferencias();
-  // Solo las personas para quienes sirve la prenda (una falda no se cotiza para un varón)
   const personasPara = (prenda) => personas.listar().filter((p) => sirvePara(prenda, avatar(p.avatar).tipo));
+  const moldePara = (prenda, persona) => prenda.variantes?.find((v) => v.para === avatar(persona.avatar).tipo) ?? prenda;
   const e = {
-    tipo, prenda: null, tabla: null,
-    cantidades: {},                     // por persona (id) o por talla
+    tipo, prenda: null,
+    cantidades: {},                     // por persona (id) o por grupo y talla
     anchoTela: pref.anchoTela, precioTela: pref.precioTela,
-    insumos: [], horas: '', pagoHora: pref.pagoHora, gastosPct: pref.gastosPct, ganancia: pref.ganancia, tipoGanancia: pref.tipo,
+    telaCliente: false,
+    insumos: [], horas: '', alcanceHoras: 'pedido', cobroTrabajo: 'hora', pagoHora: pref.pagoHora, pagoPedido: '',
+    gastosPct: pref.gastosPct, ganancia: pref.ganancia, tipoGanancia: pref.tipo,
   };
+  if (borrador) Object.assign(e, JSON.parse(JSON.stringify(borrador.formulario)));
+  if (e.prenda) {
+    const original = buscarPrenda(e.prenda);
+    const madre = prendaMadre(e.prenda);
+    if (tipo === 'tallas' && e.tabla && Object.keys(e.cantidades).some((clave) => !clave.includes(':'))) {
+      const grupo = e.tabla === 'ninos' && madre ? `ninos-${original.para}` : e.tabla;
+      e.cantidades = Object.fromEntries(Object.entries(e.cantidades).map(([talla, n]) => [talla.includes(':') ? talla : `${grupo}:${talla}`, n]));
+    }
+    if (madre) e.prenda = madre.id;
+    if (madre) {
+      for (const sugerido of sugerirInsumos(madre, pref.insumos)) {
+        if (!sugerido.cantidadesPorMolde) continue;
+        const actual = e.insumos.find((m) => m.nombre === sugerido.nombre);
+        if (actual?.alcance === 'prenda' && valor(actual.cantidad) === sugerido.cantidadesPorMolde[original.id]) {
+          actual.alcance = 'pedido';
+          actual.cantidadesPorMolde = sugerido.cantidadesPorMolde;
+        }
+      }
+    }
+  }
+  delete e.tabla;
+  const convierteHoras = borrador && borrador.formulario.alcanceHoras !== 'pedido' && String(e.horas).trim();
   const cache = new Map();             // metros de tela ya calculados (una prenda y pedido completo)
   let ultimoCalculo = null;
 
   main.innerHTML = `
+    <div class="cot-editor">
     <h1>${tipo === 'medida' ? 'Cotización a medida' : 'Cotización por tallas'}</h1>
-    <p class="ayuda">Completa los pasos. El precio se calcula solo.</p>
+    <p class="ayuda">Elige una prenda y completa el pedido. El precio se calcula al instante.</p>
+    <div id="prenda-elegida" class="cot-seleccion" hidden></div>
     <form class="costos" novalidate>
-      <section class="cuadro">
-        <h2><span class="cuadro-num">1</span> ¿Qué prenda?</h2>
-        <div class="elegir-prenda">${PRENDAS_MOLDE.map((id) => `
-          <label class="opcion-prenda"><input type="radio" name="prenda" value="${id}">
-            <img src="${buscarPrenda(id).img}" alt="" width="48" height="48"><span>${tituloDe(id)}</span></label>`).join('')}
+      <section class="cuadro cot-pedido" id="elegir-modelo">
+        <h2>¿Qué vas a confeccionar?</h2><p class="ayuda">Elige una tarjeta. Los materiales cambiarán según esta prenda.</p>
+        <div class="elegir-prenda">${PRENDAS.map((prenda) => `
+          <label class="opcion-prenda" data-modelo="${prenda.id}"><input type="radio" name="prenda" value="${prenda.id}"><span class="cot-marca" aria-hidden="true">✓</span>
+            <img src="${imagenDe(prenda)}" alt="" width="48" height="48"><span>${tituloDe(prenda.id)}</span></label>`).join('')}
         </div>
       </section>
-      <section class="cuadro" id="quienes"></section>
-      <section class="cuadro" id="tela-y-costos" hidden>
-        <h2><span class="cuadro-num">3</span> Tela</h2>
+      <section class="cuadro" id="quienes" hidden></section>
+      <section class="cuadro cot-materiales" id="tela-y-costos" hidden>
+        <div class="cot-cabecera"><span aria-hidden="true">🧵</span><div><small>MATERIALES</small><h2>Tela y complementos</h2></div></div><p class="ayuda">Calculamos la tela según las tallas. La reserva también se incluye en el costo.</p><h3>Tela principal</h3>
         <p class="ayuda">Ancho de la tela:</p>
         <div class="selector selector-ancho">${ANCHOS_COMUNES.map((a) => `<button type="button" data-ancho="${a}">${metros(a)}</button>`).join('')}</div>
         <label class="bloque">Precio por metro
           <span class="campo"><span class="unidad">Bs</span><input name="precioTela" inputmode="decimal" placeholder="ej. 35" value="${esc(e.precioTela)}"></span></label>
-        <h2 class="separado"><span class="cuadro-num">4</span> Costo de cada prenda</h2>
+        <label class="bloque"><input type="checkbox" name="telaCliente" ${e.telaCliente ? 'checked' : ''}> La tela la aporta el cliente (no se cobra)</label>
+        <h3 class="separado" id="titulo-materiales">Complementos de la prenda</h3>
+        <p class="ayuda">Escribe el precio de cada material que vas a usar.</p>
+        <details class="cot-ayuda"><summary>¿Cómo calculo el hilo?</summary><p class="ayuda">Indica los carretes que usarás para todo el pedido, o el consumo por prenda. No hace falta comprar carretes nuevos para cada polera.</p></details>
         <div id="insumos"></div>
-        <div class="fila-calculo">
-          <label>Horas por prenda<span class="campo"><input name="horas" inputmode="decimal" placeholder="ej. 1,5"><span class="unidad">h</span></span></label>
-          <span class="por" aria-hidden="true">×</span>
-          <label>Pago por hora<span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="ej. 14" value="${esc(e.pagoHora)}"></span></label>
-        </div>
+        <button type="button" class="btn-agregar" id="agregar-material">＋ Agregar material o servicio</button>
+      </section>
+      <section class="cuadro cot-trabajo" id="trabajo-precio" hidden>
+        <div class="cot-cabecera"><span aria-hidden="true">✂️</span><div><small>TU TRABAJO</small><h2>Confección del pedido</h2></div></div>
+        <p class="ayuda">Estima el tiempo para cortar, coser, planchar y terminar todas las prendas.</p>
+        <fieldset class="tipo-ganancia">
+          <legend>¿Cómo cobras tu trabajo?</legend>
+          <label><input type="radio" name="cobroTrabajo" value="hora" ${e.cobroTrabajo === 'hora' ? 'checked' : ''}> Por hora</label>
+          <label><input type="radio" name="cobroTrabajo" value="fijo" ${e.cobroTrabajo === 'fijo' ? 'checked' : ''}> Monto fijo por el pedido</label>
+        </fieldset>
+        <p id="horas-convertidas" class="nota" hidden>Este borrador se guardó con horas por prenda. Revisa las horas para todo el pedido.</p>
+        <label class="bloque"><span id="etiqueta-horas">Horas de todo el pedido</span><span class="campo"><input name="horas" inputmode="decimal" placeholder="Ej.: 6"><span class="unidad">h</span></span></label>
+        <label class="bloque" id="campo-pago-hora">Pago por hora<span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="Ej.: 18" value="${esc(e.pagoHora)}"></span></label>
+        <label class="bloque" id="campo-pago-pedido" hidden>Pago por todo el pedido<span class="campo"><span class="unidad">Bs</span><input name="pagoPedido" inputmode="decimal" placeholder="Ej.: 108" value="${esc(e.pagoPedido)}"></span></label>
         <div id="ayuda-precio"></div>
+        <p class="cot-mano-obra" id="total-trabajo" role="status"></p>
         <label class="bloque">Gastos del taller <small>Luz, máquina, agujas: % de los materiales</small>
           <span class="campo campo-corto"><input name="gastosPct" inputmode="decimal" value="${esc(e.gastosPct)}"><span class="unidad">%</span></span></label>
-        <label class="bloque">Ganancia
+        <div class="cot-ganancia"><h3>Tu ganancia</h3><p class="ayuda">Se añade después de cubrir materiales, trabajo y gastos.</p>
+        <label class="bloque">Porcentaje que quieres ganar
           <span class="campo campo-corto"><input name="ganancia" inputmode="decimal" value="${esc(e.ganancia)}"><span class="unidad">%</span></span></label>
         <fieldset class="tipo-ganancia">
           <legend>Ese porcentaje es…</legend>
           <label><input type="radio" name="tipoGanancia" value="costo" ${e.tipoGanancia === 'costo' ? 'checked' : ''}> del <b>costo</b></label>
           <label><input type="radio" name="tipoGanancia" value="venta" ${e.tipoGanancia === 'venta' ? 'checked' : ''}> del <b>precio de venta</b></label>
         </fieldset>
+        </div>
       </section>
-      <section class="cuadro" id="resultado" hidden></section>
-    </form>`;
+      <section class="cuadro cot-resumen" id="resultado" hidden></section>
+      <div id="acciones-cotizacion" class="cot-acciones">
+        <p id="estado-cot" role="status">Elige una prenda y sus cantidades.</p>
+        <p class="error" id="error-cot" role="alert"></p>
+        <button type="button" class="btn btn-principal btn-ancho" id="crear" disabled>Guardar cotización</button>
+        <button type="button" class="btn btn-secundario btn-ancho" id="guardar-borrador">Guardar borrador</button>
+        ${borrador ? '<button type="button" class="btn btn-peligro btn-ancho" id="borrar-borrador">Eliminar borrador</button>' : ''}
+      </div>
+    </form>
+    </div>`;
 
   const $ = (s) => main.querySelector(s);
   const form = $('form');
+  let resultado = null;
+  let calculando = false;
+  const datosCalculo = () => ({ ...e, tipo: e.tipoGanancia });
+  const revisar = () => {
+    const faltan = e.prenda ? pendientes(datosCalculo()) : ['Elige una prenda'];
+    if (e.prenda && !resultado?.unidades) faltan.unshift('Indica las cantidades y comprueba el ancho de tela');
+    if (resultado && !Number.isFinite(resultado.total)) faltan.push('Revisa los importes');
+    $('#crear').disabled = calculando || faltan.length > 0;
+    $('#estado-cot').textContent = calculando ? 'Calculando…' : faltan.length ? 'Pendiente: ' + faltan.join('; ') + '. Puedes guardar un borrador.' : 'Todo listo para crear la cotización.';
+    return faltan;
+  };
+  const guardar = (esBorrador) => {
+    try {
+      if (!esBorrador && (calculando || revisar().length)) return;
+      const r = resultado;
+      const c = cotizaciones.crear({
+        estado: esBorrador ? 'borrador' : 'final',
+        ...(esBorrador ? { formulario: JSON.parse(JSON.stringify(e)), cliente: borrador?.cliente } : {}),
+        tipo, fecha: hoyIso(), prendaId: e.prenda, prendaTitulo: e.prenda ? tituloDe(e.prenda) : 'Prenda pendiente',
+        aportesCliente: [...(e.telaCliente ? ['Tela'] : []), ...e.insumos.filter((m) => m.cliente).map((m) => m.nombre.trim())],
+        validez: 7,
+        lineas: esBorrador ? [] : r.filas.map((f) => ({ detalle: f.detalle, cantidad: f.cantidad, precio: f.precio })),
+        unidades: r?.unidades ?? Object.values(e.cantidades).reduce((s, n) => s + n, 0), total: esBorrador ? null : r.total,
+        interno: esBorrador ? null : { costo: r.costo, ganancia: r.total - r.costo, manoDeObra: r.manoDeObra, tela: r.tela, anchoTela: e.anchoTela },
+      }, borrador?.id);
+      if (!esBorrador) cotizaciones.guardarPreferencias({ ...cotizaciones.preferencias(), anchoTela: e.anchoTela,
+        precioTela: e.telaCliente ? '' : e.precioTela, ...(e.cobroTrabajo === 'hora' ? { pagoHora: e.pagoHora } : {}),
+        gastosPct: e.gastosPct, ganancia: e.ganancia,
+        tipo: e.tipoGanancia,
+        insumos: { ...cotizaciones.preferencias().insumos, ...Object.fromEntries(e.insumos.filter((m) => !m.cliente).map((m) => [m.nombre.trim(), m.precio])) } });
+      const destino = esBorrador ? '#/cotizaciones' : '#/cotizaciones/ver/' + c.id;
+      // Al finalizar el borrador se conserva su ID y la ruta puede ser la misma.
+      if (location.hash === destino) window.dispatchEvent(new Event('hashchange'));
+      else location.hash = destino;
+    } catch (error) { $('#error-cot').textContent = error.message; }
+  };
+  form.addEventListener('submit', (ev) => ev.preventDefault());
+  $('#crear').addEventListener('click', () => guardar(false));
+  $('#guardar-borrador').addEventListener('click', () => guardar(true));
+  $('#borrar-borrador')?.addEventListener('click', () => {
+    if (confirm('¿Eliminar este borrador?')) {
+      if (cotizaciones.borrar(borrador.id)) location.hash = '#/cotizaciones';
+      else $('#error-cot').textContent = 'No se pudo eliminar el borrador.';
+    }
+  });
 
   // ----- Paso 2: personas o tallas -----
   const pintarQuienes = () => {
+    $('#quienes').hidden = false;
     const prenda = buscarPrenda(e.prenda);
-    const todasPersonas = personasPara(prenda);
     if (tipo === 'medida') {
+      const todasPersonas = personasPara(prenda);
       $('#quienes').innerHTML = `
-        <h2><span class="cuadro-num">2</span> ¿Para quiénes?</h2>
+        <h2>¿Para quiénes?</h2>
         ${todasPersonas.length ? `<p class="ayuda">Marca a cada persona y cuántas prendas son para ella.</p>
           <ul class="lista-cantidades">${todasPersonas.map((p) => {
-            const faltan = prenda.medidas.filter((id) => p.medidas[id] == null).length;
+            const faltan = moldePara(prenda, p).medidas.filter((id) => p.medidas[id] == null).length;
             return `<li class="${faltan ? 'incompleta' : ''}">
               <span class="avatar">${avatar(p.avatar).svg}</span>
               <span class="persona-datos"><strong>${esc(p.nombre)}</strong>
@@ -130,15 +255,23 @@ function nueva(main, tipo) {
         : '<p class="ayuda">Primero guarda las medidas de las personas.</p>'}
         <a class="enlace" href="#/guardadas/nueva">＋ Agregar persona</a>`;
     } else {
-      const tablas = tablasPara(e.prenda);
-      if (!tablas.includes(e.tabla)) { e.tabla = tablas[0]; e.cantidades = {}; }
+      const grupos = gruposDeTallas(prenda);
+      const tieneCantidades = Object.values(e.cantidades).some((n) => n > 0);
       $('#quienes').innerHTML = `
-        <h2><span class="cuadro-num">2</span> ¿Cuántas de cada talla?</h2>
-        <div class="selector">${tablas.map((t) => `<button type="button" data-tabla="${t}" aria-pressed="${t === e.tabla}">${TABLAS[t].nombre}</button>`).join('')}</div>
-        <ul class="lista-cantidades">${TABLAS[e.tabla].tallas.map((t) => `
-          <li><span class="talla" aria-label="Talla ${t}">${t}</span>
-            ${contador(t)}<button type="button" class="btn-docena" data-docena="${t}">+12</button></li>`).join('')}
-        </ul>
+        <h2>¿Cuántas de cada talla?</h2>
+        ${prenda.variantes ? '<p class="ayuda">Agrega tallas de distintos grupos en el mismo pedido.</p>' : ''}
+        ${grupos.map((grupo, i) => {
+          const tabla = TABLAS[grupo.tabla];
+          const abierto = tabla.tallas.some((talla) => e.cantidades[`${grupo.id}:${talla}`] > 0) || (!tieneCantidades && i === 0);
+          return `<details class="cot-grupo" ${abierto ? 'open' : ''}>
+            <summary>${grupo.nombre}<span data-total-grupo="${grupo.id}"></span></summary>
+            <ul class="lista-cantidades">${tabla.tallas.map((talla) => {
+              const clave = `${grupo.id}:${talla}`;
+              return `<li><span class="talla" aria-label="Talla ${talla}">${talla}</span>
+                ${contador(clave)}<button type="button" class="btn-docena" data-docena="${clave}">+12</button></li>`;
+            }).join('')}</ul>
+          </details>`;
+        }).join('')}
         <p class="ayuda">Medidas de cada talla: tabla aproximada del taller (provisional).</p>`;
     }
   };
@@ -149,117 +282,166 @@ function nueva(main, tipo) {
       <button type="button" data-mas="${clave}" aria-label="Uno más">＋</button>
     </span>`;
 
-  const pintarInsumos = () => {
-    $('#insumos').innerHTML = e.insumos.map((m, i) => `
-      <label class="bloque">${esc(m.nombre)} <small>${numero(valor(m.cantidad))} ${esc(m.unidad)} por prenda</small>
-        <span class="campo"><span class="unidad">Bs</span><input data-insumo="${i}" inputmode="decimal" placeholder="precio" value="${esc(m.precio)}"></span></label>`).join('');
+  const pintarDatosInsumo = (fila, material) => {
+    const nombre = material.nombre.trim() || 'Nuevo material';
+    fila.querySelector('.material-cot-nombre').textContent = nombre;
+    fila.querySelector('.material-cot-cantidad').textContent = [material.cantidad, material.unidad,
+      material.alcance === 'pedido' ? 'para todo el pedido' : 'por prenda', material.cantidadesPorMolde ? '(calculado)' : ''].join(' ').trim();
+    const editar = fila.querySelector('[data-editar-insumo]');
+    editar.setAttribute('aria-label', editar.getAttribute('aria-expanded') === 'true' ? `Listo con ${nombre}` : `Editar ${nombre}`);
+    const precio = fila.querySelector('[data-campo="precio"]');
+    precio.setAttribute('aria-label', `Precio por unidad de ${nombre} en bolivianos`);
+    precio.disabled = material.cliente;
+    fila.querySelector('.material-cot-precio').hidden = material.cliente;
+    fila.querySelector('.material-cot-aporte').hidden = !material.cliente;
+  };
+
+  const pintarInsumos = (editar = -1) => {
+    $('#insumos').innerHTML = e.insumos.map((m, i) => {
+      const campo = (nombre) => `data-insumo="${i}" data-campo="${nombre}"`;
+      const abierto = i === editar;
+      return `<div class="material-cot">
+        <div class="material-cot-cabecera">
+          <div><strong class="material-cot-nombre"></strong><small class="material-cot-cantidad"></small></div>
+          <button type="button" class="material-cot-editar" data-editar-insumo="${i}" aria-expanded="${abierto}" aria-controls="ajustes-insumo-${i}">${abierto ? 'Listo' : 'Editar'}</button>
+        </div>
+        <label class="campo material-cot-precio"><span class="unidad" aria-hidden="true">Bs</span><input ${campo('precio')} inputmode="decimal" placeholder="Precio por unidad" value="${esc(m.precio)}"></label>
+        <small class="material-cot-aporte" hidden>Lo aporta el cliente</small>
+        <div class="material-cot-ajustes" id="ajustes-insumo-${i}" ${abierto ? '' : 'hidden'}>
+          <label>Nombre<input ${campo('nombre')} maxlength="60" value="${esc(m.nombre)}" placeholder="Ej.: Estampado"></label>
+          <div class="material-cot-grid">
+            <label>Cantidad<input ${campo('cantidad')} inputmode="decimal" value="${esc(m.cantidad)}"></label>
+            <label>Unidad<input ${campo('unidad')} maxlength="20" value="${esc(m.unidad)}"></label>
+          </div>
+          <label>¿Para cuántas prendas?<select ${campo('alcance')}><option value="prenda" ${m.alcance !== 'pedido' ? 'selected' : ''}>Para cada prenda</option><option value="pedido" ${m.alcance === 'pedido' ? 'selected' : ''}>Para todo el pedido</option></select></label>
+          <label class="material-cot-checkbox"><input type="checkbox" ${campo('cliente')} ${m.cliente ? 'checked' : ''}> Lo aporta el cliente</label>
+          <button type="button" class="btn btn-secundario" data-quitar="${i}">Quitar material</button>
+        </div>
+      </div>`;
+    }).join('') || '<p class="ayuda">Sin materiales adicionales. Puedes agregarlos abajo.</p>';
+    $('#insumos').querySelectorAll('.material-cot').forEach((fila, i) => pintarDatosInsumo(fila, e.insumos[i]));
   };
 
   // ----- Líneas de la cotización (cada persona o talla con cantidad) -----
   const lineas = () => {
+    if (!e.prenda) return [];
     const prenda = buscarPrenda(e.prenda);
     if (tipo === 'medida') {
-      return personasPara(prenda).filter((p) => (e.cantidades[p.id] ?? 0) > 0 && prenda.medidas.every((id) => p.medidas[id] != null))
-        .map((p) => ({ clave: p.id, detalle: `${tituloDe(e.prenda)} – ${p.nombre}`, cantidad: e.cantidades[p.id], medidas: p.medidas }));
+      return personasPara(prenda).flatMap((persona) => {
+        const molde = moldePara(prenda, persona);
+        const cantidad = e.cantidades[persona.id] ?? 0;
+        if (!cantidad || molde.medidas.some((id) => persona.medidas[id] == null)) return [];
+        return [{ prendaId: molde.id, detalle: `${molde.titulo ?? molde.nombre} – ${persona.nombre}`, cantidad, medidas: persona.medidas }];
+      });
     }
-    return TABLAS[e.tabla].tallas.filter((t) => (e.cantidades[t] ?? 0) > 0)
-      .map((t) => ({ clave: t, detalle: `${tituloDe(e.prenda)} – talla ${t}`, cantidad: e.cantidades[t], medidas: TABLAS[e.tabla].medidas[t] }));
+    return gruposDeTallas(prenda).flatMap((grupo) => TABLAS[grupo.tabla].tallas.flatMap((talla) => {
+      const cantidad = e.cantidades[`${grupo.id}:${talla}`] ?? 0;
+      if (!cantidad) return [];
+      const etiqueta = `Talla ${talla}${prenda.variantes ? ` · ${grupo.nombre}` : ''}`;
+      return [{ grupoId: grupo.id, prendaId: grupo.prendaId, etiqueta, detalle: `${tituloDe(e.prenda)} – ${etiqueta}`, cantidad, medidas: TABLAS[grupo.tabla].medidas[talla] }];
+    }));
+  };
+
+  const pintarTrabajo = (unidades) => {
+    const fijo = e.cobroTrabajo === 'fijo';
+    $('#campo-pago-hora').hidden = fijo;
+    $('#campo-pago-pedido').hidden = !fijo;
+    $('#ayuda-precio').hidden = fijo;
+    $('#etiqueta-horas').textContent = fijo ? 'Horas estimadas de todo el pedido (opcional)' : 'Horas de todo el pedido';
+    const importe = manoDeObraPedido(datosCalculo(), unidades);
+    $('#total-trabajo').textContent = importe > 0 && Number.isFinite(importe)
+      ? `Mano de obra para ${unidades} ${unidades === 1 ? 'prenda' : 'prendas'}: ${bs(importe)}`
+      : 'El total de mano de obra aparecerá al completar el pago.';
   };
 
   const actualizar = async () => {
-    const lista = lineas();
-    $('#tela-y-costos').hidden = !e.prenda;
-    const zona = $('#resultado');
-    zona.hidden = !lista.length;
-    if (!lista.length) return;
     const turno = Symbol();
     ultimoCalculo = turno;
+    resultado = null;
+    calculando = true;
+    revisar();
+    const lista = lineas();
+    const unidadesPedido = lista.reduce((s, l) => s + l.cantidad, 0);
+    e.insumos.forEach((material, i) => {
+      if (!material.cantidadesPorMolde) return;
+      material.cantidad = String(lista.reduce((s, l) => s + l.cantidad * (material.cantidadesPorMolde[l.prendaId] ?? 0), 0));
+      const campo = $(`[data-insumo="${i}"][data-campo="cantidad"]`);
+      campo.value = material.cantidad;
+      pintarDatosInsumo(campo.closest('.material-cot'), material);
+    });
+    pintarTrabajo(unidadesPedido);
+    main.querySelectorAll('[data-total-grupo]').forEach((elemento) => {
+      const cantidad = lista.filter((l) => l.grupoId === elemento.dataset.totalGrupo).reduce((s, l) => s + l.cantidad, 0);
+      elemento.textContent = cantidad ? ` (${cantidad})` : '';
+    });
+    $('#prenda-elegida').hidden = !e.prenda;
+    $('#prenda-elegida').innerHTML = e.prenda ? `<img src="${imagenDe(buscarPrenda(e.prenda))}" alt="" width="44" height="44"><div><small>ESTÁS COTIZANDO</small><strong>${tituloDe(e.prenda)}</strong></div><b>${unidadesPedido} ${unidadesPedido === 1 ? 'prenda' : 'prendas'}</b>` : '';
+    $('#titulo-materiales').textContent = e.prenda ? 'Complementos · ' + tituloDe(e.prenda) : 'Complementos';
+    main.querySelectorAll('[data-modelo]').forEach((x) => x.classList.toggle('seleccionada', x.dataset.modelo === e.prenda));
+    form.elements.precioTela.disabled = e.telaCliente;
+    $('#tela-y-costos').hidden = !e.prenda;
+    $('#trabajo-precio').hidden = !e.prenda;
+    const zona = $('#resultado');
+    zona.hidden = !lista.length;
+    if (!lista.length) { calculando = false; revisar(); return; }
+    zona.innerHTML = '<p role="status">Calculando el pedido…</p>';
     let conMetros;
     try {
       conMetros = await Promise.all(lista.map(async (l) => {
-        const clave = `${e.prenda}|${e.anchoTela}|${JSON.stringify(l.medidas)}`;
-        if (!cache.has(clave)) cache.set(clave, telaDePrenda(e.prenda, l.medidas, e.anchoTela));
+        const clave = `${l.prendaId}|${e.anchoTela}|${JSON.stringify(l.medidas)}`;
+        if (!cache.has(clave)) cache.set(clave, telaDePrenda(l.prendaId, l.medidas, e.anchoTela));
         return { ...l, metros: await cache.get(clave) };
       }));
     } catch (error) {
-      if (ultimoCalculo === turno) zona.innerHTML = `<p class="nota">⚠️ ${esc(error.message)} Elige una tela más ancha.</p>`;
+      if (ultimoCalculo === turno && zona.isConnected) { zona.innerHTML = `<p class="nota">⚠️ ${esc(error.message)} Elige una tela más ancha.</p>`; calculando = false; revisar(); }
       return;
     }
+    if (ultimoCalculo !== turno || !zona.isConnected) return;
     let pedido;
     try {
-      const clave = `pedido|${e.prenda}|${e.anchoTela}|${JSON.stringify(conMetros.map((l) => [l.medidas, l.cantidad]))}`;
+      const clave = `pedido|${e.anchoTela}|${JSON.stringify(conMetros.map((l) => [l.prendaId, l.medidas, l.cantidad]))}`;
       if (!cache.has(clave)) cache.set(clave, telaDelPedido(e.prenda, conMetros, e.anchoTela));
       pedido = await cache.get(clave);
     } catch {
       pedido = { lineas: conMetros, doblez: 'uno', ahorro: 0 };
     }
-    if (ultimoCalculo !== turno) return;
-    conMetros = pedido.lineas;
-    const datos = { precioTela: e.precioTela, insumos: e.insumos, horas: e.horas, pagoHora: e.pagoHora, gastosPct: e.gastosPct, ganancia: e.ganancia, tipo: e.tipoGanancia };
-    const filas = conMetros.map((l) => {
-      const u = precioUnidad(l.metros, datos);
-      return { ...l, costo: u.costo, precio: Math.ceil(u.precio) };
-    });
-    const valido = filas.every((f) => Number.isFinite(f.precio));
-    const unidades = filas.reduce((s, f) => s + f.cantidad, 0);
-    const total = filas.reduce((s, f) => s + f.precio * f.cantidad, 0);
-    const costo = filas.reduce((s, f) => s + f.costo * f.cantidad, 0);
-    const tela = telaTotal(filas);
-    const falta = !valor(e.precioTela) || !valor(e.horas) || !valor(e.pagoHora);
-    const mercado = falta || !unidades ? null : compararConMercado(e.prenda, total / unidades);
+    if (ultimoCalculo !== turno || !zona.isConnected) return;
+    conMetros = conMetros.map((linea, i) => ({ ...linea, metros: pedido.lineas[i].metros }));
+    const datos = datosCalculo();
+    resultado = calcularPedido(conMetros, datos);
+    calculando = false;
+    const { filas, unidades, total, costo, tela, materiales, gastos, manoDeObra } = resultado;
+    const valido = Number.isFinite(total);
+    const falta = pendientes(datos).length > 0;
+    revisar();
+    const mercado = falta || !unidades ? null : compararConMercado(filas[0].prendaId, total / unidades);
     const MERCADO_TEXTO = {
       parecido: '✅ Tu precio está cerca del mercado.',
       caro: '⬆️ Tu precio está bastante más alto. Revisa las horas (en serie se tarda menos), el pago por hora o la ganancia.',
       barato: '⬇️ Tu precio está bastante más bajo. Revisa que estés cobrando tu trabajo y todos los materiales.',
     };
     zona.innerHTML = `
-      <h2><span class="cuadro-num">5</span> Resultado</h2>
+      <div class="cot-cabecera"><span aria-hidden="true">✓</span><div><small>RESUMEN DEL PEDIDO</small><h2>${tituloDe(e.prenda)}</h2></div></div>
       ${!valido ? '<p class="error">Revisa los números: usa solo cifras positivas, y una ganancia sobre la venta menor a 100 %.</p>' : `
-      ${falta ? '<p class="nota">⚠️ Faltan el precio de la tela, las horas o el pago por hora: el precio todavía está incompleto.</p>' : ''}
+      ${falta ? '<p class="nota">⚠️ Estimación incompleta. Revisa los pendientes antes de crear la cotización final.</p>' : ''}
+      <div class="cot-totales"><div><small>Costo de producción</small><strong>${bs(costo)}</strong></div><div><small>Ganancia estimada</small><strong>${bs(total - costo)}</strong></div><div class="cot-total-venta"><small>${falta ? 'Precio provisional' : 'Total para tu cliente'}</small><strong>${bs(total)}</strong><span>${unidades} prendas · reserva incluida</span></div></div>
+      <dl class="cot-desglose" aria-label="Desglose del costo de producción">
+        <div><dt>Materiales</dt><dd>${bs(materiales)}</dd></div>
+        <div><dt>Mano de obra del pedido</dt><dd>${bs(manoDeObra)}</dd></div>
+        <div><dt>Gastos del taller</dt><dd>${bs(gastos)}</dd></div>
+      </dl>
       <table class="tabla-cot">
         <thead><tr><th>Prenda</th><th>Cant.</th><th>Precio c/u</th><th>Subtotal</th></tr></thead>
-        <tbody>${filas.map((f) => `<tr><td>${esc(f.detalle)}<small>${numero(Math.round(f.metros * 100) / 100)} m de tela c/u</small></td>
+        <tbody>${filas.map((f) => `<tr><td>${esc(f.etiqueta ?? f.detalle)}<small>${numero(Math.round(f.metros * 100) / 100)} m de corte c/u</small></td>
           <td>${f.cantidad}</td><td>${bs(f.precio)}</td><td>${bs(f.precio * f.cantidad)}</td></tr>`).join('')}</tbody>
         <tfoot><tr><td colspan="3">Total (${unidades} prendas)</td><td>${bs(total)}</td></tr></tfoot>
       </table>
+      <details class="cot-ayuda"><summary>Ver tela y detalles del cálculo</summary>
       ${mercado ? `<p class="nota ${mercado.estado === 'parecido' ? 'nota-info' : ''}">📊 En La Paz (2026) ${mercado.que} se vende ${mercado.desde ? 'desde' : 'a unos'} <b>Bs ${mercado.precio}</b>. Tu precio por prenda: <b>${bs(total / unidades)}</b>.<br>${MERCADO_TEXTO[mercado.estado]}</p>` : ''}
-      ${unidades >= EN_SERIE ? '<p class="nota nota-info">💡 En pedidos grandes se suele ganar de 20 a 25 % por prenda: la ganancia está en la cantidad.</p>' : ''}
-      <p class="nota nota-info">🧵 Tela a comprar para todo el pedido: <b>${numero(tela)} m</b> (ancho ${metros(e.anchoTela)}).
+      <p class="nota nota-info">🧵 Tela a comprar para todo el pedido: <b>${numero(tela)} m</b> (ancho ${metros(e.anchoTela)}). Reserva incluida en el cálculo${e.telaCliente ? "; la tela la aporta el cliente" : " y en el costo"}.
         ${pedido.doblez === 'dos' ? '<br>✂️ Dobla la tela con <b>los dos orillos al centro</b>: así los delanteros y espaldas van lado a lado, cada uno en su doblez. Las piezas anchas (como las mangas) se cortan después con la tela doblada como siempre.' : ''}<br>
-        💰 Tu ganancia: <b>${bs(total - costo)}</b>. Esto no aparece en la cotización.</p>
-      <h2 class="separado">Datos para enviar</h2>
-      <label class="bloque" for="cliente">¿Para quién es la cotización?
-        <input id="cliente" class="entrada-texto" maxlength="40" placeholder="Ej.: Sra. Juana, Colegio San José"></label>
-      <label class="bloque" for="taller">Tu nombre o el de tu taller
-        <input id="taller" class="entrada-texto" maxlength="40" value="${esc(pref.taller)}"></label>
-      <div class="fila-calculo">
-        <label>Fecha de entrega<input type="date" id="entrega" class="entrada-texto" value="${sumarDias(hoyIso(), 7)}"></label>
-        <span></span>
-        <label>Adelanto<span class="campo"><input id="adelanto" inputmode="decimal" value="50"><span class="unidad">%</span></span></label>
-      </div>
-      <label class="bloque" for="notas">Nota (opcional)
-        <input id="notas" class="entrada-texto" maxlength="120" placeholder="Ej.: tela azul marino, incluye bordado"></label>
-      <p class="error" id="error-cot" role="alert"></p>
-      <button type="button" class="btn btn-principal btn-ancho" id="crear">📄 Crear cotización</button>`}`;
-    $('#crear')?.addEventListener('click', () => {
-      try {
-        const nuevaPref = { ...cotizaciones.preferencias(), anchoTela: e.anchoTela, precioTela: e.precioTela, pagoHora: e.pagoHora,
-          gastosPct: e.gastosPct, ganancia: e.ganancia, tipo: e.tipoGanancia, taller: $('#taller').value.trim(),
-          horas: { ...cotizaciones.preferencias().horas, [e.prenda]: e.horas },
-          insumos: { ...cotizaciones.preferencias().insumos, ...Object.fromEntries(e.insumos.map((m) => [m.nombre, m.precio])) } };
-        cotizaciones.guardarPreferencias(nuevaPref);
-        const c = cotizaciones.crear({
-          tipo, fecha: hoyIso(), prendaId: e.prenda, prendaTitulo: tituloDe(e.prenda),
-          cliente: $('#cliente').value.trim(), taller: $('#taller').value.trim(), entrega: $('#entrega').value,
-          adelantoPct: Math.min(100, valor($('#adelanto').value) || 0), validez: 7, notas: $('#notas').value.trim(),
-          lineas: filas.map((f) => ({ detalle: f.detalle, cantidad: f.cantidad, precio: f.precio })),
-          unidades, total, interno: { costo, ganancia: total - costo, tela, anchoTela: e.anchoTela },
-        });
-        location.hash = `#/cotizaciones/ver/${c.id}`;
-      } catch (error) {
-        $('#error-cot').textContent = error.message;
-      }
-    });
+        El costo y la ganancia son solo para ti; no aparecen en el documento del cliente.</p></details>
+      `}`;
   };
 
   // ----- Eventos -----
@@ -267,12 +449,10 @@ function nueva(main, tipo) {
     if (ev.target.name !== 'prenda') return;
     e.prenda = ev.target.value;
     e.cantidades = {};
-    e.horas = pref.horas[e.prenda] ?? '';
-    form.horas.value = e.horas;
-    const ayuda = $('#ayuda-precio');
-    ayuda.innerHTML = ayudaHorasYPago(e.prenda, { serie: tipo !== 'medida' });
-    conectarAyuda(ayuda.firstElementChild, { horas: () => form.horas, pago: () => form.pagoHora });
-    e.insumos = (buscarPrenda(e.prenda).insumos ?? []).map((m) => ({ ...m, precio: pref.insumos[m.nombre] ?? '' }));
+    e.horas = form.elements.horas.value = '';
+    e.pagoPedido = form.elements.pagoPedido.value = '';
+    $('#horas-convertidas').hidden = true;
+    e.insumos = sugerirInsumos(buscarPrenda(e.prenda), pref.insumos);
     pintarQuienes();
     pintarInsumos();
     marcarAncho();
@@ -280,8 +460,14 @@ function nueva(main, tipo) {
   });
   form.addEventListener('input', (ev) => {
     const el = ev.target;
-    if (el.dataset.insumo != null) e.insumos[el.dataset.insumo].precio = el.value;
-    else if (['precioTela', 'horas', 'pagoHora', 'gastosPct', 'ganancia', 'tipoGanancia'].includes(el.name)) e[el.name] = el.value;
+    if (el.dataset.insumo != null) {
+      const material = e.insumos[el.dataset.insumo];
+      if (el.dataset.campo === 'cantidad' || el.dataset.campo === 'alcance') delete material.cantidadesPorMolde;
+      material[el.dataset.campo] = el.type === 'checkbox' ? el.checked : el.value;
+      if (el.dataset.campo !== 'precio') pintarDatosInsumo(el.closest('.material-cot'), material);
+    }
+    else if (el.name === 'telaCliente') e.telaCliente = el.checked;
+    else if (['precioTela', 'horas', 'cobroTrabajo', 'pagoHora', 'pagoPedido', 'gastosPct', 'ganancia', 'tipoGanancia'].includes(el.name)) e[el.name] = el.value;
     else return;
     actualizar();
   });
@@ -289,26 +475,53 @@ function nueva(main, tipo) {
     const b = ev.target.closest('button');
     if (!b) return;
     const d = b.dataset;
-    if (d.mas || d.menos || d.docena) {
+    if (b.id === 'agregar-material') {
+      e.insumos.push({ nombre: '', cantidad: '1', unidad: 'unid.', alcance: 'prenda', precio: '', cliente: false });
+      pintarInsumos(e.insumos.length - 1); actualizar();
+      $('#insumos').lastElementChild.querySelector('[data-campo="nombre"]').focus();
+    } else if (b.hasAttribute('data-editar-insumo')) {
+      const fila = b.closest('.material-cot');
+      const ajustes = fila.querySelector('.material-cot-ajustes');
+      ajustes.hidden = !ajustes.hidden;
+      b.setAttribute('aria-expanded', String(!ajustes.hidden));
+      b.textContent = ajustes.hidden ? 'Editar' : 'Listo';
+      pintarDatosInsumo(fila, e.insumos[d.editarInsumo]);
+    } else if (d.quitar != null) {
+      e.insumos.splice(Number(d.quitar), 1); pintarInsumos(); actualizar();
+      $('#agregar-material').focus();
+    } else if (d.mas || d.menos || d.docena) {
       const clave = d.mas ?? d.menos ?? d.docena;
       e.cantidades[clave] = Math.max(0, (e.cantidades[clave] ?? 0) + (d.mas ? 1 : d.menos ? -1 : 12));
       $(`#c-${CSS.escape(clave)}`).textContent = e.cantidades[clave];
       actualizar();
-    } else if (d.tabla) {
-      e.tabla = d.tabla; e.cantidades = {};
-      pintarQuienes(); actualizar();
     } else if (d.ancho) {
       e.anchoTela = Number(d.ancho);
       marcarAncho(); actualizar();
     }
   });
   const marcarAncho = () => main.querySelectorAll('[data-ancho]').forEach((x) => x.setAttribute('aria-pressed', Number(x.dataset.ancho) === e.anchoTela));
+  if (e.prenda) {
+    form.querySelector('[name="prenda"][value="' + e.prenda + '"]').checked = true;
+    pintarQuienes(); pintarInsumos(); marcarAncho();
+    if (convierteHoras) {
+      const unidades = lineas().reduce((s, l) => s + l.cantidad, 0);
+      const horas = valor(e.horas);
+      if (Number.isFinite(horas) && unidades) e.horas = String(Number((horas * unidades).toPrecision(15)));
+      $('#horas-convertidas').hidden = false;
+    }
+  }
+  e.alcanceHoras = 'pedido';
+  form.elements.horas.value = e.horas;
+  const ayuda = $('#ayuda-precio');
+  ayuda.innerHTML = ayudaHorasYPago(null);
+  conectarAyuda(ayuda.firstElementChild, { horas: () => form.elements.horas, pago: () => form.elements.pagoHora });
+  actualizar();
   return '#/cotizaciones';
 }
 
 // ---------- Ver una cotización (lo que se envía al cliente) ----------
 function documento(c) {
-  const adelanto = Math.round(c.total * c.adelantoPct) / 100;
+  const adelanto = Math.round(c.total * (c.adelantoPct ?? 0)) / 100;
   return `
     <article class="documento-cot">
       <header><p class="doc-titulo">COTIZACIÓN</p><p>Nº ${c.numero} · ${fechaCorta(c.fecha)}</p></header>
@@ -320,6 +533,7 @@ function documento(c) {
         <tfoot><tr><td colspan="3">TOTAL</td><td>${bs(c.total)}</td></tr></tfoot>
       </table>
       <ul class="doc-datos">
+        ${(c.aportesCliente ?? []).map((nombre) => `<li>Aporta el cliente: ${esc(nombre)}</li>`).join('')}
         ${c.adelantoPct ? `<li>Adelanto (${numero(c.adelantoPct)} %): <b>${bs(adelanto)}</b></li><li>Saldo al entregar: <b>${bs(c.total - adelanto)}</b></li>` : ''}
         ${c.entrega ? `<li>Fecha de entrega: <b>${fechaCorta(c.entrega)}</b></li>` : ''}
         <li>Precio válido hasta el ${fechaCorta(sumarDias(c.fecha, c.validez))}</li>
@@ -379,9 +593,9 @@ function imagen(c) {
   const lienzo = document.createElement('canvas');
   const ctx = lienzo.getContext('2d');
   const fuente = (t, p = '') => `${p} ${t}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
-  const adelanto = Math.round(c.total * c.adelantoPct) / 100;
+  const adelanto = Math.round(c.total * (c.adelantoPct ?? 0)) / 100;
   // Medir el alto que hace falta
-  const alto = 330 + c.lineas.length * 70 + 120 + 5 * 52 + (c.cliente ? 50 : 0) + (c.taller ? 50 : 0) + 80;
+  const alto = (c.aportesCliente?.length ?? 0) * 52 + 330 + c.lineas.length * 70 + 120 + 5 * 52 + (c.cliente ? 50 : 0) + (c.taller ? 50 : 0) + 80;
   lienzo.width = ancho; lienzo.height = alto;
   ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, ancho, alto);
   ctx.fillStyle = '#9E2F45'; ctx.fillRect(0, 0, ancho, 170);
@@ -408,6 +622,7 @@ function imagen(c) {
   if (c.adelantoPct) { lineasTexto.push(`Adelanto (${numero(c.adelantoPct)} %): ${bs(adelanto)}`, `Saldo al entregar: ${bs(c.total - adelanto)}`); }
   if (c.entrega) lineasTexto.push(`Fecha de entrega: ${fechaCorta(c.entrega)}`);
   lineasTexto.push(`Precio válido hasta el ${fechaCorta(sumarDias(c.fecha, c.validez))}`);
+  for (const nombre of c.aportesCliente ?? []) lineasTexto.push(corto('Aporta el cliente: ' + nombre, ancho - 2 * m));
   if (c.notas) lineasTexto.push(corto(`Nota: ${c.notas}`, ancho - 2 * m));
   for (const t of lineasTexto) { texto(t, m, 30); y += 52; }
   const final = Object.assign(document.createElement('canvas'), { width: ancho, height: Math.min(alto, y + 10) });

@@ -5,14 +5,16 @@ const CLAVE = 'cotizaciones';
 export const listar = () => leer(CLAVE, []);
 export const buscar = (id) => listar().find((c) => c.id === id);
 
-export function crear(datos) {
+export function crear(datos, id) {
   const todas = listar();
+  const anterior = id ? todas.find((c) => c.id === id && c.estado === 'borrador') : null;
+  if (id && !anterior) throw new Error('El borrador ya no está disponible. Vuelve a la lista.');
   const c = {
     ...datos,
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    numero: todas.reduce((n, x) => Math.max(n, x.numero ?? 0), 0) + 1,
+    id: anterior?.id ?? Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    numero: anterior?.numero ?? todas.reduce((n, x) => Math.max(n, x.numero ?? 0), 0) + 1,
   };
-  if (!guardar(CLAVE, [c, ...todas])) throw new Error('No se pudo guardar: el navegador no tiene espacio o está en modo privado.');
+  if (!guardar(CLAVE, [c, ...todas.filter((x) => x.id !== c.id)])) throw new Error('No se pudo guardar: el navegador no tiene espacio o está en modo privado.');
   return c;
 }
 

@@ -3,7 +3,7 @@
 // actualizar la app nunca borra los datos de la persona.
 
 // ⚠️ Cambiar VERSION cada vez que se publique un cambio (así el celular se actualiza)
-const VERSION = 'mi-taller-v41';
+const VERSION = 'mi-taller-v48';
 
 const ARCHIVOS = [
   './',
@@ -86,6 +86,8 @@ const ARCHIVOS = [
   'img/marca.webp',
   'img/qr-mi-taller.svg',
   'img/fotos/blusa.webp',
+  'img/fotos/buzo-dama.png',
+  'img/fotos/buzo-varon.png',
   'img/fotos/camisa.webp',
   'img/fotos/camisa-dama.webp',
   'img/fotos/camisa-varon.webp',

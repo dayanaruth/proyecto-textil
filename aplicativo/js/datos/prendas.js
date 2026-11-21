@@ -82,10 +82,10 @@ export const PRENDAS = [
     ],
   },
   {
-    id: 'buzo', nombre: 'Buzo deportivo', detalle: 'Dama o varón', img: img('buzo-varon'),
+    id: 'buzo', nombre: 'Buzo deportivo', detalle: 'Dama o varón', img: img('buzo-varon'), foto: 'img/fotos/buzo-dama.png',
     variantes: [
-      { id: 'buzo-dama', nombre: 'Dama', para: 'dama', titulo: 'Buzo de dama', img: img('buzo-dama'), medidas: BUZO_DAMA, insumos: INSUMOS_BUZO },
-      { id: 'buzo-varon', nombre: 'Varón', para: 'varon', titulo: 'Buzo de varón', img: img('buzo-varon'), medidas: BUZO_VARON, insumos: INSUMOS_BUZO },
+      { id: 'buzo-dama', nombre: 'Dama', para: 'dama', titulo: 'Buzo de dama', img: img('buzo-dama'), foto: 'img/fotos/buzo-dama.png', medidas: BUZO_DAMA, insumos: INSUMOS_BUZO },
+      { id: 'buzo-varon', nombre: 'Varón', para: 'varon', titulo: 'Buzo de varón', img: img('buzo-varon'), foto: 'img/fotos/buzo-varon.png', medidas: BUZO_VARON, insumos: INSUMOS_BUZO },
     ],
   },
 ];

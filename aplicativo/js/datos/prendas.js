@@ -14,9 +14,7 @@ const INSUMOS_FALDA = [
 const BLUSA = ['busto', 'cintura', 'cadera', 'cuello', 'talle-espalda', 'talle-delantero', 'ancho-espalda',
   'busto-a-busto', 'alto-busto', 'altura-cadera', 'largo-blusa', 'contorno-brazo', 'largo-manga'];
 const INSUMOS_BLUSA = [
-  { nombre: 'Cierre invisible', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
-  { nombre: 'Entretela (escote)', cantidad: '0,1', unidad: 'm' },
 ];
 // Vestido: como la blusa, pero en vez del largo de blusa pide el largo de la falda
 const VESTIDO = BLUSA.map((id) => (id === 'largo-blusa' ? 'largo-falda' : id));

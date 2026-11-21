@@ -212,6 +212,7 @@ dialog:not([open]) { display: none; }
   border: 2px solid var(--borde); border-radius: 12px; font-size: .85rem; font-weight: 600; line-height: 1.2;
 }
 .opcion-prenda img { width: 3rem; height: 3rem; background: var(--lienzo); border-radius: 8px; padding: .125rem; }
+.opcion-prenda img.foto-prenda, .bienvenida-prendas img.foto-prenda, .cot-seleccion img.foto-prenda, .tiempo img.foto-prenda { object-fit: cover; padding: 0; }
 .opcion-prenda input { position: absolute; opacity: 0; pointer-events: none; }
 .opcion-prenda:has(input:checked) { border-color: var(--primario); background: var(--primario-suave); }
 .opcion-prenda:has(input:focus-visible) { outline: 3px solid var(--foco); outline-offset: 2px; }

@@ -17,12 +17,13 @@ export function mostrar(main, [id]) {
   const esta = location.hash;
   main.innerHTML = `${barraPasos(3, id)}<p class="ayuda">Calculando…</p>`;
   construirMolde(id, trabajo.medidas).then((molde) => {
-    if (location.hash === esta) pintar(main, prenda, piezasDeMolde(molde), trabajo.tela?.ancho ?? 150);
+    if (location.hash === esta) pintar(main, prenda, molde, trabajo.tela?.ancho ?? 150);
   });
   return `#/molde/${id}`;
 }
 
-function pintar(main, prenda, piezas, anchoInicial) {
+function pintar(main, prenda, molde, anchoInicial) {
+  const piezas = piezasDeMolde(molde);
   const otroInicial = ANCHOS_COMUNES.includes(anchoInicial) ? '' : numero(anchoInicial / 100);
   main.innerHTML = `
     ${barraPasos(3, prenda.id)}
@@ -47,7 +48,8 @@ function pintar(main, prenda, piezas, anchoInicial) {
       return;
     }
     const t = leer('trabajo', { medidas: {} });
-    guardar('trabajo', { ...t, tela: { ancho, largo: plano.largo, comprar: plano.comprar } });
+    const cantidades = { botones: molde.botones, elastico: molde.elastico };
+    guardar('trabajo', { ...t, tela: { ancho, largo: plano.largo, comprar: plano.comprar, prendaId: prenda.id, cantidades } });
     $('#resultado').innerHTML = resultado(plano, piezas);
   };
 

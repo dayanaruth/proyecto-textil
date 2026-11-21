@@ -103,7 +103,7 @@ export function tiraCuello(escoteEsp, escoteDel) {
   return {
     escote,
     rectangulo: {
-      nombre: 'Tira de cuello', cortar: 'Cortar 1', alDoblez: false, largo, alto,
+      nombre: 'Tira de cuello', cortar: 'Cortar 1', alDoblez: false, largo, alto, materialAlternativo: 'rib',
       texto: `Rectángulo de ${n(r1(largo))} × ${n(r1(alto))} cm, mejor en tela rib (ya incluye margen). Es el escote (${n(r1(escote))} cm) × 0,9 para que quede pegado al cuello. Se dobla a lo largo.`,
     },
   };

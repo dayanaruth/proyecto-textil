@@ -2,9 +2,9 @@
 import * as cotizaciones from '../datos/cotizaciones.js';
 import { dibujo } from '../utilidades/iconos.js';
 import * as personas from '../datos/personas.js';
-import { PRENDAS, buscarPrenda, prendaMadre, sirvePara } from '../datos/prendas.js';
+import { PRENDAS, RIB_CUELLO, buscarPrenda, prendaMadre, sirvePara } from '../datos/prendas.js';
 import { TABLAS, tablasPara } from '../datos/tallas.js';
-import { telaDePrenda, telaDelPedido, calcularPedido, manoDeObraPedido, pendientes } from '../calculos/cotizacion.js';
+import { corteDePrenda, telaDelPedido, calcularPedido, manoDeObraPedido, pendientes } from '../calculos/cotizacion.js';
 import { compararConMercado } from '../datos/referencias.js';
 import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { ANCHOS_COMUNES } from '../calculos/tela.js';
@@ -13,9 +13,9 @@ import { avatar } from '../utilidades/avatares.js';
 import { bs, metros, numero } from '../utilidades/formato.js';
 import { esc } from '../utilidades/ui.js';
 
-const NOMBRES_COTIZACION = { polera: 'Poleras', buzo: 'Buzos deportivos', camisa: 'Camisas', pantalon: 'Pantalones' };
+const NOMBRES_COTIZACION = { polera: 'Poleras básicas', buzo: 'Buzos deportivos', camisa: 'Camisas', pantalon: 'Pantalones' };
 const tituloDe = (id) => NOMBRES_COTIZACION[id] ?? buscarPrenda(id).nombre;
-const imagenDe = (prenda) => prenda.id === 'buzo' ? prenda.foto : prenda.img;
+const imagenDe = (prenda) => prenda.foto ?? prenda.img;
 
 function gruposDeTallas(prenda) {
   if (!prenda.variantes) return tablasPara(prenda.id).map((tabla) => ({ id: tabla, tabla, nombre: TABLAS[tabla].nombre, prendaId: prenda.id }));
@@ -25,22 +25,12 @@ function gruposDeTallas(prenda) {
 }
 
 function sugerirInsumos(prenda, precios) {
-  const modelos = prenda.variantes ?? [prenda];
-  const porMaterial = new Map();
-  for (const modelo of modelos) {
-    for (const insumo of modelo.insumos ?? []) {
-      if (!porMaterial.has(insumo.nombre)) porMaterial.set(insumo.nombre, { ...insumo, cantidadesPorMolde: {} });
-      porMaterial.get(insumo.nombre).cantidadesPorMolde[modelo.id] = valor(insumo.cantidad);
-    }
-  }
-  return [...porMaterial.values()].map(({ cantidadesPorMolde, ...insumo }) => {
+  const materiales = (prenda.variantes ?? [prenda]).flatMap((modelo) => modelo.insumos ?? []);
+  return materiales.filter((insumo, i) => materiales.findIndex((m) => m.nombre === insumo.nombre) === i).map((insumo) => {
     const hilo = insumo.nombre === 'Hilo';
-    const cantidades = modelos.map((modelo) => cantidadesPorMolde[modelo.id] ?? 0);
-    const automatico = !hilo && new Set(cantidades).size > 1;
     return {
       ...insumo, precio: precios[insumo.nombre] ?? '', cliente: false,
-      cantidad: hilo ? '1' : insumo.cantidad, alcance: hilo || automatico ? 'pedido' : 'prenda',
-      ...(automatico ? { cantidadesPorMolde } : {}),
+      alcance: hilo || insumo.cantidadMolde ? 'pedido' : 'prenda',
     };
   });
 }
@@ -106,14 +96,11 @@ function nueva(main, tipo, borrador = null) {
       e.cantidades = Object.fromEntries(Object.entries(e.cantidades).map(([talla, n]) => [talla.includes(':') ? talla : `${grupo}:${talla}`, n]));
     }
     if (madre) e.prenda = madre.id;
-    if (madre) {
-      for (const sugerido of sugerirInsumos(madre, pref.insumos)) {
-        if (!sugerido.cantidadesPorMolde) continue;
-        const actual = e.insumos.find((m) => m.nombre === sugerido.nombre);
-        if (actual?.alcance === 'prenda' && valor(actual.cantidad) === sugerido.cantidadesPorMolde[original.id]) {
-          actual.alcance = 'pedido';
-          actual.cantidadesPorMolde = sugerido.cantidadesPorMolde;
-        }
+    for (const actual of e.insumos) {
+      if (e.prenda === 'polera' && actual.nombre === RIB_CUELLO.nombre) actual.materialAlternativo = 'rib';
+      if (actual.nombre === 'Botones' && actual.cantidadesPorMolde) {
+        delete actual.cantidadesPorMolde;
+        actual.cantidadMolde = 'botones';
       }
     }
   }
@@ -132,7 +119,7 @@ function nueva(main, tipo, borrador = null) {
         <h2>¿Qué vas a confeccionar?</h2><p class="ayuda">Elige una tarjeta. Los materiales cambiarán según esta prenda.</p>
         <div class="elegir-prenda">${PRENDAS.map((prenda) => `
           <label class="opcion-prenda" data-modelo="${prenda.id}"><input type="radio" name="prenda" value="${prenda.id}"><span class="cot-marca" aria-hidden="true">✓</span>
-            <img src="${imagenDe(prenda)}" alt="" width="48" height="48"><span>${tituloDe(prenda.id)}</span></label>`).join('')}
+            <img class="foto-prenda" src="${imagenDe(prenda)}" alt="" width="72" height="72"><span>${tituloDe(prenda.id)}</span></label>`).join('')}
         </div>
       </section>
       <section class="cuadro" id="quienes" hidden></section>
@@ -144,9 +131,11 @@ function nueva(main, tipo, borrador = null) {
           <span class="campo"><span class="unidad">Bs</span><input name="precioTela" inputmode="decimal" placeholder="ej. 35" value="${esc(e.precioTela)}"></span></label>
         <label class="bloque"><input type="checkbox" name="telaCliente" ${e.telaCliente ? 'checked' : ''}> La tela la aporta el cliente (no se cobra)</label>
         <h3 class="separado" id="titulo-materiales">Complementos de la prenda</h3>
+        <p class="ayuda" id="alcance-buzo" hidden>El molde del buzo corresponde al pantalón deportivo.</p>
         <p class="ayuda">Escribe el precio de cada material que vas a usar.</p>
         <details class="cot-ayuda"><summary>¿Cómo calculo el hilo?</summary><p class="ayuda">Indica los carretes que usarás para todo el pedido, o el consumo por prenda. No hace falta comprar carretes nuevos para cada polera.</p></details>
         <div id="insumos"></div>
+        <button type="button" class="btn btn-secundario btn-ancho" id="agregar-rib" hidden>Agregar rib para el cuello</button>
         <button type="button" class="btn-agregar" id="agregar-material">＋ Agregar material o servicio</button>
       </section>
       <section class="cuadro cot-trabajo" id="trabajo-precio" hidden>
@@ -285,8 +274,11 @@ function nueva(main, tipo, borrador = null) {
   const pintarDatosInsumo = (fila, material) => {
     const nombre = material.nombre.trim() || 'Nuevo material';
     fila.querySelector('.material-cot-nombre').textContent = nombre;
-    fila.querySelector('.material-cot-cantidad').textContent = [material.cantidad, material.unidad,
-      material.alcance === 'pedido' ? 'para todo el pedido' : 'por prenda', material.cantidadesPorMolde ? '(calculado)' : ''].join(' ').trim();
+    const alcance = material.alcance === 'pedido' ? 'para todo el pedido' : 'por prenda';
+    const cantidad = material.cantidadMolde && !material.cantidad
+      ? 'Cantidad según el molde'
+      : `${material.cantidad} ${material.unidad} ${alcance}${material.cantidadMolde ? ' (calculado)' : ''}`;
+    fila.querySelector('.material-cot-cantidad').textContent = cantidad;
     const editar = fila.querySelector('[data-editar-insumo]');
     editar.setAttribute('aria-label', editar.getAttribute('aria-expanded') === 'true' ? `Listo con ${nombre}` : `Editar ${nombre}`);
     const precio = fila.querySelector('[data-campo="precio"]');
@@ -362,20 +354,16 @@ function nueva(main, tipo, borrador = null) {
     revisar();
     const lista = lineas();
     const unidadesPedido = lista.reduce((s, l) => s + l.cantidad, 0);
-    e.insumos.forEach((material, i) => {
-      if (!material.cantidadesPorMolde) return;
-      material.cantidad = String(lista.reduce((s, l) => s + l.cantidad * (material.cantidadesPorMolde[l.prendaId] ?? 0), 0));
-      const campo = $(`[data-insumo="${i}"][data-campo="cantidad"]`);
-      campo.value = material.cantidad;
-      pintarDatosInsumo(campo.closest('.material-cot'), material);
-    });
+    const ribAparte = e.insumos.some((material) => material.materialAlternativo === 'rib');
+    $('#agregar-rib').hidden = e.prenda !== 'polera' || ribAparte;
+    $('#alcance-buzo').hidden = e.prenda !== 'buzo';
     pintarTrabajo(unidadesPedido);
     main.querySelectorAll('[data-total-grupo]').forEach((elemento) => {
       const cantidad = lista.filter((l) => l.grupoId === elemento.dataset.totalGrupo).reduce((s, l) => s + l.cantidad, 0);
       elemento.textContent = cantidad ? ` (${cantidad})` : '';
     });
     $('#prenda-elegida').hidden = !e.prenda;
-    $('#prenda-elegida').innerHTML = e.prenda ? `<img src="${imagenDe(buscarPrenda(e.prenda))}" alt="" width="44" height="44"><div><small>ESTÁS COTIZANDO</small><strong>${tituloDe(e.prenda)}</strong></div><b>${unidadesPedido} ${unidadesPedido === 1 ? 'prenda' : 'prendas'}</b>` : '';
+    $('#prenda-elegida').innerHTML = e.prenda ? `<img class="foto-prenda" src="${imagenDe(buscarPrenda(e.prenda))}" alt="" width="44" height="44"><div><small>ESTÁS COTIZANDO</small><strong>${tituloDe(e.prenda)}</strong></div><b>${unidadesPedido} ${unidadesPedido === 1 ? 'prenda' : 'prendas'}</b>` : '';
     $('#titulo-materiales').textContent = e.prenda ? 'Complementos · ' + tituloDe(e.prenda) : 'Complementos';
     main.querySelectorAll('[data-modelo]').forEach((x) => x.classList.toggle('seleccionada', x.dataset.modelo === e.prenda));
     form.elements.precioTela.disabled = e.telaCliente;
@@ -388,18 +376,26 @@ function nueva(main, tipo, borrador = null) {
     let conMetros;
     try {
       conMetros = await Promise.all(lista.map(async (l) => {
-        const clave = `${l.prendaId}|${e.anchoTela}|${JSON.stringify(l.medidas)}`;
-        if (!cache.has(clave)) cache.set(clave, telaDePrenda(l.prendaId, l.medidas, e.anchoTela));
-        return { ...l, metros: await cache.get(clave) };
+        const clave = `${l.prendaId}|${e.anchoTela}|${ribAparte}|${JSON.stringify(l.medidas)}`;
+        if (!cache.has(clave)) cache.set(clave, corteDePrenda(l.prendaId, l.medidas, e.anchoTela, ribAparte));
+        return { ...l, ...await cache.get(clave) };
       }));
     } catch (error) {
       if (ultimoCalculo === turno && zona.isConnected) { zona.innerHTML = `<p class="nota">⚠️ ${esc(error.message)} Elige una tela más ancha.</p>`; calculando = false; revisar(); }
       return;
     }
     if (ultimoCalculo !== turno || !zona.isConnected) return;
+    e.insumos.forEach((material, i) => {
+      if (!material.cantidadMolde) return;
+      const cantidad = conMetros.reduce((s, l) => s + l.cantidad * (l.cantidades[material.cantidadMolde] ?? 0), 0);
+      material.cantidad = String(Number(cantidad.toFixed(4)));
+      const campo = $(`[data-insumo="${i}"][data-campo="cantidad"]`);
+      campo.value = material.cantidad;
+      pintarDatosInsumo(campo.closest('.material-cot'), material);
+    });
     let pedido;
     try {
-      const clave = `pedido|${e.anchoTela}|${JSON.stringify(conMetros.map((l) => [l.prendaId, l.medidas, l.cantidad]))}`;
+      const clave = `pedido|${e.anchoTela}|${ribAparte}|${JSON.stringify(conMetros.map((l) => [l.prendaId, l.medidas, l.cantidad]))}`;
       if (!cache.has(clave)) cache.set(clave, telaDelPedido(e.prenda, conMetros, e.anchoTela));
       pedido = await cache.get(clave);
     } catch {
@@ -462,7 +458,7 @@ function nueva(main, tipo, borrador = null) {
     const el = ev.target;
     if (el.dataset.insumo != null) {
       const material = e.insumos[el.dataset.insumo];
-      if (el.dataset.campo === 'cantidad' || el.dataset.campo === 'alcance') delete material.cantidadesPorMolde;
+      if (el.dataset.campo === 'cantidad' || el.dataset.campo === 'alcance') delete material.cantidadMolde;
       material[el.dataset.campo] = el.type === 'checkbox' ? el.checked : el.value;
       if (el.dataset.campo !== 'precio') pintarDatosInsumo(el.closest('.material-cot'), material);
     }
@@ -475,10 +471,11 @@ function nueva(main, tipo, borrador = null) {
     const b = ev.target.closest('button');
     if (!b) return;
     const d = b.dataset;
-    if (b.id === 'agregar-material') {
-      e.insumos.push({ nombre: '', cantidad: '1', unidad: 'unid.', alcance: 'prenda', precio: '', cliente: false });
-      pintarInsumos(e.insumos.length - 1); actualizar();
-      $('#insumos').lastElementChild.querySelector('[data-campo="nombre"]').focus();
+    if (b.id === 'agregar-material' || b.id === 'agregar-rib') {
+      const esRib = b.id === 'agregar-rib';
+      e.insumos.push(esRib ? { ...RIB_CUELLO, precio: '' } : { nombre: '', cantidad: '1', unidad: 'unid.', alcance: 'prenda', precio: '', cliente: false });
+      pintarInsumos(esRib ? -1 : e.insumos.length - 1); actualizar();
+      $('#insumos').lastElementChild.querySelector(`[data-campo="${esRib ? 'precio' : 'nombre'}"]`).focus();
     } else if (b.hasAttribute('data-editar-insumo')) {
       const fila = b.closest('.material-cot');
       const ajustes = fila.querySelector('.material-cot-ajustes');
@@ -501,7 +498,8 @@ function nueva(main, tipo, borrador = null) {
   });
   const marcarAncho = () => main.querySelectorAll('[data-ancho]').forEach((x) => x.setAttribute('aria-pressed', Number(x.dataset.ancho) === e.anchoTela));
   if (e.prenda) {
-    form.querySelector('[name="prenda"][value="' + e.prenda + '"]').checked = true;
+    const opcion = form.querySelector(`[name="prenda"][value="${CSS.escape(e.prenda)}"]`);
+    if (opcion) opcion.checked = true;
     pintarQuienes(); pintarInsumos(); marcarAncho();
     if (convierteHoras) {
       const unidades = lineas().reduce((s, l) => s + l.cantidad, 0);

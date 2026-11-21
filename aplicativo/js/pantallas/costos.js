@@ -30,9 +30,11 @@ function estadoInicial(prenda, trabajo) {
   const guardado = trabajo.costos;
   if (guardado && guardado.prenda === (prenda?.id ?? null)) return guardado;
   const metrosTela = trabajo.tela && prenda ? numero(trabajo.tela.comprar / 100) : '';
+  const cantidades = trabajo.tela?.prendaId === prenda?.id ? trabajo.tela?.cantidades : null;
+  const insumos = (prenda?.insumos ?? []).map((i) => ({ ...i, cantidad: cantidades?.[i.cantidadMolde] ?? i.cantidad, precio: '' }));
   return {
     prenda: prenda?.id ?? null,
-    materiales: [{ nombre: 'Tela', cantidad: metrosTela, unidad: 'm', precio: '' }, ...(prenda?.insumos ?? []).map((i) => ({ ...i, precio: '' }))],
+    materiales: [{ nombre: 'Tela', cantidad: metrosTela, unidad: 'm', precio: '' }, ...insumos],
     horas: preferencias().horas[prenda?.id] ?? '', pagoHora: preferencias().pagoHora, gastos: '', ganancia: '30', tipo: 'costo',
   };
 }

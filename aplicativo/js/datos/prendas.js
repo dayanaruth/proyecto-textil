@@ -4,11 +4,11 @@ const img = (nombre) => `img/prendas/${nombre}.svg`;
 const foto = (nombre) => `img/fotos/${nombre}.webp`;
 const FALDA = ['cintura', 'cadera', 'altura-cadera', 'largo-falda'];
 // "insumos": materiales sugeridos para el cuadro de costos (además de la tela)
-const INSUMOS_FALDA = [
-  { nombre: 'Cierre (15 cm)', cantidad: '1', unidad: 'unid.' },
+const INSUMOS_FALDA = (cierre) => [
+  { nombre: cierre, cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
   { nombre: 'Botón o gancho', cantidad: '1', unidad: 'unid.' },
-  { nombre: 'Entretela', cantidad: '0,1', unidad: 'm' },
+  { nombre: 'Entretela (pretina)', cantidad: '0,1', unidad: 'm' },
 ];
 // Medidas de la blusa en el orden de los afiches del taller
 const BLUSA = ['busto', 'cintura', 'cadera', 'cuello', 'talle-espalda', 'talle-delantero', 'ancho-espalda',
@@ -21,14 +21,14 @@ const VESTIDO = BLUSA.map((id) => (id === 'largo-blusa' ? 'largo-falda' : id));
 // Camisas: dama parte de la blusa; varón tiene cuerpo recto
 const CAMISA_DAMA = [...BLUSA.filter((id) => !['largo-blusa', 'largo-manga'].includes(id)), 'largo-camisa', 'largo-manga-larga', 'muneca'];
 const CAMISA_VARON = ['pecho', 'cadera', 'cuello', 'ancho-espalda', 'largo-camisa', 'contorno-brazo', 'largo-manga-larga', 'muneca'];
-const INSUMOS_CAMISA = (botones) => [
-  { nombre: 'Botones', cantidad: String(botones), unidad: 'unid.' },
+const INSUMOS_CAMISA = [
+  { nombre: 'Botones', cantidad: '', unidad: 'unid.', cantidadMolde: 'botones' },
   { nombre: 'Entretela (cuello y puños)', cantidad: '0,3', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
 const PANTALON = ['cintura', 'cadera', 'altura-cadera', 'tiro', 'altura-rodilla', 'rodilla', 'largo-pantalon', 'bota'];
 const INSUMOS_PANTALON = [
-  { nombre: 'Cierre (20 cm)', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Cierre para bragueta', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Botón o gancho', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Entretela (pretina)', cantidad: '0,15', unidad: 'm' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
@@ -37,30 +37,31 @@ const INSUMOS_PANTALON = [
 const POLERA_VARON = ['pecho', 'cuello', 'ancho-espalda', 'largo-polera', 'contorno-brazo', 'largo-manga'];
 const POLERA_DAMA = ['busto', 'cintura', 'cadera', 'cuello', 'talle-espalda', 'ancho-espalda', 'altura-cadera', 'largo-polera', 'contorno-brazo', 'largo-manga'];
 const INSUMOS_POLERA = [
-  { nombre: 'Rib para el cuello', cantidad: '0,1', unidad: 'm' },
-  { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
+  { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
+export const RIB_CUELLO = { nombre: 'Rib para el cuello', cantidad: '1', unidad: 'tira', alcance: 'prenda', cliente: false, materialAlternativo: 'rib' };
 // Buzos (pantalón deportivo con elástico): guía de ropa deportiva del CEA
 const BUZO_VARON = ['cintura', 'cadera', 'tiro', 'largo-pantalon', 'bota'];
 const BUZO_DAMA = ['cintura', 'cadera', 'tiro', 'altura-rodilla', 'largo-pantalon', 'bota'];
 const INSUMOS_BUZO = [
-  { nombre: 'Elástico (4 cm)', cantidad: '1', unidad: 'm' },
-  { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
+  { nombre: 'Elástico (4 cm)', cantidad: '', unidad: 'm', cantidadMolde: 'elastico' },
+  { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
 const INSUMOS_VESTIDO = [
-  { nombre: 'Cierre invisible (50 cm)', cantidad: '1', unidad: 'unid.' },
-  { nombre: 'Hilo', cantidad: '2', unidad: 'carrete' },
-  { nombre: 'Entretela (escote)', cantidad: '0,1', unidad: 'm' },
+  { nombre: 'Cierre para espalda', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
 
+// Se conserva para abrir trabajos y cotizaciones anteriores.
+const BLUSA_ARCHIVADA = { id: 'blusa', para: 'dama', nombre: 'Blusa básica', img: img('blusa'), foto: foto('blusa'), medidas: BLUSA, insumos: INSUMOS_BLUSA };
+
 export const PRENDAS = [
-  { id: 'blusa', para: 'dama', nombre: 'Blusa básica', img: img('blusa'), foto: foto('blusa'), medidas: BLUSA, insumos: INSUMOS_BLUSA },
-  { id: 'falda-recta', para: 'dama', nombre: 'Falda recta', img: img('falda-recta'), foto: foto('falda-recta'), medidas: FALDA, insumos: INSUMOS_FALDA },
+  { id: 'falda-recta', para: 'dama', nombre: 'Falda recta', img: img('falda-recta'), foto: foto('falda-recta'), medidas: FALDA, insumos: INSUMOS_FALDA('Cierre (15 cm)') },
   {
     id: 'camisa', nombre: 'Camisa básica', detalle: 'Dama o varón', img: img('camisa-varon'), foto: foto('camisa'),
     variantes: [
-      { id: 'camisa-dama', nombre: 'Dama', para: 'dama', titulo: 'Camisa de dama', img: img('camisa-dama'), foto: foto('camisa-dama'), medidas: CAMISA_DAMA, insumos: INSUMOS_CAMISA(8) },
-      { id: 'camisa-varon', nombre: 'Varón', para: 'varon', titulo: 'Camisa de varón', img: img('camisa-varon'), foto: foto('camisa-varon'), medidas: CAMISA_VARON, insumos: INSUMOS_CAMISA(10) },
+      { id: 'camisa-dama', nombre: 'Dama', para: 'dama', titulo: 'Camisa de dama', img: img('camisa-dama'), foto: foto('camisa-dama'), medidas: CAMISA_DAMA, insumos: INSUMOS_CAMISA },
+      { id: 'camisa-varon', nombre: 'Varón', para: 'varon', titulo: 'Camisa de varón', img: img('camisa-varon'), foto: foto('camisa-varon'), medidas: CAMISA_VARON, insumos: INSUMOS_CAMISA },
     ],
   },
   {
@@ -70,13 +71,13 @@ export const PRENDAS = [
       { id: 'pantalon-varon', nombre: 'Varón', para: 'varon', titulo: 'Pantalón de varón', img: img('pantalon-varon'), foto: foto('pantalon-varon'), medidas: PANTALON, insumos: INSUMOS_PANTALON },
     ],
   },
-  { id: 'falda-uniforme', para: 'dama', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), foto: foto('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA },
+  { id: 'falda-uniforme', para: 'dama', nombre: 'Falda de uniforme', detalle: 'Con tablones', img: img('falda-uniforme'), foto: foto('falda-uniforme'), medidas: FALDA, insumos: INSUMOS_FALDA('Cierre lateral') },
   { id: 'vestido', para: 'dama', nombre: 'Vestido básico', img: img('vestido'), foto: foto('vestido'), medidas: VESTIDO, insumos: INSUMOS_VESTIDO },
   {
-    id: 'polera', nombre: 'Polera', detalle: 'Dama o varón', img: img('polera-varon'),
+    id: 'polera', nombre: 'Polera básica', detalle: 'Cuello redondo', img: img('polera-varon'), foto: foto('polera-varon'),
     variantes: [
-      { id: 'polera-dama', nombre: 'Dama', para: 'dama', titulo: 'Polera de dama', img: img('polera-dama'), medidas: POLERA_DAMA, insumos: INSUMOS_POLERA },
-      { id: 'polera-varon', nombre: 'Varón', para: 'varon', titulo: 'Polera de varón', img: img('polera-varon'), medidas: POLERA_VARON, insumos: INSUMOS_POLERA },
+      { id: 'polera-dama', nombre: 'Dama', para: 'dama', titulo: 'Polera de dama', img: img('polera-dama'), foto: foto('polera-dama'), medidas: POLERA_DAMA, insumos: INSUMOS_POLERA },
+      { id: 'polera-varon', nombre: 'Varón', para: 'varon', titulo: 'Polera de varón', img: img('polera-varon'), foto: foto('polera-varon'), medidas: POLERA_VARON, insumos: INSUMOS_POLERA },
     ],
   },
   {
@@ -90,7 +91,7 @@ export const PRENDAS = [
 
 // Busca una prenda o una variante por su id
 export const buscarPrenda = (id) =>
-  PRENDAS.flatMap((p) => [p, ...(p.variantes ?? [])]).find((p) => p.id === id);
+  id === BLUSA_ARCHIVADA.id ? BLUSA_ARCHIVADA : PRENDAS.flatMap((p) => [p, ...(p.variantes ?? [])]).find((p) => p.id === id);
 
 // ¿La prenda sirve para este tipo de persona? ('dama' o 'varon'; sin tipo, sirve siempre)
 // Una prenda con variantes sirve si alguna de sus variantes sirve.

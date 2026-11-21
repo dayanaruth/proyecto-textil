@@ -5,21 +5,27 @@ import { precioVenta, valor } from './costos.js';
 
 // Metros de tela que ocupa UNA prenda con esas medidas (sin la reserva)
 export async function telaDePrenda(prendaId, medidas, anchoTela) {
+  return (await corteDePrenda(prendaId, medidas, anchoTela)).metros;
+}
+
+export async function corteDePrenda(prendaId, medidas, anchoTela, ribAparte = false) {
   const molde = await construirMolde(prendaId, medidas);
-  const plano = planoDeCorte(piezasDeMolde(molde), anchoTela);
+  const rectangulos = ribAparte ? molde.rectangulos.filter((p) => p.materialAlternativo !== 'rib') : molde.rectangulos;
+  const piezas = piezasDeMolde({ ...molde, rectangulos });
+  const plano = planoDeCorte(piezas, anchoTela);
   if (plano.error) throw new Error(plano.error);
-  return plano.largo / 100;
+  return { metros: plano.largo / 100, piezas, cantidades: { botones: molde.botones, elastico: molde.elastico } };
 }
 
 // Tela de TODO el pedido, cortando las prendas juntas (como en el taller). Se prueban tres formas y
 // se usa la que gasta menos: prenda por prenda, todas juntas con un doblez, o con los dos orillos al centro.
-// lineas: [{ prendaId?, medidas, cantidad, metros }] (metros = tela de una prenda sola). Devuelve los metros
+// lineas: [{ prendaId?, medidas, cantidad, metros, piezas? }]. Devuelve los metros
 // de cada línea ya ajustados (por prenda) y cómo doblar la tela.
 export async function telaDelPedido(prendaId, lineas, anchoTela) {
   const unaPorUna = lineas.reduce((s, l) => s + l.metros * l.cantidad, 0);
   const todas = [];
   for (const l of lineas) {
-    const piezas = piezasDeMolde(await construirMolde(l.prendaId ?? prendaId, l.medidas));
+    const piezas = l.piezas ?? piezasDeMolde(await construirMolde(l.prendaId ?? prendaId, l.medidas));
     for (let i = 0; i < l.cantidad; i++) todas.push(...piezas);
   }
   const juntas = planoDeCorte(todas, anchoTela);

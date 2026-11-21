@@ -162,7 +162,7 @@ details.ayuda-ref p { margin: .375rem 0 .5rem; }
 .cot-editor .cot-cabecera h2 { margin: .15rem 0 0; font-size: 1.2rem; color: inherit; }
 .cot-editor .elegir-prenda { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
 .cot-editor .opcion-prenda { position: relative; min-width: 0; padding: .8rem .25rem; min-height: 110px; background: var(--fondo); font-size: .75rem; }
-.cot-editor .opcion-prenda img { width: 3.2rem; height: 3.2rem; margin-bottom: .4rem; }
+.cot-editor .opcion-prenda img { width: 100%; max-width: 4rem; height: auto; aspect-ratio: 1; margin-bottom: .4rem; }
 .cot-editor .opcion-prenda.seleccionada { border-color: var(--primario); background: var(--primario-suave); box-shadow: 0 0 0 1px var(--primario); }
 .cot-marca { display: none; position: absolute; top: -.4rem; right: -.3rem; width: 1.4rem; height: 1.4rem; border-radius: 50%; color: var(--primario-texto); background: var(--primario); font-size: .85rem; font-weight: 800; }
 .seleccionada .cot-marca { display: grid; place-items: center; }
@@ -170,6 +170,7 @@ details.ayuda-ref p { margin: .375rem 0 .5rem; }
 .cot-editor .opcion-prenda:focus-within { outline: 3px solid var(--foco); outline-offset: 3px; }
 .material-cot { padding: .65rem 0 .85rem; }
 .material-cot + .material-cot { border-top: 1px solid var(--borde); }
+#agregar-rib { margin-bottom: .5rem; }
 .material-cot-cabecera { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .35rem; }
 .material-cot-cabecera > div { min-width: 0; overflow-wrap: anywhere; }
 .material-cot-cantidad, .material-cot-aporte { display: block; color: var(--texto-suave); font-size: .82rem; }

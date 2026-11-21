@@ -146,6 +146,7 @@ function trasero(t, f) {
 }
 
 export function construir(m) {
+  const largoElastico = m.cintura - 5;
   const del = delantero(tabla(m));
   const t = del.t;
   const tra = trasero(t, del);
@@ -160,9 +161,10 @@ export function construir(m) {
       { nombre: 'Rodilla (delantero)', formula: 'bota − 1', valor: t.R },
       { nombre: 'Trasero: G a O', formula: 'mitad de cadera ÷ 10', valor: t.CD / 10 },
       { nombre: 'Trasero: Q a L', formula: `I–R + ${n(F.masCintura)}`, valor: tra.datos.ancho },
-      { nombre: 'Largo del elástico', formula: 'tu cintura − 5', valor: m.cintura - 5 },
+      { nombre: 'Largo del elástico', formula: 'tu cintura − 5', valor: largoElastico },
     ],
     piezas: [del.pieza, tra],
     rectangulos: [],
+    elastico: largoElastico / 100,
   };
 }

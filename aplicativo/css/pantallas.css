@@ -424,4 +424,5 @@ dialog:not([open]) { display: none; }
 .compartir-botones .btn { flex: 1 1 9rem; min-height: 3rem; padding: .5rem .75rem; font-size: .95rem; }
 @media (max-width: 520px) { .compartir-app { flex-direction: column; text-align: center; } }
 .dialogo-qr { width: min(26rem, calc(100% - 1.5rem)); }
+.dialogo-qr p, #enlace-mensaje { overflow-wrap: anywhere; }
 .dialogo-qr img { display: block; width: 100%; height: auto; max-width: 20rem; margin: .5rem auto 1rem; padding: .5rem; background: #fff; border-radius: 16px; }

@@ -2,7 +2,7 @@
 
 Aplicación web progresiva (PWA) de apoyo para estudiantes de Corte y Confección del CEA "Man Césped" (Cochabamba, Bolivia). Proyecto Integrador de la carrera de Sistemas Informáticos, 2026.
 
-**Abrir la app:** https://dayanaruth.github.io/proyecto-textil/
+**Abrir la app:** https://tallerdigitalberk.github.io/proyecto-textil/
 
 ## Qué hace
 1. **Moldes:** pide las medidas una por una, con dibujos, y traza el molde paso a paso. Se puede imprimir en tamaño real.

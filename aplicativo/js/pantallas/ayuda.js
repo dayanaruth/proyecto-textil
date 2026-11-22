@@ -4,7 +4,7 @@ import { dibujo } from '../utilidades/iconos.js';
 import { puedeInstalar, esIphone, instalar, instalada } from '../utilidades/pwa.js';
 
 // Dirección pública de la app (la misma del código QR)
-const URL_APP = 'https://dayanaruth.github.io/proyecto-textil/';
+const URL_APP = 'https://tallerdigitalberk.github.io/proyecto-textil/';
 
 const pasos = (lista) => `<ol class="pasos-ayuda">${lista.map((p) => `<li>${p}</li>`).join('')}</ol>`;
 const ir = (ruta, texto) => `<a class="btn btn-secundario btn-chico" href="${ruta}">${texto} ▶</a>`;
@@ -76,7 +76,7 @@ export function mostrar(main) {
     <dialog class="dialogo dialogo-qr" id="dialogo-qr">
       <h2>Escanea con la cámara</h2>
       <img src="img/qr-mi-taller.svg" alt="Código QR para abrir Mi Taller" width="320" height="320">
-      <p>o escribe: <b>dayanaruth.github.io/proyecto-textil</b></p>
+      <p>o escribe: <b>${URL_APP.slice('https://'.length, -1)}</b></p>
       <button type="button" class="btn btn-principal btn-ancho" id="cerrar-qr">Listo</button>
     </dialog>
     <p class="ayuda">Toca una pregunta para ver la respuesta.</p>

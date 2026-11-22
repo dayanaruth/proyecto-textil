@@ -44,12 +44,13 @@
 .mat-cuerpo { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: .375rem; }
 .mat-cabeza { display: flex; align-items: center; gap: .25rem; }
 .mat-nombre {
-  flex: 1; min-width: 0; padding: .25rem .375rem; font-size: 1.05rem; font-weight: 800;
-  background: transparent; border: 2px solid transparent; border-radius: 8px;
+  flex: 1; min-width: 0; padding: .25rem .375rem; font: inherit; font-size: 1.05rem; font-weight: 800; overflow-wrap: anywhere;
 }
-.mat-nombre:hover { border-color: var(--borde); }
-.mat-nombre:focus { outline: none; border-color: var(--azul); background: var(--superficie); }
-.lapiz { font-size: .85rem; opacity: .6; }
+.error-material:not(:empty) { display: block; color: var(--error); margin-top: .25rem; }
+.nuevo-material summary { display: grid; place-items: center; }
+.nuevo-material summary::-webkit-details-marker { display: none; }
+.nuevo-material label { margin: .5rem 0 .25rem; }
+.mat input { scroll-margin-block: 5rem; }
 .quitar-c { flex: none; width: 2.5rem; height: 2.5rem; background: none; border: 0; color: var(--texto-suave); font-size: 1rem; cursor: pointer; border-radius: 8px; }
 .quitar-c:hover { background: var(--fondo); }
 .btn-agregar { width: 100%; min-height: 3rem; margin-top: .5rem; background: none; border: 2px dashed var(--azul); border-radius: 12px; color: var(--azul); font-weight: 700; cursor: pointer; }

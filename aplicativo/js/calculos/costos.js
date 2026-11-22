@@ -9,8 +9,21 @@ export const valor = (texto) => {
   return n >= 0 ? n : NaN;
 };
 
+export function errorDatoMaterial(texto, campo) {
+  const dato = String(texto ?? '').trim();
+  const cantidad = campo === 'cantidad';
+  if (!dato) return cantidad ? 'Escribe la cantidad que usas.' : 'Escribe el precio. Si es gratis, escribe 0.';
+  if (!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(dato) || !Number.isFinite(valor(dato))) {
+    return 'Usa un número sin signo, por ejemplo 2 o 1,50.';
+  }
+  return cantidad && valor(dato) === 0 ? 'La cantidad debe ser mayor que cero.' : '';
+}
+
 export function calcularCostos({ materiales, horas, pagoHora, gastos }) {
-  const subtotales = materiales.map((m) => valor(m.cantidad) * valor(m.precio));
+  const subtotales = materiales.map((m) => {
+    if (errorDatoMaterial(m.cantidad, 'cantidad') || errorDatoMaterial(m.precio, 'precio')) return NaN;
+    return valor(m.cantidad) * valor(m.precio);
+  });
   const totalMateriales = subtotales.reduce((s, v) => s + v, 0);
   const manoDeObra = valor(horas) * valor(pagoHora);
   const gastosTaller = valor(gastos);

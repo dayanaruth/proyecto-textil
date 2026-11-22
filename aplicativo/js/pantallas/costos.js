@@ -3,7 +3,7 @@
 // de ganancia, ejemplo, voz, marcas de "listo", avisos de lo que falta y el precio siempre a la vista.
 import { buscarPrenda } from '../datos/prendas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
-import { calcularCostos, precioVenta, valor } from '../calculos/costos.js';
+import { calcularCostos, errorDatoMaterial, precioVenta, valor } from '../calculos/costos.js';
 import { bs, numero } from '../utilidades/formato.js';
 import { barraPasos, esc } from '../utilidades/ui.js';
 import { hayVoz, hablar } from '../utilidades/voz.js';
@@ -65,24 +65,30 @@ export function mostrar(main, [id]) {
             <div><h2>1. Materiales <span class="listo" id="ok-mat" hidden>✅</span></h2><small>Lo que compras para hacer la prenda</small></div>
             ${voz('mat')}<b class="parte-total" id="t-materiales"></b></header>
           <div id="materiales">${e.materiales.map((m, i) => `
-            <div class="mat">
+            <div class="mat" role="group" aria-labelledby="material-${i}">
               <div class="mat-cabeza">
                 ${dibujo(iconoMaterial(m.nombre), 'mat-icono')}
-                <input class="mat-nombre" data-i="${i}" data-campo="nombre" value="${esc(m.nombre)}" placeholder="Nombre del material" aria-label="Nombre del material">
-                <span class="lapiz" aria-hidden="true">✏️</span>
-                <button type="button" class="quitar-c" data-quitar="${i}" aria-label="Quitar ${esc(m.nombre)}">✕</button>
+                <h3 class="mat-nombre" id="material-${i}">${esc(m.nombre.trim() || 'Material adicional')}</h3>
+                <button type="button" class="quitar-c" data-quitar="${i}" aria-label="Quitar ${esc(m.nombre.trim() || 'material adicional')}">✕</button>
               </div>
               <div class="cuenta">
                 <label class="pregunta-c">¿Cuánto usas?
-                  <span class="campo"><input data-i="${i}" data-campo="cantidad" inputmode="decimal" placeholder="0" value="${esc(m.cantidad)}"><span class="unidad">${esc(m.unidad)}</span></span></label>
+                  <span class="campo"><input data-i="${i}" data-campo="cantidad" inputmode="decimal" enterkeyhint="next" required aria-describedby="error-cantidad-${i}" placeholder="0" value="${esc(m.cantidad)}"><span class="unidad">${esc(m.unidad)}</span></span></label>
                 <span class="por" aria-hidden="true">×</span>
                 <label class="pregunta-c">¿Cuánto cuesta 1 ${PALABRA[m.unidad] ?? esc(m.unidad)}?
-                  <span class="campo"><span class="unidad">Bs</span><input data-i="${i}" data-campo="precio" inputmode="decimal" placeholder="0" value="${esc(m.precio)}"></span></label>
+                  <span class="campo"><span class="unidad">Bs</span><input data-i="${i}" data-campo="precio" inputmode="decimal" enterkeyhint="next" required aria-describedby="error-precio-${i}" placeholder="0" value="${esc(m.precio)}"></span></label>
                 <b class="cuenta-res" id="s-${i}"></b>
               </div>
+              <small class="error-material" id="error-cantidad-${i}"></small>
+              <small class="error-material" id="error-precio-${i}"></small>
             </div>`).join('')}
           </div>
-          <button type="button" class="btn-agregar" id="agregar">＋ Agregar otro material</button>
+          <details class="nuevo-material">
+            <summary class="btn-agregar">＋ Agregar otro material</summary>
+            <label class="pregunta-c" for="nombre-nuevo">Nombre del nuevo material</label>
+            <div class="campo"><input id="nombre-nuevo" enterkeyhint="done" placeholder="Ej. Etiqueta">
+              <button type="button" class="btn-c" id="agregar">Agregar</button></div>
+          </details>
           <p class="falta" id="falta-mat" role="status"></p>
         </section>
 
@@ -152,6 +158,15 @@ export function mostrar(main, [id]) {
   const $ = (s) => main.querySelector(s);
   const poner = (sel, v) => { $(sel).textContent = Number.isFinite(v) ? bs(v) : '—'; };
 
+  function validarCampo(input, mostrar) {
+    const mensaje = errorDatoMaterial(input.value, input.dataset.campo);
+    input.setCustomValidity(mensaje);
+    const visible = mostrar && Boolean(mensaje);
+    input.setAttribute('aria-invalid', String(visible));
+    $('#' + input.getAttribute('aria-describedby')).textContent = visible ? mensaje : '';
+    return !mensaje;
+  }
+
   const actualizar = () => {
     const c = calcularCostos(e);
     const g = valor(e.ganancia);
@@ -166,7 +181,7 @@ export function mostrar(main, [id]) {
     $('#t-mano').textContent = Number.isFinite(c.manoDeObra) ? `= ${bs(c.manoDeObra)}` : '—';
 
     // ✅ y avisos de lo que falta (en palabras sencillas)
-    const sinPrecio = e.materiales.filter((m) => !lleno(m.cantidad) || !lleno(m.precio)).map((m) => m.nombre || 'un material');
+    const sinPrecio = e.materiales.filter((m, i) => !Number.isFinite(c.subtotales[i])).map((m) => m.nombre || 'material adicional');
     const faltaTra = [!lleno(e.horas) && 'las horas que tardas', !lleno(e.pagoHora) && 'cuánto vale tu hora'].filter(Boolean);
     $('#ok-mat').hidden = sinPrecio.length > 0 || !e.materiales.length;
     $('#ok-tra').hidden = faltaTra.length > 0;
@@ -177,10 +192,11 @@ export function mostrar(main, [id]) {
     main.querySelectorAll('[data-pct]').forEach((b) => b.setAttribute('aria-pressed', valor(b.dataset.pct) === g));
     poner('#op-costo', pCosto); poner('#op-venta', pVenta);
     $('#gana-costo').textContent = Number.isFinite(pCosto) ? `ganas ${bs(pCosto - c.total)}` : '';
-    $('#gana-venta').textContent = Number.isFinite(pVenta) ? `ganas ${bs(pVenta - c.total)}` : 'menos de 100 %';
+    $('#gana-venta').textContent = Number.isFinite(pVenta) ? `ganas ${bs(pVenta - c.total)}` : g >= 100 ? 'menos de 100 %' : '';
     main.querySelectorAll('[data-tipo]').forEach((b) => b.setAttribute('aria-checked', b.dataset.tipo === e.tipo));
     $('#ganarias').innerHTML = malo || !c.total ? '' : `Ganarías <b>${bs(precio - c.total)}</b> por prenda`;
-    $('#error').textContent = !Number.isFinite(c.total) ? 'Revisa los números: usa solo cifras, por ejemplo 12,50.'
+    $('#error').textContent = sinPrecio.length ? '' : !Number.isFinite(c.total) || !Number.isFinite(g)
+      ? 'Revisa los números: usa solo cifras, por ejemplo 12,50.'
       : !Number.isFinite(precio) ? 'La ganancia sobre el precio de venta debe ser menor a 100 %.' : '';
 
     poner('#f-mat', c.totalMateriales); poner('#f-tra', c.manoYGastos);
@@ -200,14 +216,40 @@ export function mostrar(main, [id]) {
   };
 
   const conectar = () => {
-    if (prenda) $('#terminar').addEventListener('click', terminarPrenda);
     const form = $('form');
+    const campos = Array.from(form.querySelectorAll('#materiales input'));
+    campos.forEach((input) => validarCampo(input, false));
+    $('#terminar').addEventListener('click', (ev) => {
+      const primero = campos.find((input) => !input.validity.valid);
+      if (primero) {
+        ev.preventDefault();
+        validarCampo(primero, true);
+        primero.focus();
+        return;
+      }
+      if (prenda) terminarPrenda();
+    });
+    form.addEventListener('focusout', (ev) => {
+      if (ev.target.dataset.campo) validarCampo(ev.target, true);
+    });
+    form.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' || ev.isComposing) return;
+      const el = ev.target;
+      if (el.id === 'nombre-nuevo') {
+        ev.preventDefault();
+        $('#agregar').click();
+      } else if (el.dataset.campo) {
+        ev.preventDefault();
+        if (validarCampo(el, true)) (campos[campos.indexOf(el) + 1] ?? form.elements.horas).focus();
+      }
+    });
     form.addEventListener('input', (ev) => {
       const el = ev.target;
       if (el.dataset.campo) {
         e.materiales[el.dataset.i][el.dataset.campo] = el.value;
-        if (el.dataset.campo === 'nombre') el.closest('.mat').querySelector('.mat-icono').outerHTML = dibujo(iconoMaterial(el.value), 'mat-icono');
+        validarCampo(el, el.getAttribute('aria-invalid') === 'true' || Boolean(el.value.trim()));
       } else if (el.name) e[el.name] = el.value;
+      else { el.setCustomValidity(''); return; }
       actualizar();
     });
     form.addEventListener('submit', (ev) => ev.preventDefault());
@@ -231,7 +273,17 @@ export function mostrar(main, [id]) {
     }
     let redibujar = false;
     if (b.dataset.quitar != null) { e.materiales.splice(Number(b.dataset.quitar), 1); redibujar = true; }
-    if (b.id === 'agregar') { e.materiales.push({ nombre: '', cantidad: '1', unidad: 'unid.', precio: '' }); redibujar = true; }
+    if (b.id === 'agregar') {
+      const campo = $('#nombre-nuevo');
+      const nombre = campo.value.trim();
+      if (!nombre) {
+        campo.setCustomValidity('Escribe el nombre del material.');
+        campo.reportValidity();
+        return;
+      }
+      e.materiales.push({ nombre, cantidad: '1', unidad: 'unid.', precio: '' });
+      redibujar = true;
+    }
     if (b.id === 'ejemplo') {
       e = { ...e, materiales: e.materiales.map((m) => ({ ...m, cantidad: m.cantidad || '0,9', precio: precioEjemplo(m.nombre) })),
         horas: '2', pagoHora: '14', ganancia: '30', tipo: 'costo' };
@@ -247,7 +299,7 @@ export function mostrar(main, [id]) {
     if (redibujar) {
       main.removeEventListener('click', alTocar);
       dibujar();
-      if (b.id === 'agregar') main.querySelector(`[data-i="${e.materiales.length - 1}"][data-campo="nombre"]`)?.focus();
+      if (b.id === 'agregar') main.querySelector(`[data-i="${e.materiales.length - 1}"][data-campo="cantidad"]`).focus();
     }
   }
 

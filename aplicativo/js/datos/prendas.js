@@ -48,7 +48,7 @@ const INSUMOS_BUZO = [
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
 const INSUMOS_VESTIDO = [
-  { nombre: 'Cierre para espalda', cantidad: '1', unidad: 'unid.' },
+  { nombre: 'Cierre invisible para espalda', cantidad: '1', unidad: 'unid.' },
   { nombre: 'Hilo', cantidad: '1', unidad: 'carrete' },
 ];
 

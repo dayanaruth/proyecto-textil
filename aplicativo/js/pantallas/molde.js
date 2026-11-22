@@ -46,6 +46,7 @@ function pintar(main, prenda, molde) {
         <button type="button" class="btn btn-principal" id="siguiente"></button>
       </div>
     </div>
+    ${(molde.indicaciones ?? []).map((texto) => `<p class="nota nota-info">${texto}</p>`).join('')}
     ${molde.rectangulos.map((x) => `<p class="nota nota-info">📏 <b>${x.nombre}</b> (${x.cortar}): ${x.texto}</p>`).join('')}
     <details class="calculos">
       <summary>¿De dónde salen las medidas?</summary>
@@ -54,7 +55,7 @@ function pintar(main, prenda, molde) {
       </table>
     </details>
     ${molde.piezas.some((p) => p.imprimir !== false)
-      ? '<button type="button" class="btn btn-secundario btn-ancho" id="imprimir">🖨️ Imprimir en tamaño real</button>'
+      ? '<button type="button" class="btn btn-secundario btn-ancho" id="imprimir">🖨️ Imprimir o descargar PDF</button>'
       : '<p class="nota nota-info">✏️ Esta prenda se marca directamente sobre la tela con tiza y regla: no hace falta imprimir.</p>'}
     <a class="btn btn-principal btn-ancho" href="#/tela/${prenda.id}">Siguiente: calcular tela ▶</a>
     <p class="provisional">Fórmulas provisionales, pendientes de revisión con el docente del taller.</p>`;
@@ -65,6 +66,7 @@ function pintar(main, prenda, molde) {
     const ultimo = p.pasos.length - 1;
     $('#dibujo').innerHTML = svgPieza(p, paso);
     $('#dibujo').classList.toggle('ancho', Boolean(p.verAncho));
+    $('.paso-caja').classList.toggle('terminado', paso === ultimo);
     $('#deslizar').hidden = !p.verAncho;
     $('#paso-num').textContent = `${p.nombre} · Paso ${paso + 1} de ${p.pasos.length}${paso === ultimo ? ' · ¡Terminado!' : ''}`;
     $('#paso-texto').textContent = p.pasos[paso];

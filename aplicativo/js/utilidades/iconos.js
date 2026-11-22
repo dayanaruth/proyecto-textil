@@ -85,6 +85,12 @@ export const ICONOS = {
       <path d="M22 31q-7-8 0-15 2-10 12-10 9 0 9 8 0 6-5.5 8.5T33 30v2" stroke="#9E2F45" stroke-width="3"/>
       <circle cx="33" cy="38.5" r="2.4" fill="#9E2F45" stroke="none"/>`),
   },
+  opinion: {
+    fondo: '#EEE6F7',
+    svg: svg(`
+      <path d="M11 8h26a5 5 0 0 1 5 5v16a5 5 0 0 1-5 5H22l-11 8v-8a5 5 0 0 1-5-5V13a5 5 0 0 1 5-5z" fill="#D8C5E8"/>
+      <path d="M13 16h22M13 22h16" stroke-width="2.2"/>`),
+  },
   // Cinta métrica en su estuche redondo
   conversor: {
     fondo: '#FFF1CC',

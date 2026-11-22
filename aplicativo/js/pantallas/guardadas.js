@@ -31,13 +31,14 @@ function lista(main) {
   main.innerHTML = `
     <h1>Medidas guardadas</h1>
     <p class="ayuda">Guarda las medidas de cada persona y no tendrás que medir de nuevo en cada prenda.</p>
+    ${todas.some(personas.esEjemplo) ? '<p class="nota nota-info">Para probar la app, elige uno de los ejemplos de talla M y toca «Probar una prenda».</p>' : ''}
     ${todas.length ? `
       <ul class="personas">
         ${todas.map((p) => `
           <li><a class="persona" href="#/guardadas/${p.id}">
             <span class="avatar">${avatar(p.avatar).svg}</span>
             <span class="persona-datos"><strong>${esc(p.nombre)}</strong>
-              <small>${cuantas(p)} medidas · ${personas.fecha(p.actualizado)}</small>
+              <small>${personas.esEjemplo(p) ? 'Ejemplo para practicar' : `${cuantas(p)} medidas · ${personas.fecha(p.actualizado)}`}</small>
               ${personas.esAntigua(p) ? '<small class="antigua">⏰ Conviene volver a medir</small>' : ''}</span>
             <span class="flecha" aria-hidden="true">›</span>
           </a></li>`).join('')}
@@ -48,43 +49,8 @@ function lista(main) {
       </div>`}
     <a class="btn btn-principal btn-ancho" href="#/guardadas/nueva">＋ Agregar persona</a>
 
-    <section class="respaldo">
-      <h2 class="subtitulo">💾 Copia de seguridad</h2>
-      <p class="ayuda">Si cambias de celular o se borran los datos del navegador, con la copia recuperas todas las medidas. También sirve para pasarlas a una compañera.</p>
-      <div class="acciones">
-        <button type="button" class="btn btn-secundario" id="guardar-copia" ${todas.length ? '' : 'disabled'}>⬇️ Guardar copia</button>
-        <label class="btn btn-secundario" for="archivo-copia">⬆️ Recuperar copia</label>
-      </div>
-      <input type="file" id="archivo-copia" accept=".json,application/json" hidden>
-      <button type="button" class="btn btn-secundario btn-ancho" id="compartir-copia" hidden>📤 Enviar copia (WhatsApp, correo…)</button>
-      <p class="aviso-respaldo" id="respaldo-mensaje" role="status"></p>
-    </section>
     <p class="privacidad">🔒 Las medidas quedan solo en este celular. No se envían a internet.</p>`;
 
-  const mensaje = (t) => { main.querySelector('#respaldo-mensaje').textContent = t; };
-  main.querySelector('#guardar-copia').addEventListener('click', () => {
-    const archivo = personas.copia();
-    const enlace = Object.assign(document.createElement('a'), { href: URL.createObjectURL(archivo), download: archivo.name });
-    enlace.click();
-    URL.revokeObjectURL(enlace.href);
-    mensaje(`✅ Copia guardada en Descargas: ${archivo.name}`);
-  });
-  const compartir = main.querySelector('#compartir-copia');
-  if (todas.length && navigator.canShare?.({ files: [personas.copia()] })) {
-    compartir.hidden = false;
-    compartir.addEventListener('click', () => navigator.share({ files: [personas.copia()], title: 'Medidas – Mi Taller' }).catch(() => {}));
-  }
-  main.querySelector('#archivo-copia').addEventListener('change', async (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    try {
-      const { nuevas, actualizadas } = personas.recuperar(await archivo.text());
-      lista(main);
-      main.querySelector('#respaldo-mensaje').textContent = `✅ Copia recuperada: ${nuevas} personas nuevas, ${actualizadas} actualizadas.`;
-    } catch (error) {
-      mensaje(`⚠️ ${error.message}`);
-    }
-  });
   return '#/';
 }
 
@@ -152,15 +118,16 @@ function formulario(main, p, { para, desdeTrabajo }) {
 // ---------- Ficha de una persona ----------
 function ficha(main, p) {
   const tipo = tipoDe(p);
+  const esEjemplo = personas.esEjemplo(p);
   main.innerHTML = `
     <section class="ficha-cabeza">
       <span class="avatar avatar-grande">${avatar(p.avatar).svg}</span>
       <div><h1>${esc(p.nombre)}</h1>
-        <p class="ayuda">${cuantas(p)} medidas · actualizado el ${personas.fecha(p.actualizado)}</p>
+        <p class="ayuda">${esEjemplo ? 'Medidas de referencia para practicar' : `${cuantas(p)} medidas · actualizado el ${personas.fecha(p.actualizado)}`}</p>
         <a class="enlace-chico" href="#/guardadas/${p.id}/editar">✏️ Cambiar nombre o dibujo</a></div>
     </section>
     ${personas.esAntigua(p) ? '<p class="nota">⏰ Estas medidas tienen más de 6 meses. El cuerpo cambia: conviene volver a medir.</p>' : ''}
-    <a class="btn btn-principal btn-ancho" href="#/prendas/${p.id}">✂️ Hacer una prenda para ${esc(p.nombre)}</a>
+    <a class="btn btn-principal btn-ancho" href="#/prendas/${p.id}">✂️ ${esEjemplo ? 'Probar una prenda' : `Hacer una prenda para ${esc(p.nombre)}`}</a>
     <p class="ayuda centrada">Toca una medida para agregarla o cambiarla.</p>
     ${ZONAS.map((z) => {
       const ids = medidasDe(z, tipo);
@@ -285,7 +252,7 @@ export function para(main, [prendaId, elegida]) {
         <a class="tarjeta tarjeta-persona" href="#/para/${prendaId}/${p.id}">
           <span class="avatar">${avatar(p.avatar).svg}</span>
           <span class="tarjeta-nombre">${esc(p.nombre)}</span>
-          <span class="tarjeta-detalle ${faltan ? '' : 'completa'}">${faltan ? `Faltan ${faltan} medidas` : '✓ Tiene todas'}</span>
+          <span class="tarjeta-detalle ${faltan ? '' : 'completa'}">${personas.esEjemplo(p) ? 'Ejemplo · ' : ''}${faltan ? `Faltan ${faltan} medidas` : '✓ Tiene todas'}</span>
         </a>`;
       }).join('')}
       <a class="tarjeta tarjeta-persona" href="#/guardadas/nueva/para/${prendaId}">

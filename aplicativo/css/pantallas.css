@@ -3,6 +3,14 @@
 /* Inicio */
 .bienvenida { padding: 1.25rem 0 .5rem; }
 .bienvenida h1 { font-size: 1.6rem; margin-bottom: 1rem; }
+.invitacion-opinion {
+  padding: 1rem; margin-bottom: 1rem; background: var(--primario-suave); color: var(--texto);
+  border: 1px solid var(--primario); border-radius: var(--radio);
+}
+.invitacion-opinion .cerrar-aviso { float: right; margin: -.375rem -.375rem 0 .5rem; }
+.invitacion-opinion h2 { font-size: 1.2rem; }
+.invitacion-opinion p { margin: .25rem 0 .75rem; }
+.invitacion-opinion .btn { display: inline-flex; min-height: 2.75rem; }
 .subtitulo { font-size: 1.05rem; margin: 1.75rem 0 .75rem; color: var(--texto-suave); }
 #instalar { margin-top: 1.25rem; }
 .instalar-nota { margin-top: .5rem; text-align: center; color: var(--texto-suave); font-size: .9rem; }
@@ -49,6 +57,7 @@
   box-shadow: 0 -4px 16px rgb(0 0 0 / .12);
 }
 .paso-caja .como { margin-bottom: .5rem; }
+.paso-caja.terminado { position: static; }
 .paso-num { margin-bottom: .25rem; color: var(--primario); font-weight: 700; }
 .nota-info { background: var(--primario-suave); color: var(--texto); }
 .calculos summary { padding: .75rem 0; color: var(--primario); font-weight: 700; cursor: pointer; }
@@ -125,8 +134,6 @@
 .vacio { text-align: center; padding: 1.5rem 1rem; color: var(--texto-suave); }
 .avatares-vacio { display: flex; justify-content: center; gap: .5rem; margin-bottom: .75rem; }
 .avatares-vacio .avatar { width: 4rem; height: 4rem; }
-.respaldo { margin-top: 1.5rem; padding-top: .25rem; border-top: 1px solid var(--borde); }
-.respaldo .acciones .btn { flex: 1; font-size: .95rem; }
 .aviso-respaldo { margin-top: .75rem; font-weight: 600; }
 .privacidad { margin-top: 1rem; text-align: center; color: var(--texto-suave); font-size: .9rem; }
 

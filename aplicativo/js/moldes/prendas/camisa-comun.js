@@ -65,11 +65,11 @@ export function cuelloYPuno(escoteMitad, muneca) {
   return {
     escote,
     rectangulos: [
-      { nombre: 'Pie de cuello', cortar: 'Cortar 2 al doblez', alDoblez: true, cantidad: 2, ...pie,
+      { nombre: 'Pie de cuello', cortar: 'Cortar 2 al doblez', alDoblez: true, cantidad: 2, imprimir: true, ...pie,
         texto: `${n(pie.largo)} × ${n(pie.alto)} cm. Mide lo mismo que tu escote (${n(escote)} cm) + ${n(F.cruceCuello)} cm para el botón (ya incluye margen). Redondea las puntas.` },
-      { nombre: 'Cuello', cortar: 'Cortar 2 al doblez', alDoblez: true, cantidad: 2, ...pala,
+      { nombre: 'Cuello', cortar: 'Cortar 2 al doblez', alDoblez: true, cantidad: 2, imprimir: true, ...pala,
         texto: `${n(pala.largo)} × ${n(pala.alto)} cm (ya incluye margen). Corta las puntas en diagonal o redondas, como prefieras.` },
-      { nombre: 'Puño', cortar: 'Cortar 2', alDoblez: false, ...puno,
+      { nombre: 'Puño', cortar: 'Cortar 2', alDoblez: false, imprimir: true, doblezMitad: true, ...puno,
         texto: `${n(puno.largo)} × ${n(puno.alto)} cm (se dobla a la mitad). Muñeca + ${n(F.holguraMuneca)} de holgura + ${n(F.cruceMuneca)} de cruce (ya incluye margen).` },
     ],
     largoPuno: muneca + F.holguraMuneca,

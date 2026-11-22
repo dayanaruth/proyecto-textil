@@ -1,41 +1,53 @@
 /* Impresión del molde a escala real + vista previa en pantalla */
 #impresion { display: none; color: #000; font-size: 11pt; }
-#impresion .hoja-titulo { margin: 0 0 .2cm; font-size: 9pt; }
-#impresion h1 { font-size: 18pt; margin-bottom: .4cm; }
-#impresion ol, #impresion ul { margin: 0 0 .5cm; padding-left: .6cm; }
-#impresion svg { display: block; }
-.cuadro-control {
-  display: grid; place-items: center; width: 10cm; height: 10cm; margin: .5cm 0;
-  border: 1px solid #000; font-size: 14pt;
+.dialogo-impresion .hoja > svg {
+  display: block; width: calc(var(--ancho-hoja) - 2cm); height: auto;
 }
 
-/* Vista previa: las hojas se ven como papel, achicadas para la pantalla */
 @media screen {
-  #impresion.vista-previa {
-    display: block; position: fixed; inset: 4.25rem 0 0; z-index: 40; overflow: auto;
-    padding: 1rem; background: #6B6460;
+  #impresion.dialogo-impresion[open] {
+    display: flex; flex-direction: column; position: fixed; inset: 0;
+    width: 100%; height: 100%; max-width: none; max-height: none;
+    padding: 0; border: 0; background: var(--superficie); color: var(--texto);
+  }
+  .dialogo-impresion .vista-previa {
+    flex: 1; min-height: 0; overflow: auto; padding: 12px; background: #6B6460;
+    display: grid; grid-auto-rows: max-content; gap: 12px;
   }
   .vista-previa .hoja {
     zoom: var(--zoom, 1);
-    box-sizing: border-box; width: 21.6cm; min-height: 27.9cm; margin: 0 auto 1rem; padding: 1cm;
+    width: var(--ancho-hoja); height: var(--alto-hoja); margin: 0 auto; padding: 1cm;
     background: #fff; box-shadow: 0 4px 16px rgb(0 0 0 / .35);
   }
   .barra-impresion {
-    position: fixed; inset: 0 0 auto; z-index: 41; height: 4.25rem;
-    display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem;
-    background: var(--superficie); border-bottom: 1px solid var(--borde);
+    display: flex; align-items: end; flex-wrap: wrap; gap: .5rem 1rem;
+    padding: max(.75rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-right)) .65rem max(.75rem, env(safe-area-inset-left));
+    border-bottom: 1px solid var(--borde);
   }
-  .barra-impresion p { flex: 1; font-size: .95rem; line-height: 1.25; }
-  .barra-impresion small { display: block; color: var(--texto-suave); font-size: .8rem; }
-  .barra-impresion .btn { min-height: 3rem; padding: .5rem 1rem; }
+  .formato-impresion { flex: 1 1 15rem; }
+  .formato-impresion h2 { margin: 0 0 .35rem; font-size: 1.15rem; }
+  .formato-impresion label { display: block; font-size: .95rem; }
+  .formato-impresion select {
+    width: 100%; max-width: 23rem; min-height: 44px; padding: .4rem .7rem; font: inherit;
+    color: inherit; background: var(--fondo); border: 1px solid var(--borde); border-radius: .65rem;
+  }
+  .acciones-impresion { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .acciones-impresion .btn { min-height: 44px; padding: .4rem .75rem; font-size: .95rem; white-space: nowrap; }
+  .acciones-impresion [hidden] { display: none; }
+  .estado-impresion { flex-basis: 100%; font-size: .9rem; color: var(--texto-suave); }
 }
 
 @page { margin: 1cm; }
 
 @media print {
-  body { background: #fff; color: #000; }
+  html body { margin: 0; background: #fff; color: #000; }
   body > :not(#impresion) { display: none !important; }
   #impresion { display: block; }
+  #impresion.dialogo-impresion {
+    position: static; width: auto; max-width: none; max-height: none;
+    margin: 0; padding: 0; border: 0; overflow: visible;
+  }
+  .dialogo-impresion::backdrop, .barra-impresion { display: none; }
   .hoja { break-after: page; }
   .hoja:last-child { break-after: auto; }
 }

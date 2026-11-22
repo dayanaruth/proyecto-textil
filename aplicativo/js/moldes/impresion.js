@@ -1,89 +1,286 @@
-// Imprime el molde a tamaño real: lo divide en hojas que sirven en A4 y en Carta
+// La vista previa, la impresión y el PDF comparten el mismo dibujo en centímetros.
 import { contenidoPieza, cajaPieza } from './dibujo-svg.js';
 
-const HOJA = { ancho: 19, alto: 24.5 }; // cm útiles de cada hoja
+const FORMATOS = {
+  carta: { nombre: 'Carta', medida: '21,6 × 27,9 cm', ancho: 21.59, alto: 27.94 },
+  a4: { nombre: 'A4', medida: '21 × 29,7 cm', ancho: 21, alto: 29.7 },
+  oficio: { nombre: 'Oficio', medida: '21,6 × 33 cm', ancho: 21.59, alto: 33.02 },
+  plotter: { nombre: 'Ploteo', medida: 'rollo de 90 cm', ancho: 90 },
+};
+const MARGEN = 1;
+const CABECERA = 1.3;
 const r = (v) => Math.round(v * 100) / 100;
+const escapar = (texto) => String(texto).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
-function hojasDe(pieza) {
-  const c = cajaPieza(pieza);
-  const columnas = Math.ceil(c.ancho / HOJA.ancho), filas = Math.ceil(c.alto / HOJA.alto);
-  const hojas = [];
-  for (let f = 0; f < filas; f++) {
-    for (let k = 0; k < columnas; k++) {
-      hojas.push({ fila: f + 1, columna: k + 1, x: c.x + k * HOJA.ancho, y: c.y + f * HOJA.alto });
+function grupoRectangular(pieza) {
+  // Si se corta al doblez, el papel lleva media pieza.
+  const ancho = r(pieza.alto);
+  const alto = r(pieza.largo / (pieza.alDoblez ? 2 : 1));
+  const caja = { x: -.6, y: -.2, ancho: ancho + 1.2, alto: alto + .4 };
+  const doblez = pieza.alDoblez ? `
+    <path d="M0 0 H${ancho}" stroke="#333" stroke-width=".09" stroke-dasharray=".3 .2"/>
+    ${textoSVG(ancho / 2, .85, .4, 'DOBLEZ DE LA TELA', 'text-anchor="middle"')}` : pieza.doblezMitad ? `
+    <path d="M${r(ancho / 2)} 0 V${alto}" stroke="#555" stroke-width=".06" stroke-dasharray=".3 .2"/>
+    ${textoSVG(ancho / 2 + .25, 2, .4, 'DOBLAR AL COSER')}` : '';
+  const dibujo = `
+    <rect data-contorno-rectangular width="${ancho}" height="${alto}" fill="none" stroke="#9E2F45" stroke-width=".08"/>
+    ${doblez}`;
+  return { pieza, caja, dibujo, rectangular: true };
+}
+
+function textoSVG(x, y, tam, texto, atributos = '') {
+  return `<text x="${r(x)}" y="${r(y)}" font-size="${tam}" ${atributos}>${escapar(texto)}</text>`;
+}
+
+function dividirLineas(texto, ancho, tam, medidor) {
+  medidor.font = `${tam * 100}px Arial`;
+  const lineas = [];
+  let linea = '';
+  for (const palabra of texto.split(/\s+/)) {
+    const intento = linea ? `${linea} ${palabra}` : palabra;
+    if (linea && medidor.measureText(intento).width > (ancho - .4) * 100) {
+      lineas.push(linea);
+      linea = palabra;
+    } else {
+      linea = intento;
     }
   }
-  return { pieza, columnas, filas, hojas };
+  if (linea) lineas.push(linea);
+  return lineas;
+}
+
+function portada(titulo, molde, grupos, papel, ancho, alto) {
+  const enRollo = !papel.alto;
+  const medidor = document.createElement('canvas').getContext('2d');
+  const paginas = [];
+  const tam = .37;
+  const interlineado = .52;
+  let contenido = textoSVG(.1, .7, .62, `Molde · ${titulo}`, 'font-weight="bold"');
+  contenido += textoSVG(.1, 1.37, .42, `${papel.nombre} · ${papel.medida}`);
+  let y = 2.1;
+  const instrucciones = [
+    'Imprime a tamaño real (100 % de escala). Desactiva «Ajustar a la página».',
+    'Mide el cuadro de control. Cada lado debe medir 10 cm antes de cortar.',
+    enRollo
+      ? 'Envía este PDF a la imprenta y pide ploteo en rollo de 90 cm a escala 100 %.'
+      : 'Para armar cada pieza, corta por la línea gris punteada y une las hojas según su fila y columna.',
+    'Corta la tela por el borde exterior del molde, que incluye el margen de costura.',
+  ];
+  for (const [i, texto] of instrucciones.entries()) {
+    for (const linea of dividirLineas(`${i + 1}. ${texto}`, ancho, tam, medidor)) {
+      contenido += textoSVG(.1, y, tam, linea);
+      y += interlineado;
+    }
+  }
+  y = r(y + .22);
+  contenido += `<rect x=".1" y="${y}" width="10" height="10" fill="none" stroke="#444" stroke-width=".025"/>`;
+  contenido += textoSVG(5.1, y + 5, .47, '10 × 10 cm', 'text-anchor="middle"');
+  y += 10.85;
+
+  const notas = [
+    ...(enRollo && grupos.some(({ columnas }) => columnas > 1)
+      ? ['Si una pieza ocupa varias columnas, recorta por la línea gris y únelas en orden.'] : []),
+    ...grupos.map(({ pieza, filas, columnas }) => filas * columnas === 1
+      ? `${pieza.nombre} · 1 hoja`
+      : `${pieza.nombre} · ${filas} filas × ${columnas} columnas (${filas * columnas} hojas)`),
+    ...molde.rectangulos.map(({ nombre, cortar, texto }) => `${nombre} (${cortar}) · ${texto}`),
+    ...(molde.indicaciones ?? []),
+  ];
+  for (const nota of notas) {
+    const lineas = dividirLineas(`• ${nota}`, ancho, tam, medidor);
+    if (y + lineas.length * interlineado > alto) {
+      paginas.push({ alto, contenido });
+      contenido = textoSVG(.1, .7, .62, `Piezas y notas · ${titulo}`, 'font-weight="bold"');
+      y = 1.5;
+    }
+    for (const linea of lineas) {
+      contenido += textoSVG(.1, y, tam, linea);
+      y += interlineado;
+    }
+    y += .12;
+  }
+  paginas.push({ alto: enRollo ? r(y + .45) : alto, contenido });
+  return paginas;
+}
+
+function prepararPaginas(titulo, molde, originales, papel) {
+  const ancho = r(papel.ancho - 2 * MARGEN);
+  // Deja un pequeño espacio por el redondeo de centímetros a píxeles al imprimir.
+  const alto = papel.alto ? r(papel.alto - 2 * MARGEN - .07) : Infinity;
+  const grupos = originales.map((grupo) => {
+    const altoCorte = papel.alto ? r(alto - CABECERA) : r(grupo.caja.alto + .02);
+    return {
+      ...grupo, altoCorte, filas: Math.ceil(grupo.caja.alto / altoCorte),
+      columnas: Math.ceil(grupo.caja.ancho / ancho),
+    };
+  });
+  const paginas = portada(titulo, molde, grupos, papel, ancho, alto);
+  const secciones = [];
+  for (const { pieza, caja, dibujo, rectangular, altoCorte, filas, columnas } of grupos) {
+    for (let fila = 0; fila < filas; fila++) {
+      for (let columna = 0; columna < columnas; columna++) {
+        const partes = filas * columnas > 1 ? ` · fila ${fila + 1}, columna ${columna + 1}` : '';
+        const anchoSeccion = papel.alto ? ancho : Math.min(ancho, Math.max(7, r(caja.ancho - columna * ancho + .02)));
+        const x = r(caja.x + columna * ancho);
+        const y = r(caja.y + fila * altoCorte);
+        const tituloPieza = `${pieza.nombre}${partes}`;
+        const cortar = papel.alto && rectangular && pieza.alDoblez
+          ? `${pieza.cortar} · Alinea el borde marcado con el doblez de la tela` : pieza.cortar;
+        const recuadro = papel.alto || partes
+          ? `<rect x="0" y="${CABECERA}" width="${anchoSeccion}" height="${altoCorte}"
+               fill="none" stroke="#888" stroke-width=".04" stroke-dasharray=".4 .3"/>` : '';
+        const id = `corte-hoja-${secciones.length}`;
+        secciones.push({
+          ancho: anchoSeccion, alto: r(CABECERA + altoCorte),
+          contenido: `
+            <defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse">
+              <rect x="0" y="${CABECERA}" width="${anchoSeccion}" height="${altoCorte}"/>
+            </clipPath></defs>
+            <g clip-path="url(#${id})">
+              <g transform="translate(${r(-x)} ${r(CABECERA - y)})">${dibujo}</g>
+            </g>
+            ${recuadro}`,
+          tituloPieza, cortar,
+        });
+      }
+    }
+  }
+  const filas = papel.alto
+    ? secciones.map((seccion) => ({ alto: seccion.alto, piezas: [{ x: 0, ...seccion }] }))
+    : ordenarEnRollo(secciones, ancho);
+  const total = paginas.length + filas.length;
+  for (const fila of filas) {
+    const numero = paginas.length + 1;
+    const tituloHoja = `${titulo} · hoja ${numero} de ${total}`;
+    const contenido = fila.piezas.map(({ x, tituloPieza, cortar, contenido }) => `
+      <g transform="translate(${x} 0)">
+        ${textoSVG(.1, .35, .35, papel.alto ? `${titulo} · ${tituloPieza} · hoja ${numero} de ${total}` : tituloPieza, 'font-weight="bold"')}
+        ${textoSVG(.1, .9, .33, cortar)}
+        ${contenido}
+      </g>`).join('');
+    const cabecera = papel.alto ? '' : textoSVG(.1, .35, .35, tituloHoja, 'font-weight="bold"');
+    const margen = papel.alto ? 0 : .85;
+    paginas.push({ alto: r(fila.alto + margen), contenido: `${cabecera}<g transform="translate(0 ${margen})">${contenido}</g>` });
+  }
+  return paginas.map((pagina) => ({
+    ancho: papel.ancho, alto: papel.alto ?? r(pagina.alto + 2 * MARGEN),
+    dibujo: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ancho} ${pagina.alto}"
+      width="${ancho}" height="${pagina.alto}" font-family="Helvetica, Arial, sans-serif">${pagina.contenido}</svg>`,
+  }));
+}
+
+function ordenarEnRollo(secciones, ancho) {
+  const filas = [];
+  for (const seccion of [...secciones].sort((a, b) => b.alto - a.alto)) {
+    let fila = filas.find(({ usado }) => r(usado + seccion.ancho) <= ancho);
+    if (!fila) {
+      fila = { usado: 0, alto: seccion.alto, piezas: [] };
+      filas.push(fila);
+    }
+    fila.piezas.push({ x: fila.usado, ...seccion });
+    fila.usado = r(fila.usado + seccion.ancho + 1);
+  }
+  return filas;
+}
+
+async function descargarPDF(titulo, formato, paginas) {
+  const { jsPDF } = await import('../vendor/pdf.js');
+  const plantilla = document.createElement('template');
+  let pdf;
+  for (const { ancho, alto, dibujo } of paginas) {
+    const orientacion = ancho > alto ? 'landscape' : 'portrait';
+    if (pdf) pdf.addPage([ancho, alto], orientacion);
+    else pdf = new jsPDF({ unit: 'cm', format: [ancho, alto], orientation: orientacion, compress: true });
+    plantilla.innerHTML = dibujo;
+    const svg = plantilla.content.firstElementChild;
+    await pdf.svg(svg, {
+      x: MARGEN, y: MARGEN, width: Number(svg.getAttribute('width')), height: Number(svg.getAttribute('height')),
+    });
+  }
+  pdf.setProperties({ title: `Molde · ${titulo}` });
+  const nombre = titulo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  pdf.save(`molde-${nombre}-${formato}.pdf`);
 }
 
 export function imprimir(titulo, molde) {
-  const grupos = molde.piezas.filter((p) => p.imprimir !== false).map(hojasDe);
-  const total = 1 + grupos.reduce((s, g) => s + g.hojas.length, 0);
-  let numero = 1;
+  const grupos = [
+    ...molde.piezas.filter((p) => p.imprimir !== false)
+      .map((pieza) => ({ pieza, dibujo: contenidoPieza(pieza), caja: cajaPieza(pieza) })),
+    ...molde.rectangulos.filter((p) => p.imprimir === true).map(grupoRectangular),
+  ];
+  const dialogo = document.createElement('dialog');
+  dialogo.id = 'impresion';
+  dialogo.className = 'dialogo-impresion';
+  dialogo.setAttribute('aria-labelledby', 'titulo-impresion');
+  dialogo.innerHTML = `
+    <style></style>
+    <header class="barra-impresion">
+      <div class="formato-impresion">
+        <h2 id="titulo-impresion">Imprimir o descargar molde</h2>
+        <label for="formato-papel">Formato de papel</label>
+        <select id="formato-papel" autofocus>
+          ${Object.entries(FORMATOS).map(([clave, papel]) =>
+            `<option value="${clave}">${papel.nombre} · ${papel.medida}</option>`).join('')}
+        </select>
+      </div>
+      <div class="acciones-impresion">
+        <button type="button" class="btn btn-secundario" data-cerrar>Cerrar</button>
+        <button type="button" class="btn btn-secundario" data-imprimir>Imprimir</button>
+        <button type="button" class="btn btn-principal" data-descargar>Descargar PDF</button>
+      </div>
+      <p class="estado-impresion" role="status"></p>
+    </header>
+    <div class="vista-previa"></div>`;
 
-  const paginas = grupos.flatMap(({ pieza, hojas }) => {
-    const dibujo = contenidoPieza(pieza);
-    return hojas.map((h) => `
-      <section class="hoja">
-        <p class="hoja-titulo">${titulo} · <b>${pieza.nombre}</b> · fila ${h.fila}, columna ${h.columna} · hoja ${++numero} de ${total}</p>
-        <svg width="${HOJA.ancho}cm" height="${HOJA.alto}cm" viewBox="${r(h.x)} ${r(h.y)} ${HOJA.ancho} ${HOJA.alto}" font-family="Nunito, system-ui, sans-serif">
-          ${dibujo}
-          <rect x="${r(h.x)}" y="${r(h.y)}" width="${HOJA.ancho}" height="${HOJA.alto}" fill="none" stroke="#999" stroke-width=".05" stroke-dasharray=".4 .3"/>
-          <text x="${r(h.x + .5)}" y="${r(h.y + 1.2)}" font-size="1" fill="#999">${pieza.nombre} ${h.fila}-${h.columna}</text>
-        </svg>
-      </section>`);
+  const formato = dialogo.querySelector('select');
+  const zona = dialogo.querySelector('.vista-previa');
+  const estado = dialogo.querySelector('.estado-impresion');
+  const botonImprimir = dialogo.querySelector('[data-imprimir]');
+  const botonDescargar = dialogo.querySelector('[data-descargar]');
+  let paginas;
+  function ajustar() {
+    const anchoHoja = FORMATOS[formato.value].ancho * 96 / 2.54;
+    const anchoDisponible = zona.clientWidth - 24;
+    zona.style.setProperty('--zoom', Math.min(1, anchoDisponible / anchoHoja).toFixed(4));
+  }
+  function mostrar() {
+    const papel = FORMATOS[formato.value];
+    paginas = prepararPaginas(titulo, molde, grupos, papel);
+    dialogo.querySelector('style').textContent = papel.alto
+      ? `@page { size: ${papel.ancho}cm ${papel.alto}cm; margin: ${MARGEN}cm; }` : '';
+    dialogo.style.setProperty('--ancho-hoja', `${papel.ancho}cm`);
+    zona.innerHTML = paginas.map(({ alto, dibujo }) =>
+      `<section class="hoja" style="--alto-hoja:${alto}cm">${dibujo}</section>`).join('');
+    zona.scrollTop = 0;
+    botonImprimir.hidden = !papel.alto;
+    estado.textContent = papel.alto
+      ? `${paginas.length} hojas · Imprime al 100 % de escala.`
+      : `${paginas.length} páginas · Envía el PDF a la imprenta para plotear al 100 %.`;
+    ajustar();
+  }
+  dialogo.querySelector('[data-cerrar]').addEventListener('click', () => dialogo.close());
+  botonImprimir.addEventListener('click', () => window.print());
+  botonDescargar.addEventListener('click', async () => {
+    const instruccion = estado.textContent;
+    formato.disabled = botonDescargar.disabled = true;
+    estado.textContent = 'Preparando PDF…';
+    try {
+      await descargarPDF(titulo, formato.value, paginas);
+      estado.textContent = instruccion;
+    } catch (error) {
+      console.error(error);
+      estado.textContent = 'No se pudo descargar el PDF. Vuelve a intentarlo.';
+    } finally {
+      formato.disabled = botonDescargar.disabled = false;
+    }
   });
-
-  const portada = `
-    <section class="hoja">
-      <h1>Molde: ${titulo}</h1>
-      <ol>
-        <li>Imprime en <b>tamaño real</b> (escala 100 %, sin "ajustar a la página").</li>
-        <li>Mide el cuadro de abajo: <b>debe medir 10 × 10 cm</b>. Si no, revisa la escala.</li>
-        <li>Recorta cada hoja por la línea punteada gris y pégalas según fila y columna.</li>
-        <li>Recorta el molde por la línea de afuera (ya incluye el margen de costura).</li>
-      </ol>
-      <div class="cuadro-control">10 cm</div>
-      <ul>
-        ${grupos.map((g) => `<li><b>${g.pieza.nombre}</b>: ${g.filas} filas × ${g.columnas} columnas (${g.hojas.length} hojas)</li>`).join('')}
-        ${molde.rectangulos.map((x) => `<li><b>${x.nombre}</b>: ${x.texto}</li>`).join('')}
-      </ul>
-    </section>`;
-
-  // Vista previa propia: se ven las hojas antes de gastar papel (funciona en cualquier navegador)
-  document.querySelector('#impresion')?.remove();
-  document.querySelector('.barra-impresion')?.remove();
-  const zona = document.createElement('div');
-  zona.id = 'impresion';
-  zona.className = 'vista-previa';
-  zona.innerHTML = portada + paginas.join('');
-  const barra = document.createElement('div');
-  barra.className = 'barra-impresion';
-  barra.innerHTML = `
-    <p><b>Vista previa</b><small>${total} hojas · Carta o A4</small></p>
-    <button type="button" class="btn btn-secundario" data-accion="cerrar">Cerrar</button>
-    <button type="button" class="btn btn-principal" data-accion="imprimir">🖨️ Imprimir</button>`;
-
-  // Las hojas miden 21,6 cm de ancho: se achican para que entren en la pantalla
-  const ajustar = () => {
-    const anchoHoja = (21.6 / 2.54) * 96;
-    zona.style.setProperty('--zoom', Math.min(1, (window.innerWidth - 32) / anchoHoja).toFixed(3));
-  };
-  const cerrar = () => {
-    zona.remove();
-    barra.remove();
+  formato.addEventListener('change', mostrar);
+  dialogo.addEventListener('close', () => {
     window.removeEventListener('resize', ajustar);
-    document.removeEventListener('keydown', teclas);
-  };
-  const teclas = (e) => { if (e.key === 'Escape') cerrar(); };
-  barra.addEventListener('click', (e) => {
-    const accion = e.target.closest('[data-accion]')?.dataset.accion;
-    if (accion === 'cerrar') cerrar();
-    if (accion === 'imprimir') window.print();
+    dialogo.remove();
   });
+  document.body.append(dialogo);
+  dialogo.showModal();
+  mostrar();
   window.addEventListener('resize', ajustar);
-  document.addEventListener('keydown', teclas);
-  ajustar();
-  document.body.append(barra, zona);
-  barra.querySelector('[data-accion="imprimir"]').focus();
 }

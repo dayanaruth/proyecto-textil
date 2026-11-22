@@ -10,6 +10,7 @@ import { hayVoz, hablar } from '../utilidades/voz.js';
 import { preferencias } from '../datos/cotizaciones.js';
 import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { dibujo, iconoMaterial } from '../utilidades/iconos.js';
+import { terminarPrenda } from '../utilidades/opinion.js';
 
 const normal = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const PALABRA = { m: 'metro', 'unid.': 'unidad', carrete: 'carrete' };
@@ -143,7 +144,7 @@ export function mostrar(main, [id]) {
         <div class="barra-colores" aria-hidden="true"><span class="azul" id="seg-mat"></span><span class="verde" id="seg-tra"></span><span class="dorado" id="seg-gan"></span></div>
         <div class="leyenda" aria-hidden="true"><span class="azul">Materiales</span><span class="verde">Trabajo</span><span class="dorado">Ganancia</span></div>
       </div>
-      <a class="btn btn-principal btn-ancho" href="#/">✓ Terminar</a>`;
+      <a class="btn btn-principal btn-ancho" id="terminar" href="#/">✓ Terminar</a>`;
     conectar();
     actualizar();
   };
@@ -199,6 +200,7 @@ export function mostrar(main, [id]) {
   };
 
   const conectar = () => {
+    if (prenda) $('#terminar').addEventListener('click', terminarPrenda);
     const form = $('form');
     form.addEventListener('input', (ev) => {
       const el = ev.target;

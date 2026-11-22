@@ -42,7 +42,7 @@ const TEMAS = [
   { icono: 'celular', nombre: 'Internet', preguntas: [
     ['¿Qué hago si no tengo internet?', `<p>Nada especial: <b>la app funciona igual</b> después de abrirla una vez con internet. Arriba verás el aviso «Sin internet». Puedes sacar moldes, calcular tela y precios, y guardar medidas.</p>
       <p>Solo necesitas internet para <b>enviar</b> por WhatsApp y para recibir las mejoras de la app.</p>`],
-    ['¿Cómo recibo las mejoras de la app?', `<p>Cuando haya una versión nueva, abajo aparece <b>«Hay una versión nueva de la app»</b>. Toca <b>Actualizar</b>. Tus medidas y datos no se borran.</p>`],
+    ['¿Cómo recibo las mejoras de la app?', `<p>Cuando entras desde el QR o el enlace, Mi Taller busca las mejoras con internet y las aplica automáticamente. Si abres la app desde el ícono instalado, toca <b>Actualizar</b> cuando aparezca el aviso. Tus medidas guardadas se conservan.</p>`],
   ] },
   { icono: 'costos', nombre: 'Precios y cotizaciones', preguntas: [
     ['¿Cuánto cobro por mi hora de trabajo?', `<p>Lo mínimo por ley en Bolivia (2026) es <b>Bs 13,75 por hora</b>: el salario mínimo de Bs 3.300 al mes ÷ 30 días ÷ 8 horas.

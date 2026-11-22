@@ -3,7 +3,7 @@
 // actualizar la app nunca borra los datos de la persona.
 
 // ⚠️ Cambiar VERSION cada vez que se publique un cambio (así el celular se actualiza)
-const VERSION = 'mi-taller-v62';
+const VERSION = 'mi-taller-v63';
 
 const ARCHIVOS = [
   './',
@@ -123,7 +123,8 @@ const ARCHIVOS = [
 
 // 1. Primera visita con internet: descarga y guarda todo
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(ARCHIVOS)));
+  const archivos = ARCHIVOS.map((ruta) => new Request(ruta, { cache: 'reload' }));
+  e.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(archivos)));
 });
 
 // 2. Al activar una versión nueva, borra solo las versiones viejas de la app
@@ -143,17 +144,17 @@ self.addEventListener('fetch', (e) => {
   // Las páginas de prueba no se guardan: así siempre se ve la última versión
   if (url.pathname.includes('/pruebas/')) return;
   e.respondWith(
-    caches.match(request, { ignoreSearch: true }).then((guardado) => guardado ?? fetch(request).then((respuesta) => {
+    caches.match(request, { cacheName: VERSION, ignoreSearch: true }).then((guardado) => guardado ?? fetch(request).then((respuesta) => {
       if (respuesta.ok) {
         const copia = respuesta.clone();
         caches.open(VERSION).then((cache) => cache.put(request, copia));
       }
       return respuesta;
-    }).catch(() => (request.mode === 'navigate' ? caches.match('index.html') : Response.error()))),
+    }).catch(() => (request.mode === 'navigate' ? caches.match('index.html', { cacheName: VERSION }) : Response.error()))),
   );
 });
 
-// 4. La página pide usar la versión nueva cuando la persona toca "Actualizar"
+// 4. Activar la descarga completa cuando lo solicite la página.
 self.addEventListener('message', (e) => {
-  if (e.data === 'actualizar') self.skipWaiting();
+  if (e.data === 'actualizar') e.waitUntil(self.skipWaiting());
 });

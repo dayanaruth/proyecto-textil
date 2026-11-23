@@ -181,10 +181,22 @@ export function manga(m, sisaTotal, opciones = {}) {
   const der = { a: P(A / 2, 0), c: P(A * 0.7, 0), c2: P(A * 0.8, h), b: P(A, h) };
   const U1 = P(0, h), U2 = P(A, h), B1 = P(entra, L), B2 = P(A - entra, L), T = P(A / 2, 0);
   const xa = B1.x + (B2.x - B1.x) * 0.25; // abertura del puño, del lado de atrás
+  // Cada par de marcas se superpone al coser: consume 2 cm, 4 cm entre ambos.
+  // La abertura es un corte independiente, no una marca del pliegue.
+  const pliegues = [1, 4].flatMap((desplazamiento) => {
+    const inicio = xa + desplazamiento;
+    const fin = inicio + 2;
+    return [
+      ...[inicio, fin].map((x) => ({ paso: 4, tipo: 'linea', p: [P(x, L), P(x, L - 4)], puntos: true })),
+      { paso: 4, tipo: 'linea', p: [P(inicio, L - 3), P(fin, L - 3)] },
+      { paso: 4, tipo: 'linea', p: [P(fin - .4, L - 3.3), P(fin, L - 3)] },
+      { paso: 4, tipo: 'linea', p: [P(fin - .4, L - 2.7), P(fin, L - 3)] },
+      { paso: 4, tipo: 'texto', p: [P(inicio + 1, L - 4.5)], tam: .65, texto: '2 cm' },
+    ];
+  });
   const abertura = o.abertura ? [
     { paso: 4, tipo: 'linea', p: [P(xa, L), P(xa, L - 12)] },
-    { paso: 4, tipo: 'linea', p: [P(xa + 3, L), P(xa + 3, L - 4)], puntos: true },
-    { paso: 4, tipo: 'linea', p: [P(xa + 6, L), P(xa + 6, L - 4)], puntos: true },
+    ...pliegues,
   ] : [];
 
   return {
@@ -201,7 +213,7 @@ export function manga(m, sisaTotal, opciones = {}) {
       `Desde el centro de A–B sube ${n(h)} cm (altura de copa) y marca C. La app la calculó para que la manga calce en tu sisa de ${n(sisaTotal)} cm.`,
       'Une A con C y C con B con curvas suaves: hacia adentro cerca de A y B, y redondeada arriba (la copa).',
       `Desde A y B baja ${n(L)} cm${o.abertura ? ' (largo de manga menos el puño)' : ' (largo de manga)'}, entrando ${n(entra)} cm a cada lado. Une abajo.`,
-      ...(o.abertura ? ['Abertura: a un cuarto del ancho de abajo (lado de atrás) sube 12 cm. Al lado marca 2 pliegues de 2 cm: así la manga mide lo mismo que el puño.'] : []),
+      ...(o.abertura ? ['Abertura: a un cuarto del ancho de abajo (lado de atrás) sube 12 cm; solo esta línea se corta. Los pliegues llevan dos pares de marcas punteadas, separados 2 cm dentro de cada par. Junta las marcas de cada par siguiendo la flecha y sujeta: recoges 2 cm por pliegue, 4 cm en total. El espacio entre los pares no se recoge.'] : []),
       `Agrega el margen: ${n(F.margen.sisa)} cm en la copa, ${n(F.margen.costado)} en los costados y ${n(o.margenRuedo)} en el ruedo.`,
     ],
     contorno: [
@@ -209,7 +221,7 @@ export function manga(m, sisaTotal, opciones = {}) {
       { a: U2, b: B2, margen: F.margen.costado }, { a: B2, b: B1, margen: o.margenRuedo }, { a: B1, b: U1, margen: F.margen.costado },
     ],
     rotulo: P(A / 2, h + (L - h) * 0.45 + 1),
-    hilo: [P(A / 2, h + 1), P(A / 2, Math.max(h + 3, L - 2))],
+    hilo: [P(A / 2, h + 1), P(A / 2, Math.max(h + 3, L - (o.abertura ? 7 : 2)))],
     alturaCopa: h, ancho: A,
   };
 }

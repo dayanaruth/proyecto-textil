@@ -223,6 +223,14 @@ export function imprimir(titulo, molde) {
             `<option value="${clave}">${papel.nombre} · ${papel.medida}</option>`).join('')}
         </select>
       </div>
+      <div class="formato-impresion">
+        <label for="pieza-impresion">Qué deseas imprimir</label>
+        <select id="pieza-impresion">
+          <option value="todas">Todo el molde</option>
+          ${grupos.map(({ pieza }, indice) =>
+            `<option value="${indice}">${escapar(pieza.nombre)}</option>`).join('')}
+        </select>
+      </div>
       <div class="acciones-impresion">
         <button type="button" class="btn btn-secundario" data-cerrar>Cerrar</button>
         <button type="button" class="btn btn-secundario" data-imprimir>Imprimir</button>
@@ -232,12 +240,14 @@ export function imprimir(titulo, molde) {
     </header>
     <div class="vista-previa"></div>`;
 
-  const formato = dialogo.querySelector('select');
+  const formato = dialogo.querySelector('#formato-papel');
+  const seleccion = dialogo.querySelector('#pieza-impresion');
   const zona = dialogo.querySelector('.vista-previa');
   const estado = dialogo.querySelector('.estado-impresion');
   const botonImprimir = dialogo.querySelector('[data-imprimir]');
   const botonDescargar = dialogo.querySelector('[data-descargar]');
   let paginas;
+  let tituloPDF;
   function ajustar() {
     const anchoHoja = FORMATOS[formato.value].ancho * 96 / 2.54;
     const anchoDisponible = zona.clientWidth - 24;
@@ -245,7 +255,14 @@ export function imprimir(titulo, molde) {
   }
   function mostrar() {
     const papel = FORMATOS[formato.value];
-    paginas = prepararPaginas(titulo, molde, grupos, papel);
+    const todos = seleccion.value === 'todas';
+    const elegidos = todos ? grupos : [grupos[Number(seleccion.value)]];
+    const moldeElegido = todos ? molde : {
+      ...molde,
+      rectangulos: molde.rectangulos.filter((pieza) => elegidos.some((grupo) => grupo.pieza === pieza)),
+    };
+    tituloPDF = todos ? titulo : `${titulo} · ${elegidos[0].pieza.nombre}`;
+    paginas = prepararPaginas(titulo, moldeElegido, elegidos, papel);
     dialogo.querySelector('style').textContent = papel.alto
       ? `@page { size: ${papel.ancho}cm ${papel.alto}cm; margin: ${MARGEN}cm; }` : '';
     dialogo.style.setProperty('--ancho-hoja', `${papel.ancho}cm`);
@@ -262,19 +279,20 @@ export function imprimir(titulo, molde) {
   botonImprimir.addEventListener('click', () => window.print());
   botonDescargar.addEventListener('click', async () => {
     const instruccion = estado.textContent;
-    formato.disabled = botonDescargar.disabled = true;
+    formato.disabled = seleccion.disabled = botonDescargar.disabled = true;
     estado.textContent = 'Preparando PDF…';
     try {
-      await descargarPDF(titulo, formato.value, paginas);
+      await descargarPDF(tituloPDF, formato.value, paginas);
       estado.textContent = instruccion;
     } catch (error) {
       console.error(error);
       estado.textContent = 'No se pudo descargar el PDF. Vuelve a intentarlo.';
     } finally {
-      formato.disabled = botonDescargar.disabled = false;
+      formato.disabled = seleccion.disabled = botonDescargar.disabled = false;
     }
   });
   formato.addEventListener('change', mostrar);
+  seleccion.addEventListener('change', mostrar);
   dialogo.addEventListener('close', () => {
     window.removeEventListener('resize', ajustar);
     dialogo.remove();

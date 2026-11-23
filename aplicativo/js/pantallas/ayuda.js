@@ -89,8 +89,10 @@ export function mostrar(main) {
       </section>`).join('')}
     <button type="button" class="btn btn-secundario btn-ancho" id="ver-bienvenida">👋 Ver la bienvenida otra vez</button>
     <section class="acerca">
+      <h2>Acerca del proyecto</h2>
       <img class="logo-cea" src="img/logo-cea.webp" alt="Logo del C.E.A. Man Césped" width="72" height="72">
       <p><b>Mi Taller</b> · versión 1.0</p>
+      <p><b>Desarrollado por</b><br>Dayana Ruth Alanoca Colque<br>Jhon Kevin Mamani Marcani</p>
       <p>Proyecto Integrador de Sistemas Informáticos para el área de Corte y Confección del CEA «Man Césped», Cochabamba, 2026.</p>
       <p>Las fórmulas de los moldes y las tablas de tallas son provisionales, hasta su revisión con el docente del taller.</p>
     </section>`;

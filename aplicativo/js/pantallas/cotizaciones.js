@@ -6,7 +6,6 @@ import { PRENDAS, RIB_CUELLO, buscarPrenda, prendaMadre, sirvePara } from '../da
 import { TABLAS, tablasPara } from '../datos/tallas.js';
 import { corteDePrenda, telaDelPedido, calcularPedido, manoDeObraPedido, pendientes } from '../calculos/cotizacion.js';
 import { compararConMercado } from '../datos/referencias.js';
-import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { ANCHOS_COMUNES } from '../calculos/tela.js';
 import { valor } from '../calculos/costos.js';
 import { avatar } from '../utilidades/avatares.js';
@@ -84,10 +83,24 @@ function nueva(main, tipo, borrador = null) {
     cantidades: {},                     // por persona (id) o por grupo y talla
     anchoTela: pref.anchoTela, precioTela: pref.precioTela,
     telaCliente: false,
-    insumos: [], horas: '', alcanceHoras: 'pedido', cobroTrabajo: 'hora', pagoHora: pref.pagoHora, pagoPedido: '',
-    gastosPct: pref.gastosPct, ganancia: pref.ganancia, tipoGanancia: pref.tipo,
+    insumos: [], horas: '', alcanceHoras: 'pedido', cobroTrabajo: 'prenda', pagoHora: pref.pagoHora, pagoPedido: '', pagoPrenda: '', porcentajeFijo: null,
+    gastosPct: '0', ganancia: '0', tipoGanancia: pref.tipo,
   };
   if (borrador) Object.assign(e, JSON.parse(JSON.stringify(borrador.formulario)));
+  if (e.pagoSerie && Object.values(e.cantidades).reduce((s, n) => s + Number(n || 0), 0) > 1) {
+    e.pagoPrenda = e.pagoSerie;
+    e.porcentajeFijo = null;
+  }
+  delete e.pagoSerie;
+  if (e.cobroTrabajo !== 'prenda') {
+    const unidadesGuardadas = Object.values(e.cantidades).reduce((s, n) => s + Number(n || 0), 0);
+    const totalGuardado = e.cobroTrabajo === 'fijo' ? valor(e.pagoPedido)
+      : valor(e.horas) * valor(e.pagoHora) * (e.alcanceHoras === 'pedido' ? 1 : unidadesGuardadas);
+    const porUnidad = unidadesGuardadas && Number.isFinite(totalGuardado) && totalGuardado > 0 ? String(totalGuardado / unidadesGuardadas) : '';
+    e.pagoPrenda ||= porUnidad;
+    e.cobroTrabajo = 'prenda';
+    e.porcentajeFijo = null;
+  }
   if (e.prenda) {
     const original = buscarPrenda(e.prenda);
     const madre = prendaMadre(e.prenda);
@@ -105,7 +118,6 @@ function nueva(main, tipo, borrador = null) {
     }
   }
   delete e.tabla;
-  const convierteHoras = borrador && borrador.formulario.alcanceHoras !== 'pedido' && String(e.horas).trim();
   const cache = new Map();             // metros de tela ya calculados (una prenda y pedido completo)
   let ultimoCalculo = null;
 
@@ -124,7 +136,7 @@ function nueva(main, tipo, borrador = null) {
       </section>
       <section class="cuadro" id="quienes" hidden></section>
       <section class="cuadro cot-materiales" id="tela-y-costos" hidden>
-        <div class="cot-cabecera"><span aria-hidden="true">🧵</span><div><small>MATERIALES</small><h2>Tela y complementos</h2></div></div><p class="ayuda">Calculamos la tela según las tallas. La reserva también se incluye en el costo.</p><h3>Tela principal</h3>
+        <div class="cot-cabecera">${dibujo('hilo', 'parte-icono')}<div><small>1. MATERIALES</small><h2>Tela y complementos</h2></div><b class="cot-cabecera-total" id="total-materiales-arriba">—</b></div><p class="ayuda">Calculamos la tela según las tallas. La reserva también se incluye en el costo.</p><h3>Tela principal</h3>
         <p class="ayuda">Ancho de la tela:</p>
         <div class="selector selector-ancho">${ANCHOS_COMUNES.map((a) => `<button type="button" data-ancho="${a}">${metros(a)}</button>`).join('')}</div>
         <label class="bloque">Precio por metro
@@ -137,32 +149,24 @@ function nueva(main, tipo, borrador = null) {
         <div id="insumos"></div>
         <button type="button" class="btn btn-secundario btn-ancho" id="agregar-rib" hidden>Agregar rib para el cuello</button>
         <button type="button" class="btn-agregar" id="agregar-material">＋ Agregar material o servicio</button>
+        <p class="resumen-materiales">Total de materiales del pedido <strong id="total-materiales-cot">—</strong></p>
       </section>
       <section class="cuadro cot-trabajo" id="trabajo-precio" hidden>
-        <div class="cot-cabecera"><span aria-hidden="true">✂️</span><div><small>TU TRABAJO</small><h2>Confección del pedido</h2></div></div>
-        <p class="ayuda">Estima el tiempo para cortar, coser, planchar y terminar todas las prendas.</p>
-        <fieldset class="tipo-ganancia">
-          <legend>¿Cómo cobras tu trabajo?</legend>
-          <label><input type="radio" name="cobroTrabajo" value="hora" ${e.cobroTrabajo === 'hora' ? 'checked' : ''}> Por hora</label>
-          <label><input type="radio" name="cobroTrabajo" value="fijo" ${e.cobroTrabajo === 'fijo' ? 'checked' : ''}> Monto fijo por el pedido</label>
-        </fieldset>
-        <p id="horas-convertidas" class="nota" hidden>Este borrador se guardó con horas por prenda. Revisa las horas para todo el pedido.</p>
-        <label class="bloque"><span id="etiqueta-horas">Horas de todo el pedido</span><span class="campo"><input name="horas" inputmode="decimal" placeholder="Ej.: 6"><span class="unidad">h</span></span></label>
-        <label class="bloque" id="campo-pago-hora">Pago por hora<span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="Ej.: 18" value="${esc(e.pagoHora)}"></span></label>
-        <label class="bloque" id="campo-pago-pedido" hidden>Pago por todo el pedido<span class="campo"><span class="unidad">Bs</span><input name="pagoPedido" inputmode="decimal" placeholder="Ej.: 108" value="${esc(e.pagoPedido)}"></span></label>
-        <div id="ayuda-precio"></div>
+        <div class="cot-cabecera">${dibujo('cronometro', 'parte-icono')}<div><small>2. TU TRABAJO</small><h2>Confección del pedido</h2></div><b class="cot-cabecera-total" id="total-trabajo-arriba">—</b></div>
+        <p class="ayuda">Escribe el monto que cobrarás por confeccionar cada prenda de este pedido. Si haces varias en serie, usa tu precio por cantidad.</p>
+          <label class="bloque">Confección por cada prenda<span class="campo"><span class="unidad">Bs</span><input name="pagoPrenda" inputmode="decimal" placeholder="Ej.: 30" value="${esc(e.pagoPrenda)}"></span></label>
         <p class="cot-mano-obra" id="total-trabajo" role="status"></p>
-        <label class="bloque">Gastos del taller <small>Luz, máquina, agujas: % de los materiales</small>
-          <span class="campo campo-corto"><input name="gastosPct" inputmode="decimal" value="${esc(e.gastosPct)}"><span class="unidad">%</span></span></label>
-        <div class="cot-ganancia"><h3>Tu ganancia</h3><p class="ayuda">Se añade después de cubrir materiales, trabajo y gastos.</p>
-        <label class="bloque">Porcentaje que quieres ganar
-          <span class="campo campo-corto"><input name="ganancia" inputmode="decimal" value="${esc(e.ganancia)}"><span class="unidad">%</span></span></label>
-        <fieldset class="tipo-ganancia">
-          <legend>Ese porcentaje es…</legend>
-          <label><input type="radio" name="tipoGanancia" value="costo" ${e.tipoGanancia === 'costo' ? 'checked' : ''}> del <b>costo</b></label>
-          <label><input type="radio" name="tipoGanancia" value="venta" ${e.tipoGanancia === 'venta' ? 'checked' : ''}> del <b>precio de venta</b></label>
-        </fieldset>
-        </div>
+      </section>
+      <section class="cuadro cot-ganancia" id="ganancia-pedido" hidden>
+        <div class="cot-cabecera">${dibujo('monedas', 'parte-icono')}<div><small>3. TU GANANCIA</small><h2>Porcentaje del pedido</h2></div></div>
+        <p class="ayuda">El cobro por confección ya está incluido. Puedes subir su porcentaje si deseas cobrar más.</p>
+          <label class="bloque">Porcentaje de ganancia sobre el precio de venta
+            <span class="campo campo-corto"><input name="porcentajeFijo" inputmode="decimal" aria-describedby="minimo-cot"><span class="unidad">%</span></span></label>
+          <div class="botones-ganancia"><button type="button" class="btn btn-secundario" data-subir-ganancia="1">＋ 1 %</button>
+            <button type="button" class="btn btn-secundario" data-subir-ganancia="5">＋ 5 %</button>
+            <button type="button" class="btn btn-secundario" id="ganancia-minima-cot">Volver al mínimo</button></div>
+          <p class="ayuda" id="minimo-cot"></p>
+          <p class="precio-final-ganancia"><span>Precio final del pedido</span><strong id="precio-final-cot">—</strong></p>
       </section>
       <section class="cuadro cot-resumen" id="resultado" hidden></section>
       <div id="acciones-cotizacion" class="cot-acciones">
@@ -173,6 +177,11 @@ function nueva(main, tipo, borrador = null) {
         ${borrador ? '<button type="button" class="btn btn-peligro btn-ancho" id="borrar-borrador">Eliminar borrador</button>' : ''}
       </div>
     </form>
+    <div class="barra-precio" id="barra-precio-cot" hidden aria-live="polite">
+      <div class="barra-precio-textos"><span>Te cuesta en materiales <b id="b-costo-cot">—</b></span><span class="flecha-precio">→</span><span>Venderías por <b class="b-precio" id="b-precio-cot">—</b></span></div>
+      <div class="barra-colores" aria-hidden="true"><span class="azul" id="seg-mat-cot"></span><span class="verde" id="seg-tra-cot"></span><span class="dorado" id="seg-extra-cot"></span></div>
+      <div class="leyenda" aria-hidden="true"><span class="azul">Materiales</span><span class="verde">Confección</span><span class="dorado">Aumento y redondeo</span></div>
+    </div>
     </div>`;
 
   const $ = (s) => main.querySelector(s);
@@ -200,7 +209,7 @@ function nueva(main, tipo, borrador = null) {
         validez: 7,
         lineas: esBorrador ? [] : r.filas.map((f) => ({ detalle: f.detalle, cantidad: f.cantidad, precio: f.precio })),
         unidades: r?.unidades ?? Object.values(e.cantidades).reduce((s, n) => s + n, 0), total: esBorrador ? null : r.total,
-        interno: esBorrador ? null : { costo: r.costo, ganancia: r.total - r.costo, manoDeObra: r.manoDeObra, tela: r.tela, anchoTela: e.anchoTela },
+        interno: esBorrador ? null : { costo: r.materiales, ganancia: r.total - r.materiales, manoDeObra: r.manoDeObra, tela: r.tela, anchoTela: e.anchoTela },
       }, borrador?.id);
       if (!esBorrador) cotizaciones.guardarPreferencias({ ...cotizaciones.preferencias(), anchoTela: e.anchoTela,
         precioTela: e.telaCliente ? '' : e.precioTela, ...(e.cobroTrabajo === 'hora' ? { pagoHora: e.pagoHora } : {}),
@@ -335,12 +344,8 @@ function nueva(main, tipo, borrador = null) {
   };
 
   const pintarTrabajo = (unidades) => {
-    const fijo = e.cobroTrabajo === 'fijo';
-    $('#campo-pago-hora').hidden = fijo;
-    $('#campo-pago-pedido').hidden = !fijo;
-    $('#ayuda-precio').hidden = fijo;
-    $('#etiqueta-horas').textContent = fijo ? 'Horas estimadas de todo el pedido (opcional)' : 'Horas de todo el pedido';
     const importe = manoDeObraPedido(datosCalculo(), unidades);
+    $('#total-trabajo-arriba').textContent = importe > 0 && Number.isFinite(importe) ? bs(importe) : '—';
     $('#total-trabajo').textContent = importe > 0 && Number.isFinite(importe)
       ? `Mano de obra para ${unidades} ${unidades === 1 ? 'prenda' : 'prendas'}: ${bs(importe)}`
       : 'El total de mano de obra aparecerá al completar el pago.';
@@ -369,9 +374,11 @@ function nueva(main, tipo, borrador = null) {
     form.elements.precioTela.disabled = e.telaCliente;
     $('#tela-y-costos').hidden = !e.prenda;
     $('#trabajo-precio').hidden = !e.prenda;
+    $('#ganancia-pedido').hidden = !e.prenda;
+    $('#barra-precio-cot').hidden = true;
     const zona = $('#resultado');
     zona.hidden = !lista.length;
-    if (!lista.length) { calculando = false; revisar(); return; }
+    if (!lista.length) { $('#total-materiales-cot').textContent = '—'; $('#total-materiales-arriba').textContent = '—'; $('#precio-final-cot').textContent = '—'; calculando = false; revisar(); return; }
     zona.innerHTML = '<p role="status">Calculando el pedido…</p>';
     let conMetros;
     try {
@@ -406,25 +413,41 @@ function nueva(main, tipo, borrador = null) {
     const datos = datosCalculo();
     resultado = calcularPedido(conMetros, datos);
     calculando = false;
-    const { filas, unidades, total, costo, tela, materiales, gastos, manoDeObra } = resultado;
+    const { filas, unidades, total, tela, materiales, manoDeObra } = resultado;
+    const minimo = resultado.porcentajeMinimo;
+    const etiquetaExtra = resultado.porcentajeGanancia > minimo ? 'Aumento y redondeo' : 'Redondeo';
+    if (document.activeElement !== form.elements.porcentajeFijo)
+      form.elements.porcentajeFijo.value = numero(Math.round(resultado.porcentajeGanancia * 100) / 100);
+    $('#minimo-cot').textContent = `Mínimo: ${numero(Math.round(minimo * 100) / 100)} %. Sale del cobro de confección dividido entre materiales + confección. No puedes bajarlo.`;
+    $('#total-materiales-cot').textContent = bs(materiales);
+    $('#total-materiales-arriba').textContent = bs(materiales);
+    $('#precio-final-cot').textContent = Number.isFinite(total) ? bs(total) : '—';
+    $('#barra-precio-cot').hidden = !Number.isFinite(total);
+    $('#b-costo-cot').textContent = bs(materiales);
+    $('#b-precio-cot').textContent = Number.isFinite(total) ? bs(total) : '—';
+    $('#seg-mat-cot').style.width = total > 0 ? `${materiales / total * 100}%` : '0%';
+    $('#seg-tra-cot').style.width = total > 0 ? `${manoDeObra / total * 100}%` : '0%';
+    $('#seg-extra-cot').style.width = total > 0 ? `${Math.max(0, total - materiales - manoDeObra) / total * 100}%` : '0%';
     const valido = Number.isFinite(total);
-    const falta = pendientes(datos).length > 0;
+    const faltantes = pendientes(datos);
+    const falta = faltantes.length > 0;
     revisar();
     const mercado = falta || !unidades ? null : compararConMercado(filas[0].prendaId, total / unidades);
     const MERCADO_TEXTO = {
       parecido: '✅ Tu precio está cerca del mercado.',
-      caro: '⬆️ Tu precio está bastante más alto. Revisa las horas (en serie se tarda menos), el pago por hora o la ganancia.',
+      caro: '⬆️ Tu precio está bastante más alto. Revisa el cobro de confección en serie y el porcentaje de ganancia.',
       barato: '⬇️ Tu precio está bastante más bajo. Revisa que estés cobrando tu trabajo y todos los materiales.',
     };
     zona.innerHTML = `
-      <div class="cot-cabecera"><span aria-hidden="true">✓</span><div><small>RESUMEN DEL PEDIDO</small><h2>${tituloDe(e.prenda)}</h2></div></div>
+      <div class="cot-cabecera">${dibujo('costos', 'parte-icono')}<div><small>RESUMEN DEL PEDIDO</small><h2>${tituloDe(e.prenda)}</h2></div></div>
       ${!valido ? '<p class="error">Revisa los números: usa solo cifras positivas, y una ganancia sobre la venta menor a 100 %.</p>' : `
-      ${falta ? '<p class="nota">⚠️ Estimación incompleta. Revisa los pendientes antes de crear la cotización final.</p>' : ''}
-      <div class="cot-totales"><div><small>Costo de producción</small><strong>${bs(costo)}</strong></div><div><small>Ganancia estimada</small><strong>${bs(total - costo)}</strong></div><div class="cot-total-venta"><small>${falta ? 'Precio provisional' : 'Total para tu cliente'}</small><strong>${bs(total)}</strong><span>${unidades} prendas · reserva incluida</span></div></div>
+      ${falta ? `<p class="nota">⚠️ Estimación incompleta. Falta: ${faltantes.map(esc).join('; ')}.</p>` : ''}
+      <div class="cot-totales"><div><small>Te cuesta en materiales</small><strong>${bs(materiales)}</strong></div><div><small>Confección y ganancia</small><strong>${bs(total - materiales)}</strong></div><div class="cot-total-venta"><small>${falta ? 'Precio provisional' : 'Venderías el pedido por'}</small><strong>${bs(total)}</strong><span>${unidades} prendas · reserva incluida</span></div></div>
+      <div class="barra-desglose-cot" aria-label="Composición del precio"><div class="segmentos-cot"><span class="azul" style="width:${total > 0 ? materiales / total * 100 : 0}%"></span><span class="verde" style="width:${total > 0 ? manoDeObra / total * 100 : 0}%"></span><span class="dorado" style="width:${total > 0 ? Math.max(0, (total - materiales - manoDeObra) / total * 100) : 0}%"></span></div><small>🧵 Materiales ${bs(materiales)} · ✂️ Confección ${bs(manoDeObra)} · 💰 ${etiquetaExtra} ${bs(total - materiales - manoDeObra)}</small></div>
       <dl class="cot-desglose" aria-label="Desglose del costo de producción">
         <div><dt>Materiales</dt><dd>${bs(materiales)}</dd></div>
         <div><dt>Mano de obra del pedido</dt><dd>${bs(manoDeObra)}</dd></div>
-        <div><dt>Gastos del taller</dt><dd>${bs(gastos)}</dd></div>
+        <div><dt>${etiquetaExtra}</dt><dd>${bs(total - materiales - manoDeObra)}</dd></div>
       </dl>
       <table class="tabla-cot">
         <thead><tr><th>Prenda</th><th>Cant.</th><th>Precio c/u</th><th>Subtotal</th></tr></thead>
@@ -445,9 +468,7 @@ function nueva(main, tipo, borrador = null) {
     if (ev.target.name !== 'prenda') return;
     e.prenda = ev.target.value;
     e.cantidades = {};
-    e.horas = form.elements.horas.value = '';
-    e.pagoPedido = form.elements.pagoPedido.value = '';
-    $('#horas-convertidas').hidden = true;
+    e.porcentajeFijo = null;
     e.insumos = sugerirInsumos(buscarPrenda(e.prenda), pref.insumos);
     pintarQuienes();
     pintarInsumos();
@@ -463,15 +484,31 @@ function nueva(main, tipo, borrador = null) {
       if (el.dataset.campo !== 'precio') pintarDatosInsumo(el.closest('.material-cot'), material);
     }
     else if (el.name === 'telaCliente') e.telaCliente = el.checked;
-    else if (['precioTela', 'horas', 'cobroTrabajo', 'pagoHora', 'pagoPedido', 'gastosPct', 'ganancia', 'tipoGanancia'].includes(el.name)) e[el.name] = el.value;
+    else if (['precioTela', 'pagoPrenda', 'porcentajeFijo'].includes(el.name)) e[el.name] = el.value;
     else return;
+    if (el.name !== 'porcentajeFijo') e.porcentajeFijo = null;
     actualizar();
+  });
+  form.addEventListener('focusout', (ev) => {
+    if (ev.target.name !== 'porcentajeFijo' || !resultado) return;
+    if (valor(e.porcentajeFijo) < resultado.porcentajeMinimo) {
+      e.porcentajeFijo = null;
+      actualizar();
+    }
   });
   form.addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;
     const d = b.dataset;
+    if (d.subirGanancia && resultado) {
+      const actual = Math.max(resultado.porcentajeMinimo, resultado.porcentajeGanancia);
+      e.porcentajeFijo = String(Math.min(99.99, Math.round((actual + Number(d.subirGanancia)) * 100) / 100));
+      actualizar();
+      return;
+    }
+    if (b.id === 'ganancia-minima-cot') { e.porcentajeFijo = null; actualizar(); return; }
     if (b.id === 'agregar-material' || b.id === 'agregar-rib') {
+      e.porcentajeFijo = null;
       const esRib = b.id === 'agregar-rib';
       e.insumos.push(esRib ? { ...RIB_CUELLO, precio: '' } : { nombre: '', cantidad: '1', unidad: 'unid.', alcance: 'prenda', precio: '', cliente: false });
       pintarInsumos(esRib ? -1 : e.insumos.length - 1); actualizar();
@@ -484,14 +521,17 @@ function nueva(main, tipo, borrador = null) {
       b.textContent = ajustes.hidden ? 'Editar' : 'Listo';
       pintarDatosInsumo(fila, e.insumos[d.editarInsumo]);
     } else if (d.quitar != null) {
+      e.porcentajeFijo = null;
       e.insumos.splice(Number(d.quitar), 1); pintarInsumos(); actualizar();
       $('#agregar-material').focus();
     } else if (d.mas || d.menos || d.docena) {
+      e.porcentajeFijo = null;
       const clave = d.mas ?? d.menos ?? d.docena;
       e.cantidades[clave] = Math.max(0, (e.cantidades[clave] ?? 0) + (d.mas ? 1 : d.menos ? -1 : 12));
       $(`#c-${CSS.escape(clave)}`).textContent = e.cantidades[clave];
       actualizar();
     } else if (d.ancho) {
+      e.porcentajeFijo = null;
       e.anchoTela = Number(d.ancho);
       marcarAncho(); actualizar();
     }
@@ -501,18 +541,7 @@ function nueva(main, tipo, borrador = null) {
     const opcion = form.querySelector(`[name="prenda"][value="${CSS.escape(e.prenda)}"]`);
     if (opcion) opcion.checked = true;
     pintarQuienes(); pintarInsumos(); marcarAncho();
-    if (convierteHoras) {
-      const unidades = lineas().reduce((s, l) => s + l.cantidad, 0);
-      const horas = valor(e.horas);
-      if (Number.isFinite(horas) && unidades) e.horas = String(Number((horas * unidades).toPrecision(15)));
-      $('#horas-convertidas').hidden = false;
-    }
   }
-  e.alcanceHoras = 'pedido';
-  form.elements.horas.value = e.horas;
-  const ayuda = $('#ayuda-precio');
-  ayuda.innerHTML = ayudaHorasYPago(null);
-  conectarAyuda(ayuda.firstElementChild, { horas: () => form.elements.horas, pago: () => form.elements.pagoHora });
   actualizar();
   return '#/cotizaciones';
 }

@@ -43,6 +43,7 @@ export async function telaDelPedido(prendaId, lineas, anchoTela) {
 export function manoDeObraPedido(d, unidades) {
   if (!unidades) return 0;
   if (d.cobroTrabajo === 'fijo') return valor(d.pagoPedido);
+  if (d.cobroTrabajo === 'prenda') return unidades * valor(d.pagoPrenda);
   const horas = valor(d.horas) * (d.alcanceHoras === 'pedido' ? 1 : unidades);
   return horas * valor(d.pagoHora);
 }
@@ -53,9 +54,9 @@ export function precioUnidad(metros, d, unidades = 1) {
   const insumos = d.insumos.reduce((s, i) => s + (i.cliente ? 0 : valor(i.cantidad) * valor(i.precio) / (i.alcance === 'pedido' ? unidades : 1)), 0);
   const materiales = tela + insumos;
   const manoDeObra = manoDeObraPedido(d, unidades) / unidades;
-  const gastos = materiales * (valor(d.gastosPct) / 100);
+  const gastos = d.cobroTrabajo === 'prenda' ? 0 : materiales * (valor(d.gastosPct) / 100);
   const costo = materiales + manoDeObra + gastos;
-  const precio = precioVenta(costo, valor(d.ganancia), d.tipo);
+  const precio = d.cobroTrabajo === 'prenda' ? costo : precioVenta(costo, valor(d.ganancia), d.tipo);
   return { tela, insumos, materiales, manoDeObra, gastos, costo, precio };
 }
 
@@ -71,16 +72,27 @@ export function calcularPedido(lineas, datos) {
   const unidades = lineas.reduce((s, l) => s + l.cantidad, 0);
   const neto = lineas.reduce((s, l) => s + l.metros * l.cantidad, 0);
   const tela = telaTotal(lineas);
+  const porPrenda = datos.cobroTrabajo === 'prenda';
   const filas = lineas.map((l) => {
     const metrosCobrados = neto ? l.metros * tela / neto : 0;
     const u = precioUnidad(metrosCobrados, datos, unidades);
     return { ...l, metrosCobrados, materiales: u.materiales, gastos: u.gastos, costo: u.costo, precio: Math.ceil(u.precio) };
   });
+  const materialesBase = filas.reduce((s, f) => s + f.materiales * f.cantidad, 0);
+  const trabajoBase = manoDeObraPedido(datos, unidades);
+  const minimo = materialesBase + trabajoBase > 0 ? trabajoBase / (materialesBase + trabajoBase) * 100 : 0;
+  const elegido = datos.porcentajeFijo == null ? minimo : valor(datos.porcentajeFijo);
+  const porcentaje = porPrenda ? Math.max(minimo, elegido) : 0;
+  if (porPrenda && porcentaje > minimo && materialesBase > 0) {
+    const objetivo = porcentaje >= 100 ? NaN : materialesBase / (1 - porcentaje / 100);
+    const extra = (objetivo - materialesBase - trabajoBase) / unidades;
+    filas.forEach((f) => { f.precio = Math.ceil(f.costo + extra); });
+  }
   const total = filas.reduce((s, f) => s + f.precio * f.cantidad, 0);
   const costo = filas.reduce((s, f) => s + f.costo * f.cantidad, 0);
   const materiales = filas.reduce((s, f) => s + f.materiales * f.cantidad, 0);
   const gastos = filas.reduce((s, f) => s + f.gastos * f.cantidad, 0);
-  return { filas, unidades, tela, neto, total, costo, materiales, gastos, manoDeObra: manoDeObraPedido(datos, unidades) };
+  return { filas, unidades, tela, neto, total, costo, materiales, gastos, manoDeObra: trabajoBase, porcentajeMinimo: minimo, porcentajeGanancia: porcentaje };
 }
 
 export function pendientes(datos) {
@@ -92,13 +104,19 @@ export function pendientes(datos) {
   if (datos.cobroTrabajo === 'fijo') {
     if (String(datos.horas ?? '').trim()) numero(datos.horas, 'Horas estimadas del pedido', true);
     numero(datos.pagoPedido, 'Pago por todo el pedido', true);
+  } else if (datos.cobroTrabajo === 'prenda') {
+    numero(datos.pagoPrenda, 'Cobro de confección por prenda', true);
   } else {
     numero(datos.horas, datos.alcanceHoras === 'pedido' ? 'Horas de todo el pedido' : 'Horas por prenda', true);
     numero(datos.pagoHora, 'Pago por hora', true);
   }
-  numero(datos.gastosPct, 'Gastos del taller (puedes poner 0)');
-  numero(datos.ganancia, 'Ganancia (puedes poner 0)');
-  if (datos.tipo === 'venta' && valor(datos.ganancia) >= 100) errores.push('La ganancia sobre venta debe ser menor a 100 %');
+  if (datos.cobroTrabajo !== 'prenda') {
+    numero(datos.gastosPct, 'Gastos del taller (puedes poner 0)');
+    numero(datos.ganancia, 'Ganancia (puedes poner 0)');
+    if (datos.tipo === 'venta' && valor(datos.ganancia) >= 100) errores.push('La ganancia sobre venta debe ser menor a 100 %');
+  } else if (datos.porcentajeFijo != null && (!Number.isFinite(valor(datos.porcentajeFijo)) || valor(datos.porcentajeFijo) >= 100)) {
+    errores.push('El porcentaje de ganancia debe ser menor a 100 %');
+  }
   datos.insumos.forEach((m, i) => {
     const nombre = m.nombre.trim() || `Material ${i + 1}`;
     if (!m.nombre.trim()) errores.push(`Nombre del material ${i + 1}`);

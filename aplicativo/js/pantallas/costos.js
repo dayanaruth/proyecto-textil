@@ -3,12 +3,10 @@
 // de ganancia, ejemplo, voz, marcas de "listo", avisos de lo que falta y el precio siempre a la vista.
 import { buscarPrenda } from '../datos/prendas.js';
 import { leer, guardar } from '../datos/almacenamiento.js';
-import { calcularCostos, errorDatoMaterial, precioVenta, valor } from '../calculos/costos.js';
+import { calcularCostos, errorDatoMaterial, valor } from '../calculos/costos.js';
 import { bs, numero } from '../utilidades/formato.js';
 import { barraPasos, esc } from '../utilidades/ui.js';
 import { hayVoz, hablar } from '../utilidades/voz.js';
-import { preferencias } from '../datos/cotizaciones.js';
-import { ayudaHorasYPago, conectarAyuda } from '../utilidades/ayuda-precio.js';
 import { dibujo, iconoMaterial } from '../utilidades/iconos.js';
 import { terminarPrenda } from '../utilidades/opinion.js';
 
@@ -22,21 +20,26 @@ const precioEjemplo = (nombre) => EJEMPLO_PRECIOS.find(([p]) => normal(nombre).i
 
 const VOZ = {
   mat: 'Materiales. Escribe cuánto usas de cada material y cuánto cuesta uno. Por ejemplo: usas cero coma nueve metros de tela, y un metro cuesta treinta y cinco bolivianos.',
-  tra: 'Tu trabajo. Escribe cuántas horas tardas en coser la prenda y cuánto vale una hora de tu trabajo. Después, cuánto gastas en el taller: luz, máquina, agujas.',
+  tra: 'Tu trabajo. Escribe cuánto cobrarás por confeccionar esta prenda.',
   gan: 'Tu ganancia. Elige cuánto quieres ganar. Te mostramos el precio de venta con cada opción.',
 };
 
 // Datos iniciales: la tela calculada en el paso anterior + insumos de la prenda
 function estadoInicial(prenda, trabajo) {
   const guardado = trabajo.costos;
-  if (guardado && guardado.prenda === (prenda?.id ?? null)) return guardado;
+  if (guardado && guardado.prenda === (prenda?.id ?? null)) return {
+    ...guardado, cobroTrabajo: 'fijo',
+    pagoPrenda: guardado.pagoPrenda || (guardado.cobroTrabajo === 'fijo' || !valor(guardado.horas) || !valor(guardado.pagoHora)
+      ? '' : String(valor(guardado.horas) * valor(guardado.pagoHora))),
+    gastos: '',
+  };
   const metrosTela = trabajo.tela && prenda ? numero(trabajo.tela.comprar / 100) : '';
   const cantidades = trabajo.tela?.prendaId === prenda?.id ? trabajo.tela?.cantidades : null;
   const insumos = (prenda?.insumos ?? []).map((i) => ({ ...i, cantidad: cantidades?.[i.cantidadMolde] ?? i.cantidad, precio: '' }));
   return {
     prenda: prenda?.id ?? null,
     materiales: [{ nombre: 'Tela', cantidad: metrosTela, unidad: 'm', precio: '' }, ...insumos],
-    horas: preferencias().horas[prenda?.id] ?? '', pagoHora: preferencias().pagoHora, gastos: '', ganancia: '30', tipo: 'costo',
+    cobroTrabajo: 'fijo', pagoPrenda: '', gastos: '',
   };
 }
 
@@ -89,41 +92,34 @@ export function mostrar(main, [id]) {
             <div class="campo"><input id="nombre-nuevo" enterkeyhint="done" placeholder="Ej. Etiqueta">
               <button type="button" class="btn-c" id="agregar">Agregar</button></div>
           </details>
+          <p class="resumen-materiales">Total gastado en materiales <strong id="total-materiales-final">—</strong></p>
           <p class="falta" id="falta-mat" role="status"></p>
         </section>
 
         <section class="parte verde">
           <header>${dibujo('cronometro', 'parte-icono')}
-            <div><h2>2. Tu trabajo y el taller <span class="listo" id="ok-tra" hidden>✅</span></h2><small>Las horas que coses y los gastos del taller</small></div>
+            <div><h2>2. Tu trabajo <span class="listo" id="ok-tra" hidden>✅</span></h2><small>Cuánto cobrarás por confeccionar esta prenda</small></div>
             ${voz('tra')}<b class="parte-total" id="t-trabajo"></b></header>
-          <div class="cuenta">
-            <label class="pregunta-c">¿Cuántas horas tardas?
-              <span class="campo"><input name="horas" inputmode="decimal" placeholder="0" value="${esc(e.horas)}"><span class="unidad">horas</span></span></label>
-            <span class="por" aria-hidden="true">×</span>
-            <label class="pregunta-c">¿Cuánto vale tu hora?
-              <span class="campo"><span class="unidad">Bs</span><input name="pagoHora" inputmode="decimal" placeholder="0" value="${esc(e.pagoHora)}"></span></label>
-            <b class="cuenta-res" id="t-mano"></b>
-          </div>
-          ${ayudaHorasYPago(e.prenda)}
-          <p class="cuenta-pie">⏱️ Lo mejor es medir tu tiempo con el <a href="#/herramientas/cronometro">cronómetro de costura</a>.</p>
-          <label class="pregunta-c pregunta-sola">🏠 ¿Cuánto gastas en el taller por esta prenda? <small>Luz, máquina, agujas…</small>
-            <span class="campo"><span class="unidad">Bs</span><input name="gastos" inputmode="decimal" placeholder="0" value="${esc(e.gastos)}"></span></label>
-          <button type="button" class="enlace-chico" id="sugerir-gastos">¿No sabes? Usar el 10 % de los materiales</button>
+          <label class="pregunta-c pregunta-sola" id="campo-pago-prenda">¿Cuánto cobrarás por confeccionar esta prenda?
+            <span class="campo"><span class="unidad">Bs</span><input name="pagoPrenda" inputmode="decimal" placeholder="Ej.: 40" value="${esc(e.pagoPrenda ?? '')}"></span></label>
           <p class="falta" id="falta-tra" role="status"></p>
         </section>
 
-        <section class="parte dorado">
+        <section class="parte dorado" id="ganancia-adicional">
           <header>${dibujo('monedas', 'parte-icono')}
             <div><h2>3. Tu ganancia <span class="listo" id="ok-gan" hidden>✅</span></h2><small>¿Cuánto quieres ganar?</small></div>
             ${voz('gan')}</header>
-          <div class="chips" role="group" aria-label="Ganancia">
-            ${['20', '30', '50'].map((p) => `<button type="button" class="chip" data-pct="${p}">${p} %</button>`).join('')}
-            <label class="chip-otro">Otro <span class="campo"><input name="ganancia" inputmode="decimal" placeholder="0" value="${esc(e.ganancia)}" aria-label="Otro porcentaje de ganancia"><span class="unidad">%</span></span></label>
-          </div>
-          <p class="pregunta-c">¿Ese porcentaje es del costo o del precio de venta?</p>
-          <div class="opciones-ganancia" role="radiogroup" aria-label="Ese porcentaje es">
-            <button type="button" role="radio" data-tipo="costo"><span class="op-titulo">del costo</span><span class="op-precio" id="op-costo"></span><span class="op-gana" id="gana-costo"></span></button>
-            <button type="button" role="radio" data-tipo="venta"><span class="op-titulo">del precio de venta</span><span class="op-precio" id="op-venta"></span><span class="op-gana" id="gana-venta"></span></button>
+          <div id="ganancia-fija">
+            <p class="ayuda">Tu cobro por confección ya está incluido. Aquí aparece su porcentaje del precio; puedes aumentarlo si quieres cobrar más.</p>
+            <label class="pregunta-c pregunta-sola">Porcentaje de ganancia sobre el precio de venta
+              <span class="campo"><input name="porcentajeFijo" inputmode="decimal" aria-describedby="minimo-ganancia"><span class="unidad">%</span></span></label>
+            <div class="botones-ganancia" aria-label="Ajustar porcentaje de ganancia">
+              <button type="button" class="btn btn-secundario" data-subir-ganancia="1">＋ 1 %</button>
+              <button type="button" class="btn btn-secundario" data-subir-ganancia="5">＋ 5 %</button>
+              <button type="button" class="btn btn-secundario" id="ganancia-minima">Volver al mínimo</button>
+            </div>
+            <p class="cuenta-pie" id="minimo-ganancia"></p>
+            <p class="precio-final-ganancia"><span>Precio final de la prenda</span><strong id="precio-final-ganancia">—</strong></p>
           </div>
           <p class="ganarias" id="ganarias"></p>
           <p class="error" id="error" role="alert"></p>
@@ -134,11 +130,11 @@ export function mostrar(main, [id]) {
           <div class="suma">
             <span class="bloque-c azul"><small>🧵 Materiales</small><b id="f-mat"></b></span><span class="signo">+</span>
             <span class="bloque-c verde"><small>✋ Trabajo</small><b id="f-tra"></b></span><span class="signo">=</span>
-            <span class="bloque-c gris"><small>Costo</small><b id="f-cos"></b></span>
+            <span class="bloque-c gris"><small id="etiqueta-resultado">Precio antes de ganancia</small><b id="f-cos"></b></span>
           </div>
-          <div class="suma">
+          <div class="suma" id="suma-ganancia">
             <span class="bloque-c gris"><small>Costo</small><b id="f-cos2"></b></span><span class="signo">+</span>
-            <span class="bloque-c dorado"><small>💰 Ganancia</small><b id="f-gan"></b></span><span class="signo">=</span>
+            <span class="bloque-c dorado"><small id="etiqueta-ganancia">💰 Ganancia</small><b id="f-gan"></b></span><span class="signo">=</span>
             <span class="bloque-c precio"><small>Precio</small><b id="f-pre"></b></span>
           </div>
           <p class="redondeo" id="redondeo"></p>
@@ -148,7 +144,7 @@ export function mostrar(main, [id]) {
       <div class="barra-precio" aria-live="polite">
         <div class="barra-precio-textos"><span>Costo <b id="b-costo"></b></span><span class="flecha-precio">→</span><span>Precio <b class="b-precio" id="b-precio"></b></span></div>
         <div class="barra-colores" aria-hidden="true"><span class="azul" id="seg-mat"></span><span class="verde" id="seg-tra"></span><span class="dorado" id="seg-gan"></span></div>
-        <div class="leyenda" aria-hidden="true"><span class="azul">Materiales</span><span class="verde">Trabajo</span><span class="dorado">Ganancia</span></div>
+        <div class="leyenda" aria-hidden="true"><span class="azul">Materiales</span><span class="verde">Trabajo</span><span class="dorado" id="leyenda-ganancia">Ganancia adicional</span></div>
       </div>
       <a class="btn btn-principal btn-ancho" id="terminar" href="#/">✓ Terminar</a>`;
     conectar();
@@ -169,33 +165,40 @@ export function mostrar(main, [id]) {
 
   const actualizar = () => {
     const c = calcularCostos(e);
-    const g = valor(e.ganancia);
-    const precio = precioVenta(c.total, g, e.tipo);
-    const pCosto = precioVenta(c.total, g, 'costo');
-    const pVenta = precioVenta(c.total, g, 'venta');
+    const minimo = c.total > 0 ? c.manoDeObra / c.total * 100 : 0;
+    const porcentajeElegido = e.porcentajeFijo == null ? minimo : valor(e.porcentajeFijo);
+    const porcentajeFijo = Math.max(minimo, porcentajeElegido);
+    const precio = porcentajeFijo >= 100 && c.totalMateriales ? NaN
+      : porcentajeFijo === minimo || !c.totalMateriales ? c.total : c.totalMateriales / (1 - porcentajeFijo / 100);
     const malo = !Number.isFinite(c.total) || !Number.isFinite(precio);
 
     c.subtotales.forEach((s, i) => { $(`#s-${i}`).textContent = Number.isFinite(s) ? `= ${bs(s)}` : '—'; });
     poner('#t-materiales', c.totalMateriales);
+    poner('#total-materiales-final', c.totalMateriales);
     poner('#t-trabajo', c.manoYGastos);
-    $('#t-mano').textContent = Number.isFinite(c.manoDeObra) ? `= ${bs(c.manoDeObra)}` : '—';
 
     // ✅ y avisos de lo que falta (en palabras sencillas)
     const sinPrecio = e.materiales.filter((m, i) => !Number.isFinite(c.subtotales[i])).map((m) => m.nombre || 'material adicional');
-    const faltaTra = [!lleno(e.horas) && 'las horas que tardas', !lleno(e.pagoHora) && 'cuánto vale tu hora'].filter(Boolean);
+    const faltaTra = [!lleno(e.pagoPrenda) && 'cuánto cobrarás por confeccionar la prenda'].filter(Boolean);
+    const campoPorcentaje = $('[name="porcentajeFijo"]');
+    if (document.activeElement !== campoPorcentaje) campoPorcentaje.value = numero(Math.round(porcentajeFijo * 100) / 100);
+    $('#minimo-ganancia').textContent = Number.isFinite(minimo)
+      ? `Mínimo: ${numero(Math.round(minimo * 100) / 100)} %. Es el cobro por confección dividido entre materiales + confección. No puedes bajarlo.` : '';
+    $('#precio-final-ganancia').textContent = !malo && lleno(e.pagoPrenda) && !e.materiales.some((m, i) => !Number.isFinite(c.subtotales[i]))
+      ? bs(precio) : '—';
+    $('#suma-ganancia').hidden = porcentajeFijo === minimo;
+    $('#leyenda-ganancia').hidden = porcentajeFijo === minimo;
+    $('#etiqueta-resultado').textContent = porcentajeFijo === minimo ? 'Precio final' : 'Costo';
+    $('#etiqueta-ganancia').textContent = 'Ganancia adicional';
     $('#ok-mat').hidden = sinPrecio.length > 0 || !e.materiales.length;
     $('#ok-tra').hidden = faltaTra.length > 0;
-    $('#ok-gan').hidden = !(g > 0) || malo;
+    $('#ok-gan').hidden = malo || !lleno(e.pagoPrenda);
     $('#falta-mat').textContent = sinPrecio.length ? `✍️ Falta completar: ${sinPrecio.join(', ')}.` : '';
     $('#falta-tra').textContent = faltaTra.length ? `✍️ Falta: ${faltaTra.join(' y ')}.` : '';
 
-    main.querySelectorAll('[data-pct]').forEach((b) => b.setAttribute('aria-pressed', valor(b.dataset.pct) === g));
-    poner('#op-costo', pCosto); poner('#op-venta', pVenta);
-    $('#gana-costo').textContent = Number.isFinite(pCosto) ? `ganas ${bs(pCosto - c.total)}` : '';
-    $('#gana-venta').textContent = Number.isFinite(pVenta) ? `ganas ${bs(pVenta - c.total)}` : g >= 100 ? 'menos de 100 %' : '';
-    main.querySelectorAll('[data-tipo]').forEach((b) => b.setAttribute('aria-checked', b.dataset.tipo === e.tipo));
-    $('#ganarias').innerHTML = malo || !c.total ? '' : `Ganarías <b>${bs(precio - c.total)}</b> por prenda`;
-    $('#error').textContent = sinPrecio.length ? '' : !Number.isFinite(c.total) || !Number.isFinite(g)
+    $('#ganarias').innerHTML = malo || !c.total ? ''
+      : `Cobrarías <b>${bs(precio - c.totalMateriales)}</b> por confeccionar la prenda (${numero(Math.round((precio - c.totalMateriales) / precio * 10000) / 100)} % del precio).`;
+    $('#error').textContent = sinPrecio.length ? '' : !Number.isFinite(c.total) || !Number.isFinite(porcentajeFijo)
       ? 'Revisa los números: usa solo cifras, por ejemplo 12,50.'
       : !Number.isFinite(precio) ? 'La ganancia sobre el precio de venta debe ser menor a 100 %.' : '';
 
@@ -231,6 +234,14 @@ export function mostrar(main, [id]) {
     });
     form.addEventListener('focusout', (ev) => {
       if (ev.target.dataset.campo) validarCampo(ev.target, true);
+      if (ev.target.name === 'porcentajeFijo') {
+        const c = calcularCostos(e);
+        const minimo = c.total > 0 ? c.manoDeObra / c.total * 100 : 0;
+        if (valor(e.porcentajeFijo) < minimo) {
+          e.porcentajeFijo = null;
+          actualizar();
+        }
+      }
     });
     form.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Enter' || ev.isComposing) return;
@@ -240,7 +251,7 @@ export function mostrar(main, [id]) {
         $('#agregar').click();
       } else if (el.dataset.campo) {
         ev.preventDefault();
-        if (validarCampo(el, true)) (campos[campos.indexOf(el) + 1] ?? form.elements.horas).focus();
+        if (validarCampo(el, true)) (campos[campos.indexOf(el) + 1] ?? form.elements.pagoPrenda).focus();
       }
     });
     form.addEventListener('input', (ev) => {
@@ -250,11 +261,10 @@ export function mostrar(main, [id]) {
         validarCampo(el, el.getAttribute('aria-invalid') === 'true' || Boolean(el.value.trim()));
       } else if (el.name) e[el.name] = el.value;
       else { el.setCustomValidity(''); return; }
+      if (el.name !== 'porcentajeFijo') e.porcentajeFijo = null;
       actualizar();
     });
     form.addEventListener('submit', (ev) => ev.preventDefault());
-    const ayuda = main.querySelector('.ayuda-precio');
-    if (ayuda) conectarAyuda(ayuda, { horas: () => $('[name="horas"]'), pago: () => $('[name="pagoHora"]') });
     main.addEventListener('click', alTocar);
   };
 
@@ -263,14 +273,15 @@ export function mostrar(main, [id]) {
     const b = ev.target.closest('button');
     if (!b || !main.contains(b)) return;
     if (b.dataset.voz) return hablar(VOZ[b.dataset.voz]);
-    if (b.dataset.tipo) { e.tipo = b.dataset.tipo; return actualizar(); }
-    if (b.dataset.pct) { e.ganancia = b.dataset.pct; $('[name="ganancia"]').value = b.dataset.pct; return actualizar(); }
-    if (b.id === 'sugerir-gastos') {
-      const { totalMateriales } = calcularCostos(e);
-      e.gastos = Number.isFinite(totalMateriales) ? numero(Math.round(totalMateriales * 10) / 100) : '';
-      $('[name="gastos"]').value = e.gastos;
+    if (b.dataset.subirGanancia) {
+      const c = calcularCostos(e);
+      const minimo = c.total > 0 ? c.manoDeObra / c.total * 100 : 0;
+      const actual = e.porcentajeFijo == null ? minimo : Math.max(minimo, valor(e.porcentajeFijo));
+      if (!Number.isFinite(actual)) return;
+      e.porcentajeFijo = String(Math.min(99.99, Math.round((actual + Number(b.dataset.subirGanancia)) * 100) / 100));
       return actualizar();
     }
+    if (b.id === 'ganancia-minima') { delete e.porcentajeFijo; return actualizar(); }
     let redibujar = false;
     if (b.dataset.quitar != null) { e.materiales.splice(Number(b.dataset.quitar), 1); redibujar = true; }
     if (b.id === 'agregar') {
@@ -286,9 +297,8 @@ export function mostrar(main, [id]) {
     }
     if (b.id === 'ejemplo') {
       e = { ...e, materiales: e.materiales.map((m) => ({ ...m, cantidad: m.cantidad || '0,9', precio: precioEjemplo(m.nombre) })),
-        horas: '2', pagoHora: '14', ganancia: '30', tipo: 'costo' };
-      const { totalMateriales } = calcularCostos(e);
-      e.gastos = numero(Math.round(totalMateriales * 10) / 100);
+        cobroTrabajo: 'fijo', pagoPrenda: '28' };
+      e.gastos = '';
       esEjemplo = true; redibujar = true;
     }
     if (b.id === 'borrar') {
@@ -297,6 +307,7 @@ export function mostrar(main, [id]) {
       esEjemplo = false; redibujar = true;
     }
     if (redibujar) {
+      e.porcentajeFijo = null;
       main.removeEventListener('click', alTocar);
       dibujar();
       if (b.id === 'agregar') main.querySelector(`[data-i="${e.materiales.length - 1}"][data-campo="cantidad"]`).focus();

@@ -19,13 +19,13 @@ export function errorDatoMaterial(texto, campo) {
   return cantidad && valor(dato) === 0 ? 'La cantidad debe ser mayor que cero.' : '';
 }
 
-export function calcularCostos({ materiales, horas, pagoHora, gastos }) {
+export function calcularCostos({ materiales, horas, pagoHora, gastos, cobroTrabajo, pagoPrenda }) {
   const subtotales = materiales.map((m) => {
     if (errorDatoMaterial(m.cantidad, 'cantidad') || errorDatoMaterial(m.precio, 'precio')) return NaN;
     return valor(m.cantidad) * valor(m.precio);
   });
   const totalMateriales = subtotales.reduce((s, v) => s + v, 0);
-  const manoDeObra = valor(horas) * valor(pagoHora);
+  const manoDeObra = cobroTrabajo === 'fijo' ? valor(pagoPrenda) : valor(horas) * valor(pagoHora);
   const gastosTaller = valor(gastos);
   const total = totalMateriales + manoDeObra + gastosTaller;
   return { subtotales, totalMateriales, manoDeObra, gastosTaller, manoYGastos: manoDeObra + gastosTaller, total };

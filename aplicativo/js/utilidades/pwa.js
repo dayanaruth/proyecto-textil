@@ -47,6 +47,11 @@ export function iniciarPwa() {
   conexion();
 
   if (!('serviceWorker' in navigator)) return;
+  // En la vista local los archivos deben reflejar los cambios al recargar.
+  if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+    navigator.serviceWorker.getRegistrations().then((registros) => registros.forEach((registro) => registro.unregister()));
+    return;
+  }
   const workers = navigator.serviceWorker;
   let versionEnPantalla = workers.controller;
   let versionOfrecida = null;
